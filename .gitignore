@@ -1,5 +1,6 @@
 # Compiled files
 *.o
+multitex
 
 # tmp files
 *~
