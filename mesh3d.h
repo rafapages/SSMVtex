@@ -20,9 +20,9 @@ class Mesh3D {
 
     // Data access
     Vector3f getVertex(unsigned int _index) const;
-    Triangle getTriangle(unsigned int _index) const;
+    Triangle3D getTriangle(unsigned int _index) const;
     void addVector(const Vector3f& _vector);
-    void addTriangle(const Triangle& _triangle);
+    void addTriangle(const Triangle3D& _triangle);
     unsigned int getNVtx() const;
     unsigned int getNTri() const;
 
