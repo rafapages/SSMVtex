@@ -1,10 +1,12 @@
 #include <iostream>
 
-using namespace std;
+#include "multitexturer.h"
 
-int main()
-{
-    cout << "Hello World!" << endl;
+int main(int argc, char *argv[]){
+
+    Multitexturer multitex;
+    multitex.parseCommandLine(argc, argv);
+
     return 0;
 }
 
