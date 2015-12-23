@@ -9,6 +9,6 @@ LIBS =
 multitex: $(OBJECTS)
 	g++ -o multitex $(OBJECTS) $(LIBS)
 
-cleam:
+clean:
 	rm -f *.o
 	rm -f multitex

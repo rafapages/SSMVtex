@@ -1,11 +1,7 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include <eigen3/Eigen/Dense>
-#include <iostream>
-#include <vector>
-
-using namespace Eigen;
+#include "mesh3d.h"
 
 class Camera{
 

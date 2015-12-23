@@ -1,16 +1,13 @@
 #ifndef MULTITEXTURER_H
 #define MULTITEXTURER_H
 
-#include <iostream>
+#include <stdlib.h>
 
-#include "mesh3d.h"
 #include "camera.h"
 
 typedef enum {NONE, COLOR, TEXTURE, POINT} MappingMode;
 typedef enum {NORMAL_VERTEX, NORMAL_BARICENTER, AREA, AREA_OCCL} CamAssignMode;
-//typedef enum {LIGHT, SHADOW, DARK} VtxMode;
-typedef enum {OBJ, TXT, WRL, OBJCAM, PNG, UNKNOWN} Extension;
-//typedef enum {RECYCLE, NEWTEX} Option;
+//typedef enum {OBJ, TXT, WRL, OBJCAM, PNG, UNKNOWN} Extension;
 typedef enum {MESH, SPLAT} InputMode;
 
 class Multitexturer
@@ -24,6 +21,10 @@ public:
     // Parses the command line and sets the options
     void parseCommandLine(int argc, char *argv[]);
 
+    // I/O
+    void readCameraFile(const std::string& _fileName);
+    void readImageList(const std::string& _fileName);
+
 
 private:
 
@@ -34,6 +35,7 @@ private:
 
     std::vector<Camera> cameras_;
     std::vector<std::string> imageList_;
+    unsigned int nCam_;
 
     // Options - Default values
     CamAssignMode ca_mode_; //  AREA_OCCL

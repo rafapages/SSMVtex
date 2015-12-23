@@ -30,4 +30,3 @@ int Triangle2D::getIndex(unsigned int _index) const {
 int Triangle2D::getOrig3D() const {
     return orig3D_;
 }
-

@@ -1,9 +1,6 @@
-#include <stdlib.h>
-
 #include "multitexturer.h"
 
 Multitexturer::Multitexturer(){
-
     ca_mode_ = AREA_OCCL;
     m_mode_ = TEXTURE;
     in_mode_ = MESH;
@@ -13,10 +10,10 @@ Multitexturer::Multitexturer(){
     dimension_ = 10000000;
     imageCacheSize_ = 75;
 
+    nCam_ = 0;
 }
 
 Multitexturer::~Multitexturer(){
-
 }
 
 void Multitexturer::parseCommandLine(int argc, char *argv[]){
@@ -32,28 +29,28 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
         if (opt[0] == '-'){ // options starting with '-' or '--'
 
             switch (c = opt[1]) {
-            case 'n':			ca_mode_ = NORMAL_VERTEX;				opts.push_back(c); break;
-            case 'b':			ca_mode_ = NORMAL_BARICENTER;			opts.push_back(c); break;
-            case 'a':			ca_mode_ = AREA;						opts.push_back(c); break;
-            case 'l':			ca_mode_ = AREA_OCCL;					opts.push_back(c); break;
+            case 'n':	ca_mode_ = NORMAL_VERTEX;		opts.push_back(c); break;
+            case 'b':	ca_mode_ = NORMAL_BARICENTER;	opts.push_back(c); break;
+            case 'a':	ca_mode_ = AREA;				opts.push_back(c); break;
+            case 'l':	ca_mode_ = AREA_OCCL;			opts.push_back(c); break;
 
-            case '1':			num_cam_mix_ = 1;						opts.push_back(c); break;
-            case '2':			num_cam_mix_ = 2;						opts.push_back(c); break;
-            case '3':			num_cam_mix_ = 3;						opts.push_back(c); break;
-            case '4':			num_cam_mix_ = 4;						opts.push_back(c); break;
-            case '5':			num_cam_mix_ = 5;						opts.push_back(c); break;
-            case '6':			num_cam_mix_ = 6;						opts.push_back(c); break;
-            case '7':			num_cam_mix_ = 7;						opts.push_back(c); break;
-            case '8':			num_cam_mix_ = 8;						opts.push_back(c); break;
-            case '9':			num_cam_mix_ = 9;						opts.push_back(c); break;
+            case '1':	num_cam_mix_ = 1;	opts.push_back(c); break;
+            case '2':	num_cam_mix_ = 2;	opts.push_back(c); break;
+            case '3':	num_cam_mix_ = 3;	opts.push_back(c); break;
+            case '4':	num_cam_mix_ = 4;	opts.push_back(c); break;
+            case '5':	num_cam_mix_ = 5;	opts.push_back(c); break;
+            case '6':	num_cam_mix_ = 6;	opts.push_back(c); break;
+            case '7':	num_cam_mix_ = 7;	opts.push_back(c); break;
+            case '8':	num_cam_mix_ = 8;	opts.push_back(c); break;
+            case '9':	num_cam_mix_ = 9;   opts.push_back(c); break;
 
-            case 'e':			m_mode_ = NONE;							opts.push_back(c); break;
-            case 'u':			m_mode_ = COLOR;							opts.push_back(c); break;
-            case 't':			m_mode_ = TEXTURE;						opts.push_back(c); break;
-            case 'p':           m_mode_ = POINT;                         opts.push_back(c); break;
+            case 'e':	m_mode_ = NONE;     opts.push_back(c); break;
+            case 'u':	m_mode_ = COLOR;    opts.push_back(c); break;
+            case 't':	m_mode_ = TEXTURE;  opts.push_back(c); break;
+            case 'p':   m_mode_ = POINT;    opts.push_back(c); break;
 
-            case 'm':           in_mode_ = MESH;                         opts.push_back(c); break;
-            case 's':           in_mode_ = SPLAT;                        opts.push_back(c); break;
+            case 'm':   in_mode_ = MESH;    opts.push_back(c); break;
+            case 's':   in_mode_ = SPLAT;   opts.push_back(c); break;
 
             case 'h':
                 printHelp();
@@ -71,7 +68,6 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
 
                 if (optionValue.compare("faceCam") == 0){
                     for (unsigned int i = 2 + optionValue.length() + 1; opt[i] != '\0'; i++){
-                        //                        stringValue += opt[i];
                         fileFaceCam_ += opt[i];
                     }
 
@@ -87,9 +83,7 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
                     std::stringstream ss;
                     ss << stringValue;
                     ss >> intValue;
-                    //                    cerr << intValue << endl;
                     dimension_ = intValue;
-
                 } else if (optionValue.compare("alpha") == 0){
                     for (unsigned int i = 2 + optionValue.length() + 1; opt[i] != '\0'; i++){
                         stringValue += opt[i];
@@ -118,7 +112,6 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
                     std::cerr << "Unknown option: "  << optionValue << std::endl;
                     printHelp();
                 }
-
                 break;
             }
 
@@ -148,7 +141,6 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
         case 3:     fileNameOut_       = argv[index]; break;
         case 4:     fileNameTexOut_    = argv[index]; break;
         }
-
     }
 
     std::cerr << "fileNameIn: " << fileNameIn_ << std::endl;
@@ -156,8 +148,10 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
     // If there are no names for the output files,
     // we set them to default values
     if  (fileNameOut_.empty() || fileNameTexOut_.empty()) {
+        // In case there is something still there
         fileNameOut_.clear();
         fileNameTexOut_.clear();
+
         std::string optionlist;
         for (std::vector<char>::iterator it = opts.begin(); it != opts.end(); it++){
             optionlist += '-';
@@ -226,5 +220,61 @@ void Multitexturer::printHelp(){
     }
 
     exit(-1);
-
 }
+
+
+void Multitexturer::readCameraFile(const std::string &_fileName){
+
+    std::ifstream camFile(_fileName.c_str());
+
+    if (camFile.is_open()){
+
+        // First line contains the number of cameras
+        std::string line;
+        std::getline(camFile, line);
+        sscanf(line.c_str(), "%u", &nCam_);
+
+        std::cerr << "Reading " << nCam_ << " camera parameters... ";
+
+        // Now every camera calibration file is read
+        for ( unsigned int i = 0; i < nCam_ ; i++){
+            Camera c;
+            std::getline(camFile,line);
+            c.loadCameraParameters(line);
+            cameras_.push_back(c);
+        }
+
+        std::cerr << "done!\n";
+
+    } else {
+        std::cerr << "Unable to open " << _fileName << " file!" << std::endl;
+        exit(-1);
+    }
+
+    camFile.close();
+}
+
+void Multitexturer::readImageList(const std::string &_fileName){
+
+    std::cerr << "Reading image list file...";
+
+    std::ifstream listFile(_fileName.c_str());
+
+    if (listFile.is_open()){
+
+        std::string line;
+        while (!listFile.eof()){
+            std::getline(listFile, line);
+            imageList_.push_back(line);
+        }
+
+    } else {
+        std::cerr << "Unable to open " << _fileName << " file!" << std::endl;
+        exit(-1);
+    }
+
+    std::cerr << " done!\n";
+
+    listFile.close();
+}
+

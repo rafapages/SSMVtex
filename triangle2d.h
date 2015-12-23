@@ -1,10 +1,7 @@
 #ifndef TRIANGLE2D_H
 #define TRIANGLE2D_H
 
-#include <eigen3/Eigen/Dense>
-#include <iostream>
-
-using namespace Eigen;
+#include "triangle3d.h"
 
 class Triangle2D
 {
