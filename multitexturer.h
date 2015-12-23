@@ -21,14 +21,32 @@ public:
     // Parses the command line and sets the options
     void parseCommandLine(int argc, char *argv[]);
 
-    // I/O
-    void readCameraFile(const std::string& _fileName);
-    void readImageList(const std::string& _fileName);
+    // Loads the needed 
+    void loadInputData();
+
+    // Evaluate how each cameras sees each triangle
+    void evaluateCameraRatings();
 
 
 private:
 
     void printHelp(); // DUDA: tiene sentido una función void sin parámetros ser definida const?
+    
+    // Access input data
+    void readInputMesh();
+    void readCameraFile();
+    void readImageList();
+
+
+    // Different ways to estimate camera weights:
+    // Uses the normal of the triangle
+    void evaluateNormal(); 
+    // Uses the projected area of the triangle
+    void evaluateArea();
+    // Uses the projected area taking into account occlusions
+    void evaluateAreaWithOcclusions(unsigned int _resolution);
+    
+
 
 
     Mesh3D mesh_;

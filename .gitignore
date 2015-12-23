@@ -5,8 +5,14 @@ multitex
 # tmp files
 *~
 *DS_Store
+*.autosave
 
-# QtCreator stuff
+# QtCreator and other IDE stuff
 *.pro
 *.user
 *.pri
+*.project
+*.cproject
+
+# test files
+test/*

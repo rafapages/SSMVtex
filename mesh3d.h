@@ -11,6 +11,7 @@ class Mesh3D {
 
  public:
     Mesh3D();
+    Mesh3D(const std::string _fileName); // Currently only reads OBJs
     Mesh3D(const std::vector<Vector3f>& _vtx, const std::vector<Triangle3D> _tri);
     ~Mesh3D();
 
@@ -31,6 +32,7 @@ class Mesh3D {
     Vector3f getTriangleNormal(const Vector3f& _a, const Vector3f& _b, const Vector3f& _c) const;
 
  private:
+
     std::vector<Vector3f> vtx_;
     std::vector<Triangle3D> tri_;
     unsigned int nVtx_, nTri_;

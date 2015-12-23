@@ -33,6 +33,10 @@ class Camera{
     // Coordinates transformations from uv coordinates
     Vector3f get3Dpoint(const Vector2f& _p) const;
 
+    // Ratings calculated for each triangle and vertex
+    std::vector<float> tri_ratings_;
+    std::vector<float> vtx_ratings_;
+
  private:
 
     Matrix3f K_; // Intrinsic parameters
@@ -40,8 +44,7 @@ class Camera{
     Vector3f position_; // C
     unsigned int imWidth_, imHeight_; //nPixX, nPixY
 
-    std::vector<float> tri_ratings_;
-    std::vector<float> vtx_ratings_;
+
 
 
 };

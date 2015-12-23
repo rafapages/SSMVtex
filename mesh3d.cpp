@@ -4,6 +4,12 @@ Mesh3D::Mesh3D(){
     nVtx_ = nTri_ = 0;
 }
 
+Mesh3D::Mesh3D(const std::string _fileName){
+
+    this->readOBJ(_fileName);
+
+}
+
 Mesh3D::Mesh3D(const std::vector<Vector3f> &_vtx, const std::vector<Triangle3D> _tri){
     vtx_ = _vtx;
     tri_ = _tri;

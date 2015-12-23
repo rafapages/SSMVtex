@@ -1,7 +1,7 @@
 #ifndef TRIANGLE3D_H
 #define TRIANGLE3D_H
 
-#include <eigen3/Eigen/Geometry>
+#include <eigen3/Eigen/Dense>
 #include <iostream>
 
 using namespace Eigen;
