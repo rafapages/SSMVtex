@@ -597,7 +597,7 @@ void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
                     const Triangle3D vl = mesh_.getTriangle(*it);
                     if (vtx_in_tri(vtx_s[i], vtx_t[i], vtx_s[vl.getIndex(0)], vtx_t[vl.getIndex(0)], vtx_s[vl.getIndex(1)], vtx_t[vl.getIndex(1)], vtx_s[vl.getIndex(2)], vtx_t[vl.getIndex(2)])) {
                         // Check if triangle vertex is eclipsed
-                        if (eclipsedvtx(i, *it, c)){
+                        if (isVertexEclipsed(i, *it, c)){
                             vtx_seen[i] = SHADOW;
                         } else {
                             tri_alive[*it] = false;
@@ -643,12 +643,13 @@ unsigned int Multitexturer::findPosGrid (float _x, float _min, float _max, unsig
     return d;
 }
 
-bool Multitexturer::eclipsedvtx (int _v, int _t, int _c) {
+bool Multitexturer::isVertexEclipsed (int _v, int _t, int _c) const {
 
     Vector3f va = mesh_.getVertex(mesh_.getTriangle(_t).getIndex(0));
     Vector3f vb = mesh_.getVertex(mesh_.getTriangle(_t).getIndex(1));
     Vector3f vc = mesh_.getVertex(mesh_.getTriangle(_t).getIndex(2));
 
+    // All vertices are defined with respect to Va
     vb -= va; 
     vc -= va;
 
@@ -662,10 +663,12 @@ bool Multitexturer::eclipsedvtx (int _v, int _t, int _c) {
     av = mesh_.getVertex(_v);
     av -= va;
 
+    // We check if they are in the same side
+    // of the triangle using the dot product
     float dpnacam = n.dot(acam);
     float dpnav   = n.dot(av);
 
-    return ((dpnacam>0 && dpnav<0) || (dpnacam<0 && dpnav>0));
+    return ((dpnacam > 0 && dpnav < 0) || (dpnacam < 0 && dpnav > 0));
 }
 
 bool Multitexturer::vtx_in_tri (float pt_s, float pt_t, float a_s, float a_t,
