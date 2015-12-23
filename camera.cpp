@@ -63,6 +63,13 @@ Vector2i Camera::getImageDim() const {
     return dim;
 }
 
+unsigned int Camera::getImageWidth() const{
+    return imWidth_;
+}
+unsigned int Camera::getImageHeight() const{
+    return imHeight_;
+}
+
 Vector3f Camera::getTranslationVector() const{
     return -R_ * position_;
 }

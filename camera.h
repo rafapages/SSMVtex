@@ -17,6 +17,8 @@ class Camera{
     Matrix3f getExtrinsicParam() const;
     Vector3f getPosition() const;
     Vector2i getImageDim() const;
+    unsigned int getImageWidth() const;
+    unsigned int getImageHeight() const;
     Vector3f getTranslationVector () const; // T = -RC
     // X = [R T] in homogeneous coordinates:
     // last row is [0 0 0 1]

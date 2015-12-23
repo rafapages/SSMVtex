@@ -315,12 +315,14 @@ void Multitexturer::evaluateCameraRatings(){
     }
 
     // Create vtx2tri and tri2tri
+    // vtx2vtx is a vector containing every direct neighbor for each vertex
     std::vector<int> *vtx2tri = new std::vector<int> [mesh_.getNVtx()];
     for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
         for (unsigned int j = 0; j < 3; j++)
             // vtx2tri[tri[i].i[j]].push_back(i);
             vtx2tri[mesh_.getTriangle(i).getIndex(j)].push_back(i);
     }
+    // tri2tri is a list containing every neigbor of eac triangle
     std::list<int> *tri2tri = new std::list<int> [mesh_.getNTri()];
     for (unsigned int i = 0; i < mesh_.getNVtx(); i++) {
         for (std::vector<int>::iterator ita = vtx2tri[i].begin(); ita != vtx2tri[i].end(); ++ita) {
@@ -346,6 +348,9 @@ void Multitexturer::evaluateCameraRatings(){
     // PostProcessAreaOccl ();
     // EvaluateWeightNormal();
 
+
+    // At this point, triangle ratings are already known,
+    // and their average is calculated to set the vertex ratings 
     for(unsigned int c = 0; c < nCam_; c++){
 
         for(unsigned int i = 0; i < mesh_.getNVtx() ; i++){
@@ -395,6 +400,8 @@ void Multitexturer::evaluateNormal(){
         }
     }
 } 
+
+
 void Multitexturer::evaluateArea(){
 
 
@@ -435,6 +442,253 @@ void Multitexturer::evaluateArea(){
 }
 void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
 
+    // Define grid search resolution in both dimensions
+    const unsigned int grid_s_resol = _resolution;
+    const unsigned int grid_t_resol = _resolution;
+
+    // These arrays are calculated only once (here), because they are the
+    // same for all cameras... that is why it is calculated before the
+    // "for each camera" loop
+    std::vector<float> tri_areamax (mesh_.getNTri(), 0.0);
+    // which triangles contain each vertex
+    std::vector<int> *vtx2tri = new std::vector<int> [mesh_.getNVtx()];
+
+    for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
+        for (unsigned int j = 0; j < 3; j++){
+            vtx2tri[mesh_.getTriangle(i).getIndex(j)].push_back(i);
+        }
+    }
+
+    // This arrays are updated for each camera (this is just memory allocation)
+    //    vtx_s : horizontal coordinate in texture of each vertex
+    //    vtx_t : vertical coordinate in texture of each vertex
+    //    vtx_pos_grid_s : horizontal position in of each vertex
+    //    vtx_pos_grid_t : vertical position in grid of each vertex
+    //    grid_vtx : vertices in each cell of the grid
+    //    vtx_seen : for each vertex
+    //       DARK : Not seen
+    //       SHADOW : Not seen, covered by others
+    //       LIGHT : Seen
+    //    tri_area : projected area of each triangle
+    //    tri_frontfacing : true if projected area > 0
+    //    tri_alive : true (after processing each camera) if it can be seen
+    //    grid_tri : triangles whose projection is included in each cell of the grid
+
+    std::vector<float> vtx_s (mesh_.getNVtx());
+    std::vector<float> vtx_t (mesh_.getNVtx());
+    std::vector<unsigned int> vtx_pos_grid_s (mesh_.getNVtx());
+    std::vector<unsigned int> vtx_pos_grid_t (mesh_.getNVtx());
+    std::vector<int> *grid_vtx = new std::vector<int> [grid_s_resol * grid_t_resol];
+    std::vector<VtxMode> vtx_seen (mesh_.getNVtx());
+    std::vector<float> tri_area(mesh_.getNTri());
+    std::vector<bool> tri_frontfacing (mesh_.getNTri());
+    std::vector<bool> tri_alive (mesh_.getNTri());
+    std::vector<int> *grid_tri = new std::vector<int> [grid_s_resol * grid_t_resol];
+
+
+
+    // FOR EACH CAMERA
+    for (unsigned int c = 0; c < nCam_; c++) {
+
+        // STEP 1 : Kill backfacing triangles
+
+        // Vertex projections
+        for (unsigned int i = 0; i < mesh_.getNVtx(); i++) {
+            Vector2f v = cameras_[c].transform2uvCoord(mesh_.getVertex(i));
+            vtx_s[i] = v(0);
+            vtx_t[i] = v(1);
+        }
+
+        // Calculate the area of each triangle and kill triangles
+        // with a negative area
+        for (unsigned int j = 0; j < mesh_.getNTri(); j++) {
+            const Triangle3D vl = mesh_.getTriangle(j);
+            tri_area[j] = (vtx_t[vl.getIndex(0)]-vtx_t[vl.getIndex(2)]) * (vtx_s[vl.getIndex(1)]-vtx_s[vl.getIndex(2)]) - (vtx_s[vl.getIndex(0)]-vtx_s[vl.getIndex(2)]) * (vtx_t[vl.getIndex(1)]-vtx_t[vl.getIndex(2)]);
+            tri_alive[j] = tri_frontfacing[j] = tri_area[j] > 0;
+        }
+
+
+        // STEP 2: All vertices surrounded only by dead triangles -> DARK
+        // Rest of them -> LIGHT
+
+        for (unsigned int i = 0; i < mesh_.getNVtx(); i++) {
+            bool tobekilled = true;
+            for (std::vector<int>::iterator it = vtx2tri[i].begin(); it!=vtx2tri[i].end(); ++it) {
+                if (tri_frontfacing[*it]) {
+                    tobekilled = false;
+                    break;
+                }
+            }
+            if (tobekilled){
+                vtx_seen[i] = DARK;
+            } else {
+                vtx_seen[i] = LIGHT;
+            }
+        }
+
+        // THE NEXT STEP NEEDS THE GRIDS TO BE UPDATED
+
+        // Clear grids
+        for (unsigned int i = 0; i < grid_s_resol; i++) {
+            for (unsigned int j = 0; j < grid_t_resol; j++) {
+                grid_vtx[i*grid_s_resol+j].clear();
+                grid_tri[i*grid_s_resol+j].clear();
+            }
+        }
+
+        // Clasify LIGHT vertices in the vertex grid
+        float min_s, max_s;
+        float min_t, max_t;
+
+        min_s = max_s = vtx_s[0];
+        min_t = max_t = vtx_t[0];
+
+        for (unsigned int i = 1; i < mesh_.getNVtx(); i++) {
+            if (vtx_s[i] < min_s) {
+                min_s = vtx_s[i];
+            } else if (vtx_s[i] > max_s){
+                max_s = vtx_s[i];
+            } if (vtx_t[i] < min_t) {
+                min_t = vtx_t[i];
+            } else if (vtx_t[i] > max_t) {
+                max_t = vtx_t[i];
+            }
+        }
+
+        for (unsigned int i = 0; i < mesh_.getNVtx(); i++) {
+            if (vtx_seen[i] == LIGHT) {
+                vtx_pos_grid_s[i] = findPosGrid(vtx_s[i], min_s, max_s, grid_s_resol);
+                vtx_pos_grid_t[i] = findPosGrid(vtx_t[i], min_t, max_t, grid_t_resol);
+                grid_vtx[vtx_pos_grid_s[i]*grid_s_resol+vtx_pos_grid_t[i]].push_back(i);
+            }
+        }
+
+        // Clasify living triangles in triangle grid
+        for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
+            if (tri_alive[i]) {
+                // unsigned int * vl = tri[i].i;
+                const Triangle3D vl = mesh_.getTriangle(i);
+                unsigned int min_pos_grid_s = findPosGrid(vtx_s[vl.getIndex(0)], min_s, max_s, grid_s_resol);
+                unsigned int min_pos_grid_t = findPosGrid(vtx_t[vl.getIndex(0)], min_t, max_t, grid_t_resol);
+                unsigned int max_pos_grid_s = min_pos_grid_s;
+                unsigned int max_pos_grid_t = min_pos_grid_t;
+                for (unsigned int j = 1; j < 3; j++) {
+                    unsigned int pos_grid_s = findPosGrid(vtx_s[vl.getIndex(j)], min_s, max_s, grid_s_resol);
+                    unsigned int pos_grid_t = findPosGrid(vtx_t[vl.getIndex(j)], min_t, max_t, grid_t_resol);
+                    if (pos_grid_s < min_pos_grid_s)        min_pos_grid_s = pos_grid_s;
+                    else if (pos_grid_s > max_pos_grid_s)   max_pos_grid_s = pos_grid_s;
+                    if (pos_grid_t < min_pos_grid_t)        min_pos_grid_t = pos_grid_t;
+                    else if (pos_grid_t > max_pos_grid_t)   max_pos_grid_t = pos_grid_t;
+                }
+                for (unsigned int s = min_pos_grid_s; s <= max_pos_grid_s; s++) {
+                    for (unsigned int t = min_pos_grid_t; t <= max_pos_grid_t; t++)
+                        grid_tri[s*grid_s_resol+t].push_back(i);
+                }
+            }
+        }
+
+        // STEP 3 : LIGHT vertices covered by living triangles or outside texture turn into SHADOW vertices
+        for (unsigned int i = 0; i < mesh_.getNVtx(); i++) {
+            if (vtx_seen[i] == LIGHT) {
+                // candidates: triangles in same grid part, except for the ones incident to i
+                std::vector<int> candidates = grid_tri[vtx_pos_grid_s[i]*grid_s_resol + vtx_pos_grid_t[i]];
+                for (std::vector<int>::iterator it = candidates.begin(); it != candidates.end(); it++) {
+                    // unsigned int * vl = tri[*it].i;
+                    const Triangle3D vl = mesh_.getTriangle(*it);
+                    if (vtx_in_tri(vtx_s[i], vtx_t[i], vtx_s[vl.getIndex(0)], vtx_t[vl.getIndex(0)], vtx_s[vl.getIndex(1)], vtx_t[vl.getIndex(1)], vtx_s[vl.getIndex(2)], vtx_t[vl.getIndex(2)])) {
+                        // Check if triangle vertex is eclipsed
+                        if (eclipsedvtx(i, *it, c)){
+                            vtx_seen[i] = SHADOW;
+                        } else {
+                            tri_alive[*it] = false;
+                        }
+                    }
+                }
+                if (vtx_s[i]<0 || (cameras_[c].getImageWidth() < vtx_s[i]) || vtx_t[i]<0 || (cameras_[c].getImageHeight() < vtx_t[i])){
+                    vtx_seen[i] = SHADOW;
+                }
+            }
+        }
+
+        // STEP 4 : Kill triangles that touch SHADOW vertices
+
+        for (unsigned int i = 0; i < mesh_.getNVtx(); i++) {
+            if (vtx_seen[i] == SHADOW) {
+                for (std::vector<int>::iterator it = vtx2tri[i].begin(); it != vtx2tri[i].end(); it++) {
+                    tri_alive[*it] = false;
+                }
+            }
+        }
+
+        // STEP 5 : Process each living triangle
+
+        // For each triangle, if it is still alive and its area is greater than areamax, update
+        for (unsigned int i = 0; i < mesh_.getNTri(); i++){
+            cameras_[c].tri_ratings_[i] = tri_alive[i] ? tri_area[i] : 0;
+        }
+    }
+
+    delete [] vtx2tri;
+
+    delete [] grid_vtx;
+    delete [] grid_tri;
+}
+
+unsigned int Multitexturer::findPosGrid (float _x, float _min, float _max, unsigned int _resolution) {
+    
+    unsigned int d = (unsigned int) ((_x - _min) / (_max - _min) * _resolution);
+    if (d == _resolution)
+        return _resolution - 1;
+
+    return d;
+}
+
+bool Multitexturer::eclipsedvtx (int _v, int _t, int _c) {
+
+    Vector3f va = mesh_.getVertex(mesh_.getTriangle(_t).getIndex(0));
+    Vector3f vb = mesh_.getVertex(mesh_.getTriangle(_t).getIndex(1));
+    Vector3f vc = mesh_.getVertex(mesh_.getTriangle(_t).getIndex(2));
+
+    vb -= va; 
+    vc -= va;
+
+    Vector3f n = vb.cross(vc);
+
+    Vector3f acam, av;
+
+    acam = cameras_[_c].getPosition();
+    acam -= va;
+
+    av = mesh_.getVertex(_v);
+    av -= va;
+
+    float dpnacam = n.dot(acam);
+    float dpnav   = n.dot(av);
+
+    return ((dpnacam>0 && dpnav<0) || (dpnacam<0 && dpnav>0));
+}
+
+bool Multitexturer::vtx_in_tri (float pt_s, float pt_t, float a_s, float a_t,
+                float  b_s, float  b_t, float c_s, float c_t) {
+
+                    Vector3f A, B, C, P;
+                    A(0) = a_s; A(1) = a_t; A(2) = 0;
+                    B(0) = b_s; B(1) = b_t; B(2) = 0;
+                    C(0) = c_s; C(1) = c_t; C(2) = 0;
+                    P(0) = pt_s; P(1) = pt_t; P(2) = 0;
+
+                    Vector3f v0, v1, v2;
+                    v0 = C; v1 = B; v2 = P;
+                    v0 -= A; 
+                    v1 -= A;
+                    v2 -= A;
+
+                    float invDenom = 1 / (v0(0) * v1(1) - v1(0) * v0(1));
+                    
+                    float u = invDenom * (v1(1) * v2(0) - v1(0) * v2(1));
+                    float v = invDenom * (v0(0) * v2(1) - v0(1) * v2(0));
+
+                    return (u > 0) && (v > 0) && (u + v < 1);
 }
 
 

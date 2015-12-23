@@ -8,6 +8,7 @@
 typedef enum {NONE, COLOR, TEXTURE, POINT} MappingMode;
 typedef enum {NORMAL_VERTEX, NORMAL_BARICENTER, AREA, AREA_OCCL} CamAssignMode;
 //typedef enum {OBJ, TXT, WRL, OBJCAM, PNG, UNKNOWN} Extension;
+typedef enum {LIGHT, SHADOW, DARK} VtxMode;
 typedef enum {MESH, SPLAT} InputMode;
 
 class Multitexturer
@@ -38,14 +39,26 @@ private:
     void readImageList();
 
 
+    // Geometry stuff ***
+    // 
+    unsigned int findPosGrid (float _x, float _min, float _max, unsigned int _resolution);
+    // In mesh_, according to camera c, is vertex v eclipsed by triangle t ?
+    bool eclipsedvtx (int _v, int _t, int _c);
+    // Is the point pt included in the triangle defined by vertices a, b and c ?
+    bool vtx_in_tri (float pt_s, float pt_t, float a_s, float a_t,
+                     float  b_s, float  b_t, float c_s, float c_t); 
+
+
     // Different ways to estimate camera weights:
+    // They all fill the vector tri_ratings_ of each camera
+    // 
     // Uses the normal of the triangle
     void evaluateNormal(); 
     // Uses the projected area of the triangle
     void evaluateArea();
     // Uses the projected area taking into account occlusions
     void evaluateAreaWithOcclusions(unsigned int _resolution);
-    
+
 
 
 
