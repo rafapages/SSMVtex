@@ -373,8 +373,64 @@ void Multitexturer::evaluateCameraRatings(){
 
 void Multitexturer::evaluateNormal(){
 
+    for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
+
+        const Triangle3D thistri = mesh_.getTriangle(i);
+        // Find camera most orthogonal to this triangle
+        Vector3f n = mesh_.getTriangleNormal(i);
+        for (unsigned int j = 0; j < nCam_; j++) {
+            
+            Vector3f mf = mesh_.getVertex(thistri.getIndex(0));
+            if (ca_mode_ == NORMAL_BARICENTER) {
+                mf += mesh_.getVertex(thistri.getIndex(1));
+                mf += mesh_.getVertex(thistri.getIndex(2));
+                mf /= 3;
+            }
+
+            mf -= cameras_[j].getPosition();
+            Vector3f nf = mf.normalized();
+            const float dp = n.dot(nf);
+            // In case the camera is facing back, the rating assigned is 0
+            cameras_[j].tri_ratings_[i] = (dp < 0) ? ( -1 * dp) : 0;
+        }
+    }
 } 
 void Multitexturer::evaluateArea(){
+
+
+    for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
+        
+        const Triangle3D thistri = mesh_.getTriangle(i);
+        Vector3f n = mesh_.getTriangleNormal(i);
+
+        for (unsigned int j = 0; j < nCam_; j++) {
+            
+            cameras_[j].tri_ratings_[i] = 0;
+            // Calculate dot product (dp), in order to discard backfacing
+            // It only matters whether it is positive or negative
+            Vector3f mf = mesh_.getVertex(thistri.getIndex(0));
+            mf -= cameras_[j].getPosition();
+            const float dp = mf.dot(n);
+            
+            if (dp < 0) {
+                // Vertex projections to the image plane
+                std::vector<Vector2f> uv_vtx;
+                for (unsigned int k=0; k<3; k++) {
+                    const Vector3f vc = mesh_.getVertex(thistri.getIndex(k));
+                    Vector2f uv = cameras_[j].transform2uvCoord(vc);
+                    uv_vtx.push_back(uv);
+                }
+
+                const Vector2f v0 = uv_vtx[0];
+                const Vector2f v1 = uv_vtx[1];
+                const Vector2f v2 = uv_vtx[2];
+                float area = 0.5 * ((v0(1)-v2(1)) * (v1(0)-v2(0)) - (v0(0)-v2(0)) * (v1(1)-v2(1)));
+                    //area = (v[0]-v[2]) * (u[1]-u[2]) - (u[0]-u[2]) * (v[1]-v[2]);
+                cameras_[j].tri_ratings_[i] = area;
+
+            } // else -> tri_ratings_ stays 0
+        }
+    }
 
 }
 void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
