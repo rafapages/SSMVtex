@@ -6,6 +6,7 @@ Mesh3D::Mesh3D(){
 
 Mesh3D::Mesh3D(const std::string _fileName){
 
+    nVtx_ = nTri_ = 0;
     this->readOBJ(_fileName);
 
 }
@@ -133,6 +134,5 @@ Vector3f Mesh3D::getTriangleNormal(unsigned int _index) const{
 
     return getTriangleNormal(vertices[0], vertices[1], vertices[2]);
 }
-
 
 

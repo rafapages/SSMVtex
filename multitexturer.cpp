@@ -1,4 +1,6 @@
 #include <list>
+#include <iomanip>
+
 
 #include "multitexturer.h"
 
@@ -294,6 +296,8 @@ void Multitexturer::readInputMesh(){
 
 void Multitexturer::evaluateCameraRatings(){
 
+    std::cerr << "Evaluating camera ratings..." << std::endl;
+
     for (unsigned int c = 0 ; c < nCam_ ; c++){
         cameras_[c].tri_ratings_.resize(mesh_.getNTri());
         cameras_[c].vtx_ratings_.resize(mesh_.getNVtx());
@@ -348,7 +352,6 @@ void Multitexturer::evaluateCameraRatings(){
     // PostProcessAreaOccl ();
     // EvaluateWeightNormal();
 
-
     // At this point, triangle ratings are already known,
     // and their average is calculated to set the vertex ratings 
     for(unsigned int c = 0; c < nCam_; c++){
@@ -374,6 +377,8 @@ void Multitexturer::evaluateCameraRatings(){
         }
     }
 
+    std::cerr << "\rdone!         " << std::endl;
+
 }
 
 void Multitexturer::evaluateNormal(){
@@ -398,6 +403,9 @@ void Multitexturer::evaluateNormal(){
             // In case the camera is facing back, the rating assigned is 0
             cameras_[j].tri_ratings_[i] = (dp < 0) ? ( -1 * dp) : 0;
         }
+
+        std::cerr << "\r" << (float)i/mesh_.getNTri()*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
+
     }
 } 
 
@@ -437,6 +445,8 @@ void Multitexturer::evaluateArea(){
 
             } // else -> tri_ratings_ stays 0
         }
+        std::cerr << "\r" << (float)i/mesh_.getNTri()*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
+
     }
 
 }
@@ -626,6 +636,10 @@ void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
         for (unsigned int i = 0; i < mesh_.getNTri(); i++){
             cameras_[c].tri_ratings_[i] = tri_alive[i] ? tri_area[i] : 0;
         }
+
+        std::cerr << "\r" << (float)c/nCam_*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
+
+
     }
 
     delete [] vtx2tri;

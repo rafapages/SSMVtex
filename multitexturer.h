@@ -2,8 +2,10 @@
 #define MULTITEXTURER_H
 
 #include <stdlib.h>
+#include <map>
 
 #include "camera.h"
+#include "image.h"
 
 typedef enum {NONE, COLOR, TEXTURE, POINT} MappingMode;
 typedef enum {NORMAL_VERTEX, NORMAL_BARICENTER, AREA, AREA_OCCL} CamAssignMode;
@@ -68,6 +70,8 @@ private:
     std::vector<Camera> cameras_;
     std::vector<std::string> imageList_;
     unsigned int nCam_;
+    std::map<std::string, Image> imageCache;
+
 
     // Options - Default values
     CamAssignMode ca_mode_; //  AREA_OCCL

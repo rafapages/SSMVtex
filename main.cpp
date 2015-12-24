@@ -9,6 +9,8 @@ int main(int argc, char *argv[]){
 
     multitex.loadInputData();
 
+    multitex.evaluateCameraRatings();
+
     return 0;
 }
 
