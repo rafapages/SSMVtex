@@ -40,11 +40,11 @@ private:
 
 
     // Geometry stuff ***
-    // 
-    unsigned int findPosGrid (float _x, float _min, float _max, unsigned int _resolution);
     // According to camera c, is vertex v eclipsed by triangle t ?
     bool isVertexEclipsed(int _v, int _t, int _c) const;
-    // Is the point pt included in the triangle defined by vertices a, b and c ?
+    // OJO CUIDADO!!!!
+    unsigned int findPosGrid (float _x, float _min, float _max, unsigned int _resolution);
+    // OJO CUIDADO!!!! Is the point pt included in the triangle defined by vertices a, b and c ?
     bool vtx_in_tri (float pt_s, float pt_t, float a_s, float a_t,
                      float  b_s, float  b_t, float c_s, float c_t); 
 

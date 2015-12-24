@@ -13,6 +13,8 @@ multitex
 *.pri
 *.project
 *.cproject
+*.sublime-project
+*.sublime-workspace
 
 # test files
 test/*
