@@ -41,7 +41,7 @@ Color Image::getColor (unsigned int _row, unsigned int _column) const{
 
 }
 
-Color Image::interpolate (float _row, float _column) const{
+Color Image::interpolate (float _row, float _column, InterpolateMode _mode) const{
 	
 	float c = _column - 0.5;
     float r = _row - 0.5;
@@ -50,42 +50,51 @@ Color Image::interpolate (float _row, float _column) const{
     float delta1 = r - r_base;
     float delta2 = c - c_base;
 
+    Color final;
+    
     // Bilinear
 
-    //Color A, B, C, D;
-    //A = GetColor(r_base, c_base);
-    //B = GetColor(r_base + 1, c_base);
-    //C = GetColor(r_base, c_base + 1);
-    //D = GetColor(r_base + 1, c_base + 1);
+    if (_mode == BILINEAR){
 
-    //return A + (B-A)*delta1 + (C-A)*delta2 + (A+D-B-C)*delta1*delta2;
+    	Color A, B, C, D;
+    	A = getColor(r_base, c_base);
+    	B = getColor(r_base + 1, c_base);
+    	C = getColor(r_base, c_base + 1);
+    	D = getColor(r_base + 1, c_base + 1);
 
+    	final = A + (B-A)*delta1 + (C-A)*delta2 + (A+D-B-C)*delta1*delta2;
+    
+    } else if (_mode == BICUBIC){
     // Bi-Cubic
 
-    Color M, N, O, P;
-    Color A, B, C;
-    Color row_temp [4];
+    	Color M, N, O, P;
+    	Color A, B, C;
+    	Color row_temp [4];
 
-    for (int i = -1; i < 3; i++) {
+    	for (int i = -1; i < 3; i++) {
 
-        M = getColor(r_base + i, c_base - 1);
-        N = getColor(r_base + i, c_base);
-        O = getColor(r_base + i, c_base + 1);
-        P = getColor(r_base + i, c_base + 2);
+    		M = getColor(r_base + i, c_base - 1);
+    		N = getColor(r_base + i, c_base);
+    		O = getColor(r_base + i, c_base + 1);
+    		P = getColor(r_base + i, c_base + 2);
 
-        A = P - O;
-        B = N - M;
-        C = O - M;
+    		A = P - O;
+    		B = N - M;
+    		C = O - M;
 
-        row_temp[i+1] = N + ( ( (A+B) * delta2 - A - B - B) * delta2 + C) * delta2;
+    		row_temp[i+1] = N + ( ( (A+B) * delta2 - A - B - B) * delta2 + C) * delta2;
+    	}
+
+    	A = row_temp[3] - row_temp[2];
+    	B = row_temp[1] - row_temp[0];
+    	C = row_temp[2] - row_temp[0];
+
+    	final = row_temp[1] + ( ( (A+B) * delta1 - A - B - B) * delta1 + C) * delta1;
+    } else {
+    	std::cerr << "Mode " << _mode << " is unknown" << std::endl;
+    	final = Color(0,0,0);
     }
-
-    A = row_temp[3] - row_temp[2];
-    B = row_temp[1] - row_temp[0];
-    C = row_temp[2] - row_temp[0];
-
-    return row_temp[1] + ( ( (A+B) * delta1 - A - B - B) * delta1 + C) * delta1;
-
+    return final;
 }
 
 

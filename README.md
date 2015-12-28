@@ -10,7 +10,7 @@ To fill in..
 
 If you use this software for scientific purposes, please don’t forget to cite us! Thanks!
 
-	@article {CGF:CGF12508,
+	@article {pages2015seamless,
 	author = {Pagés, R. and Berjón, D. and Morán, F. and García, N.},
 	title = {Seamless, Static Multi-Texturing of 3D Meshes},
 	journal = {Computer Graphics Forum},

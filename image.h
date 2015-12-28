@@ -7,6 +7,7 @@
 
 #include "Color.h"
 
+typedef enum {BICUBIC, BILINEAR} InterpolateMode;
 
 class Image{
 
@@ -22,7 +23,7 @@ public:
     
     // gets the color of the specified position (_row, _column)
     // by interpolating its value through bicubic interpolation
-    Color interpolate (float _row, float _column) const;
+    Color interpolate (float _row, float _column, InterpolateMode _mode = BICUBIC) const;
     // void replicateRow(unsigned int _from, unsigned int _to);
 
     unsigned int getWidth () const; // {return width;}
