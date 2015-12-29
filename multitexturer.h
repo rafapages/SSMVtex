@@ -70,6 +70,9 @@ private:
     // Weights the normals with respect to a function with
     // curvature beta_ and cutoff value alpha_
     void evaluateWeightNormal();
+    // 
+    void improveFaceRatings();
+
 
     // Finds a camera in the list and returns its position
     // if the camera is not found, -1 is returned

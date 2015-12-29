@@ -347,7 +347,7 @@ void Multitexturer::evaluateCameraRatings(){
         evaluateWeightNormal();
     }
 
-    // PostProcessAreaOccl ();
+    improveFaceRatings();
     evaluateWeightNormal();
 
     // At this point, triangle ratings are already known,
@@ -707,6 +707,54 @@ void Multitexturer::evaluateWeightNormal(){
     }
 }
 
+void Multitexturer::improveFaceRatings(){
+
+    if (fileFaceCam_.size() == 0){
+        return;
+    }
+
+    const int faceCam = findCameraInList(fileFaceCam_);
+    if (faceCam == -1){
+        return;
+    }
+
+    float face_min_x, face_max_x, face_min_y, face_max_y;
+    bool facefound = findFaceInImage (face_min_x, face_max_x, face_min_y, face_max_y );
+
+    if (!facefound){
+        std::cerr << "Unable to find a face in image " << fileFaceCam_ << std::endl;
+    }
+
+    std::cerr << "Face limits:\n";
+    std::cerr << "\tface_min_x = " << face_min_x << std::endl;
+    std::cerr << "\tface_max_x = " << face_max_x << std::endl;
+    std::cerr << "\tface_min_y = " << face_min_y << std::endl;
+    std::cerr << "\tface_max_y = " << face_max_y << std::endl;
+
+    std::vector<bool> vtx_face (mesh_.getNVtx());
+
+    // We search for vertices lying inside the face area in the image
+    for (unsigned int i = 0; i < mesh_.getNVtx(); i++) {
+        Vector2f v = cameras_[faceCam].transform2uvCoord(mesh_.getVertex(i));
+        const float face_x = v(0);
+        const float face_y = v(1);
+        if ( (face_min_x < face_x) && (face_x < face_max_x) && (face_min_y < face_y) && (face_y < face_max_y) ) {
+            vtx_face[i] = true;
+        } else {
+            vtx_face[i] = false;
+        }
+    }
+
+    // If any of the vertices of a triangle is considered "face vertex"
+    // the rating of the triangle is multipied by 4
+    for (unsigned int t = 0; t < mesh_.getNTri(); t++) {
+        const Triangle3D thistri = mesh_.getTriangle(t);
+        if ( (vtx_face[thistri.getIndex(0)]) || (vtx_face[thistri.getIndex(1)]) || (vtx_face[thistri.getIndex(2)]) ){
+            cameras_[faceCam].tri_ratings_[t] *= 4;
+        }
+    }
+
+}
 
 unsigned int Multitexturer::findPosGrid (float _x, float _min, float _max, unsigned int _resolution) {
     
@@ -788,7 +836,7 @@ bool Multitexturer::findFaceInImage(float& _face_min_x, float& _face_max_x, floa
     if ( fileFaceCam_.size() != 0 ){
         image = cv::imread( fileFaceCam_, 1 );
     } else {
-        std::cerr << ("FaceDetect: could not load face image") << std::endl;
+        std::cerr << "FaceDetect: could not load face image" << std::endl;
         return false;
     }
 
@@ -814,8 +862,9 @@ bool Multitexturer::findFaceInImage(float& _face_min_x, float& _face_max_x, floa
     cascade.detectMultiScale( smallImg, faces, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, cv::Size(30, 30) 
     );
 
-    if (faces.empty())
+    if (faces.empty()){
         return false;
+    }
 
     std::vector<cv::Rect>::iterator itf = faces.begin();
     _face_min_x =  (float)itf->x;
