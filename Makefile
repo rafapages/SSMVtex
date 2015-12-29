@@ -5,7 +5,7 @@ OBJECTS = camera.o main.o mesh2d.o mesh3d.o \
 
 all: multitex
 
-LIBS = -lfreeimageplus
+LIBS = -lfreeimageplus -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_objdetect
 
 multitex: $(OBJECTS)
 	g++ -o multitex $(OBJECTS) $(LIBS)

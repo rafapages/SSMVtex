@@ -1,4 +1,3 @@
-#include <list>
 #include <iomanip>
 
 
@@ -648,6 +647,32 @@ void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
     delete [] grid_tri;
 }
 
+void Multitexturer::smoothRatings(std::list<int> *_tri2tri){
+
+    std::vector<float> tri_rat_filter(mesh_.getNTri());
+
+    for (unsigned int c = 0; c < nCam_; c++) {
+        for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
+            
+            if (cameras_[c].tri_ratings_[i] != 0) {
+
+                // Current vertex included in neighbors
+                float sumneighbors = 0; 
+                for (std::list<int>::iterator it = _tri2tri[i].begin(); it != _tri2tri[i].end(); it++){
+                    sumneighbors += cameras_[c].tri_ratings_[*it];
+                }
+                tri_rat_filter[i] = sumneighbors/_tri2tri[i].size();
+            } else {
+                tri_rat_filter[i] = 0;
+            }
+        }
+
+        cameras_[c].tri_ratings_ = tri_rat_filter;
+    }
+
+}
+
+
 unsigned int Multitexturer::findPosGrid (float _x, float _min, float _max, unsigned int _resolution) {
     
     unsigned int d = (unsigned int) ((_x - _min) / (_max - _min) * _resolution);
@@ -707,5 +732,65 @@ bool Multitexturer::vtx_in_tri (float pt_s, float pt_t, float a_s, float a_t,
 
                     return (u > 0) && (v > 0) && (u + v < 1);
 }
+
+int Multitexturer::findCameraInList(const std::string& _fileName) const{
+
+    for (unsigned int i = 0; i < nCam_; i++){
+        if (imageList_[i].compare(_fileName) == 0){
+            return i;
+        }
+    }
+    std::cerr << "There is no image file " << _fileName << " in the image list." << std::endl;
+    return -1;
+
+}
+
+bool Multitexturer::findFaceInImage(float& _face_min_x, float& _face_max_x, float& _face_min_y, float& _face_max_y){
+
+    std::string cascadeName = "/usr/local/share/OpenCV/haarcascades/haarcascade_frontalface_default.xml";
+
+    cv::Mat image;
+    if ( fileFaceCam_.size() != 0 ){
+        image = cv::imread( fileFaceCam_, 1 );
+    } else {
+        std::cerr << ("FaceDetect: could not load face image") << std::endl;
+        return false;
+    }
+
+    cv::CascadeClassifier cascade;
+    if( !cascade.load( cascadeName ) ) { 
+        std::cerr << "FaceDetect: could not load file with face patterns" << std::endl;
+        return false;
+    }
+
+    double scale = 1;  
+
+    if( image.empty() ){
+        return false;
+    }
+
+    std::vector<cv::Rect> faces;
+    cv::Mat gray;
+    cv::Mat smallImg( cvRound (image.rows/scale), cvRound(image.cols/scale), CV_8UC1 );
+    cv::cvtColor( image, gray, CV_BGR2GRAY );
+    cv::resize( gray, smallImg, smallImg.size(), 0, 0, cv::INTER_LINEAR );
+    cv::equalizeHist( smallImg, smallImg );
+
+    cascade.detectMultiScale( smallImg, faces, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, cv::Size(30, 30) 
+    );
+
+    if (faces.empty())
+        return false;
+
+    std::vector<cv::Rect>::iterator itf = faces.begin();
+    _face_min_x =  (float)itf->x;
+    _face_max_x =  (float)itf->x + itf->width;
+    _face_min_y =  (float)itf->y;
+    _face_max_y =  (float)itf->y + itf->height;
+
+    return true;
+
+}
+
 
 

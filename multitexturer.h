@@ -3,6 +3,10 @@
 
 #include <stdlib.h>
 #include <map>
+#include <list>
+
+#include <opencv/cv.h>
+#include <opencv/highgui.h>
 
 #include "camera.h"
 #include "image.h"
@@ -61,15 +65,31 @@ private:
     void evaluateArea();
     // Uses the projected area taking into account occlusions
     void evaluateAreaWithOcclusions(unsigned int _resolution);
+    // Smoothes the values estimated so transitions are seamless
+    void smoothRatings(std::list<int> *_tri2tri);
+    // 
+    void evaluateWeightNormal(); // <----- TO IMPLEMENT YET....
+
+    // Finds a camera in the list and returns its position
+    // if the camera is not found, -1 is returned
+    int findCameraInList(const std::string& _fileName) const;
+    // Finds a face in the determined image
+    // Returns true if found or false if not
+    // Stores the corners of the box where the face is contained
+    bool findFaceInImage(float& _face_min_x, float& _face_max_x, float& _face_min_y, float& _face_max_y);
 
 
 
-
+    // Input 3D mesh
     Mesh3D mesh_;
 
+    // Input files
     std::vector<Camera> cameras_;
     std::vector<std::string> imageList_;
     unsigned int nCam_;
+
+    // Images are stored in a cache
+    // so there are no memory issues
     std::map<std::string, Image> imageCache;
 
 
