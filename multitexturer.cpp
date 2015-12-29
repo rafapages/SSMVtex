@@ -347,6 +347,7 @@ void Multitexturer::evaluateCameraRatings(){
         evaluateWeightNormal();
     }
 
+    std::cerr << "\n";
     improveFaceRatings();
     evaluateWeightNormal();
 
@@ -723,9 +724,10 @@ void Multitexturer::improveFaceRatings(){
 
     if (!facefound){
         std::cerr << "Unable to find a face in image " << fileFaceCam_ << std::endl;
+        return;
     }
 
-    std::cerr << "Face limits:\n";
+    std::cerr << "\nFace limits:\n";
     std::cerr << "\tface_min_x = " << face_min_x << std::endl;
     std::cerr << "\tface_max_x = " << face_max_x << std::endl;
     std::cerr << "\tface_min_y = " << face_min_y << std::endl;
