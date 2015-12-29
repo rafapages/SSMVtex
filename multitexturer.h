@@ -67,16 +67,18 @@ private:
     void evaluateAreaWithOcclusions(unsigned int _resolution);
     // Smoothes the values estimated so transitions are seamless
     void smoothRatings(std::list<int> *_tri2tri);
-    // 
-    void evaluateWeightNormal(); // <----- TO IMPLEMENT YET....
+    // Weights the normals with respect to a function with
+    // curvature beta_ and cutoff value alpha_
+    void evaluateWeightNormal();
 
     // Finds a camera in the list and returns its position
     // if the camera is not found, -1 is returned
     int findCameraInList(const std::string& _fileName) const;
+
     // Finds a face in the determined image
     // Returns true if found or false if not
     // Stores the corners of the box where the face is contained
-    bool findFaceInImage(float& _face_min_x, float& _face_max_x, float& _face_min_y, float& _face_max_y);
+    bool findFaceInImage(float& _face_min_x, float& _face_max_x, float& _face_min_y, float& _face_max_y) const;
 
 
 

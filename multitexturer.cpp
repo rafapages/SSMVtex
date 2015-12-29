@@ -341,15 +341,14 @@ void Multitexturer::evaluateCameraRatings(){
         tri2tri[i].unique();
     }
 
-    // SmoothRatings(vtx2tri, tri2tri);
-    // EvaluateWeightNormal();
-    // SmoothRatings(vtx2tri, tri2tri);
-    // EvaluateWeightNormal();
-    // SmoothRatings(vtx2tri, tri2tri);
-    // EvaluateWeightNormal();
+    // Normal smoothing and weighting
+    for (unsigned int i = 0; i < 3; i++){
+        smoothRatings(tri2tri);
+        evaluateWeightNormal();
+    }
 
     // PostProcessAreaOccl ();
-    // EvaluateWeightNormal();
+    evaluateWeightNormal();
 
     // At this point, triangle ratings are already known,
     // and their average is calculated to set the vertex ratings 
@@ -390,7 +389,8 @@ void Multitexturer::evaluateNormal(){
         for (unsigned int j = 0; j < nCam_; j++) {
             
             Vector3f mf = mesh_.getVertex(thistri.getIndex(0));
-            if (ca_mode_ == NORMAL_BARICENTER) {
+            // In case we are using the baricenter (centroid) position
+            if (ca_mode_ == NORMAL_BARICENTER) { 
                 mf += mesh_.getVertex(thistri.getIndex(1));
                 mf += mesh_.getVertex(thistri.getIndex(2));
                 mf /= 3;
@@ -672,6 +672,41 @@ void Multitexturer::smoothRatings(std::list<int> *_tri2tri){
 
 }
 
+void Multitexturer::evaluateWeightNormal(){
+
+    const float invalpha = 1/alpha_;
+    const float invoneminusalpha = 1 / (1-alpha_);
+
+    for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
+
+        // Find camera most orthogonal to this triangle
+        Vector3f n = mesh_.getTriangleNormal(i);
+        const Triangle3D thistri = mesh_.getTriangle(i);
+        for (unsigned int j = 0; j < nCam_; j++) {
+            // We calculate the baricenter (centroid) of the triangle
+            Vector3f mf = mesh_.getVertex(thistri.getIndex(0));
+            mf += mesh_.getVertex(thistri.getIndex(1));
+            mf += mesh_.getVertex(thistri.getIndex(2));
+            mf /= 3;
+
+            // We check the position of the camera with respect to the triangle
+            mf -= cameras_[j].getPosition();
+            Vector3f nf = mf.normalized();
+            float dp = n.dot(nf);
+            dp *= -1;
+
+
+            if (dp <= 0){
+                cameras_[j].tri_ratings_[i] = 0;
+            } else if (dp < alpha_){
+                cameras_[j].tri_ratings_[i]  *= 0.5 * pow(dp * invalpha, beta_);
+            } else {
+                cameras_[j].tri_ratings_[i]  *= 1 - 0.5 * pow( (1-dp) * invoneminusalpha, beta_);
+            }
+        }
+    }
+}
+
 
 unsigned int Multitexturer::findPosGrid (float _x, float _min, float _max, unsigned int _resolution) {
     
@@ -745,7 +780,7 @@ int Multitexturer::findCameraInList(const std::string& _fileName) const{
 
 }
 
-bool Multitexturer::findFaceInImage(float& _face_min_x, float& _face_max_x, float& _face_min_y, float& _face_max_y){
+bool Multitexturer::findFaceInImage(float& _face_min_x, float& _face_max_x, float& _face_min_y, float& _face_max_y) const {
 
     std::string cascadeName = "/usr/local/share/OpenCV/haarcascades/haarcascade_frontalface_default.xml";
 
