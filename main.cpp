@@ -11,6 +11,10 @@ int main(int argc, char *argv[]){
 
     multitex.evaluateCameraRatings();
 
+    multitex.meshUnwrap();
+    multitex.chartPacking();
+
+
     return 0;
 }
 

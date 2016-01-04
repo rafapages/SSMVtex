@@ -177,6 +177,100 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
 
 }
 
+void Multitexturer::evaluateCameraRatings(){
+
+    std::cerr << "Evaluating camera ratings..." << std::endl;
+
+    for (unsigned int c = 0 ; c < nCam_ ; c++){
+        cameras_[c].tri_ratings_.resize(mesh_.getNTri());
+        cameras_[c].vtx_ratings_.resize(mesh_.getNVtx());
+    }
+
+    // This step will calculate every camera-triangle ratings
+    // using the chosen system.
+    switch (ca_mode_) {
+    case NORMAL_VERTEX:
+    case NORMAL_BARICENTER:
+        evaluateNormal();
+        break;
+    case AREA:
+        evaluateArea();
+        break;
+    case AREA_OCCL:
+        evaluateAreaWithOcclusions(40);
+        break;
+    }
+
+    // Create vtx2tri and tri2tri
+    // vtx2vtx is a vector containing every direct neighbor for each vertex
+    std::vector<int> *vtx2tri = new std::vector<int> [mesh_.getNVtx()];
+    for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
+        for (unsigned int j = 0; j < 3; j++)
+            // vtx2tri[tri[i].i[j]].push_back(i);
+            vtx2tri[mesh_.getTriangle(i).getIndex(j)].push_back(i);
+    }
+    // tri2tri is a list containing every neigbor of eac triangle
+    std::list<int> *tri2tri = new std::list<int> [mesh_.getNTri()];
+    for (unsigned int i = 0; i < mesh_.getNVtx(); i++) {
+        for (std::vector<int>::iterator ita = vtx2tri[i].begin(); ita != vtx2tri[i].end(); ++ita) {
+            for (std::vector<int>::iterator itb = vtx2tri[i].begin(); itb != vtx2tri[i].end(); ++itb) {
+                tri2tri[*ita].push_back(*itb);
+                tri2tri[*itb].push_back(*ita);
+            }
+        }
+    }
+
+    for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
+        tri2tri[i].sort();
+        tri2tri[i].unique();
+    }
+
+    // Normal smoothing and weighting
+    for (unsigned int i = 0; i < 3; i++){
+        smoothRatings(tri2tri);
+        evaluateWeightNormal();
+    }
+
+    std::cerr << "\n";
+    improveFaceRatings();
+    evaluateWeightNormal();
+
+    // At this point, triangle ratings are already known,
+    // and their average is calculated to set the vertex ratings 
+    for(unsigned int c = 0; c < nCam_; c++){
+
+        for(unsigned int i = 0; i < mesh_.getNVtx() ; i++){
+            std::vector<int>::iterator it;
+            float totrating = 0.0;
+            int numTri = 0;
+            for (it = vtx2tri[i].begin(); it != vtx2tri[i].end(); ++it){
+                if (cameras_[c].tri_ratings_[*it] == 0.0){
+                    totrating = 0.0;
+                    break;
+                }
+                float rating = cameras_[c].tri_ratings_[*it];
+                totrating += rating;
+                numTri++;
+            }
+            if (numTri == 0){
+                cameras_[c].vtx_ratings_[i] = 0;
+            } else {
+                cameras_[c].vtx_ratings_[i] = totrating/numTri;
+            }
+        }
+    }
+
+    std::cerr << "\rdone!         " << std::endl;
+
+}
+
+void Multitexturer::meshUnwrap(){
+
+}
+
+void Multitexturer::chartPacking(){
+
+}
 void Multitexturer::printHelp(){    
     std::string help[] = {
         "",
@@ -293,92 +387,7 @@ void Multitexturer::readInputMesh(){
 
 }
 
-void Multitexturer::evaluateCameraRatings(){
 
-    std::cerr << "Evaluating camera ratings..." << std::endl;
-
-    for (unsigned int c = 0 ; c < nCam_ ; c++){
-        cameras_[c].tri_ratings_.resize(mesh_.getNTri());
-        cameras_[c].vtx_ratings_.resize(mesh_.getNVtx());
-    }
-
-    // This step will calculate every camera-triangle ratings
-    // using the chosen system.
-    switch (ca_mode_) {
-    case NORMAL_VERTEX:
-    case NORMAL_BARICENTER:
-        evaluateNormal();
-        break;
-    case AREA:
-        evaluateArea();
-        break;
-    case AREA_OCCL:
-        evaluateAreaWithOcclusions(40);
-        break;
-    }
-
-    // Create vtx2tri and tri2tri
-    // vtx2vtx is a vector containing every direct neighbor for each vertex
-    std::vector<int> *vtx2tri = new std::vector<int> [mesh_.getNVtx()];
-    for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
-        for (unsigned int j = 0; j < 3; j++)
-            // vtx2tri[tri[i].i[j]].push_back(i);
-            vtx2tri[mesh_.getTriangle(i).getIndex(j)].push_back(i);
-    }
-    // tri2tri is a list containing every neigbor of eac triangle
-    std::list<int> *tri2tri = new std::list<int> [mesh_.getNTri()];
-    for (unsigned int i = 0; i < mesh_.getNVtx(); i++) {
-        for (std::vector<int>::iterator ita = vtx2tri[i].begin(); ita != vtx2tri[i].end(); ++ita) {
-            for (std::vector<int>::iterator itb = vtx2tri[i].begin(); itb != vtx2tri[i].end(); ++itb) {
-                tri2tri[*ita].push_back(*itb);
-                tri2tri[*itb].push_back(*ita);
-            }
-        }
-    }
-
-    for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
-        tri2tri[i].sort();
-        tri2tri[i].unique();
-    }
-
-    // Normal smoothing and weighting
-    for (unsigned int i = 0; i < 3; i++){
-        smoothRatings(tri2tri);
-        evaluateWeightNormal();
-    }
-
-    std::cerr << "\n";
-    improveFaceRatings();
-    evaluateWeightNormal();
-
-    // At this point, triangle ratings are already known,
-    // and their average is calculated to set the vertex ratings 
-    for(unsigned int c = 0; c < nCam_; c++){
-
-        for(unsigned int i = 0; i < mesh_.getNVtx() ; i++){
-            std::vector<int>::iterator it;
-            float totrating = 0.0;
-            int numTri = 0;
-            for (it = vtx2tri[i].begin(); it != vtx2tri[i].end(); ++it){
-                if (cameras_[c].tri_ratings_[*it] == 0.0){
-                    totrating = 0.0;
-                    break;
-                }
-                float rating = cameras_[c].tri_ratings_[*it];
-                totrating += rating;
-                numTri++;
-            }
-            if (numTri == 0){
-                cameras_[c].vtx_ratings_[i] = 0;
-            } else {
-                cameras_[c].vtx_ratings_[i] = totrating/numTri;
-            }
-        }
-    }
-
-    std::cerr << "\rdone!         " << std::endl;
-
-}
 
 void Multitexturer::evaluateNormal(){
 

@@ -10,6 +10,7 @@
 
 #include "camera.h"
 #include "image.h"
+#include "chart.h"
 
 typedef enum {NONE, COLOR, TEXTURE, POINT} MappingMode;
 typedef enum {NORMAL_VERTEX, NORMAL_BARICENTER, AREA, AREA_OCCL} CamAssignMode;
@@ -33,6 +34,15 @@ public:
 
     // Evaluate how each cameras sees each triangle
     void evaluateCameraRatings();
+
+    // Turns a 3D mesh into a set of 2D charts that
+    // are stored in the std::vector charts_
+    void meshUnwrap();
+
+    // Rearranges the 2D charts stored in charts_
+    // so they are efficently packed
+    void chartPacking();
+
 
 
 private:
@@ -97,6 +107,8 @@ private:
     // so there are no memory issues
     std::map<std::string, Image> imageCache;
 
+    // Group of 2D charts created by unwrapping the 3D mesh
+    std::vector<Chart> charts_;
 
     // Options - Default values
     CamAssignMode ca_mode_; //  AREA_OCCL
