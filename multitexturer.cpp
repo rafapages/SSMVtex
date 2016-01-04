@@ -399,7 +399,7 @@ void Multitexturer::evaluateNormal(){
 
     for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
 
-        const Triangle3D thistri = mesh_.getTriangle(i);
+        const Triangle thistri = mesh_.getTriangle(i);
         // Find camera most orthogonal to this triangle
         Vector3f n = mesh_.getTriangleNormal(i);
         for (unsigned int j = 0; j < nCam_; j++) {
@@ -430,7 +430,7 @@ void Multitexturer::evaluateArea(){
 
     for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
         
-        const Triangle3D thistri = mesh_.getTriangle(i);
+        const Triangle thistri = mesh_.getTriangle(i);
         Vector3f n = mesh_.getTriangleNormal(i);
 
         for (unsigned int j = 0; j < nCam_; j++) {
@@ -527,7 +527,7 @@ void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
         // Calculate the area of each triangle and kill triangles
         // with a negative area
         for (unsigned int j = 0; j < mesh_.getNTri(); j++) {
-            const Triangle3D vl = mesh_.getTriangle(j);
+            const Triangle vl = mesh_.getTriangle(j);
             tri_area[j] = (vtx_t[vl.getIndex(0)]-vtx_t[vl.getIndex(2)]) * (vtx_s[vl.getIndex(1)]-vtx_s[vl.getIndex(2)]) - (vtx_s[vl.getIndex(0)]-vtx_s[vl.getIndex(2)]) * (vtx_t[vl.getIndex(1)]-vtx_t[vl.getIndex(2)]);
             tri_alive[j] = tri_frontfacing[j] = tri_area[j] > 0;
         }
@@ -592,7 +592,7 @@ void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
         for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
             if (tri_alive[i]) {
                 // unsigned int * vl = tri[i].i;
-                const Triangle3D vl = mesh_.getTriangle(i);
+                const Triangle vl = mesh_.getTriangle(i);
                 unsigned int min_pos_grid_s = findPosGrid(vtx_s[vl.getIndex(0)], min_s, max_s, grid_s_resol);
                 unsigned int min_pos_grid_t = findPosGrid(vtx_t[vl.getIndex(0)], min_t, max_t, grid_t_resol);
                 unsigned int max_pos_grid_s = min_pos_grid_s;
@@ -619,7 +619,7 @@ void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
                 std::vector<int> candidates = grid_tri[vtx_pos_grid_s[i]*grid_s_resol + vtx_pos_grid_t[i]];
                 for (std::vector<int>::iterator it = candidates.begin(); it != candidates.end(); it++) {
                     // unsigned int * vl = tri[*it].i;
-                    const Triangle3D vl = mesh_.getTriangle(*it);
+                    const Triangle vl = mesh_.getTriangle(*it);
                     if (vtx_in_tri(vtx_s[i], vtx_t[i], vtx_s[vl.getIndex(0)], vtx_t[vl.getIndex(0)], vtx_s[vl.getIndex(1)], vtx_t[vl.getIndex(1)], vtx_s[vl.getIndex(2)], vtx_t[vl.getIndex(2)])) {
                         // Check if triangle vertex is eclipsed
                         if (isVertexEclipsed(i, *it, c)){
@@ -697,7 +697,7 @@ void Multitexturer::evaluateWeightNormal(){
 
         // Find camera most orthogonal to this triangle
         Vector3f n = mesh_.getTriangleNormal(i);
-        const Triangle3D thistri = mesh_.getTriangle(i);
+        const Triangle thistri = mesh_.getTriangle(i);
         for (unsigned int j = 0; j < nCam_; j++) {
             // We calculate the baricenter (centroid) of the triangle
             Vector3f mf = mesh_.getVertex(thistri.getIndex(0));
@@ -765,7 +765,7 @@ void Multitexturer::improveFaceRatings(){
     // If any of the vertices of a triangle is considered "face vertex"
     // the rating of the triangle is multipied by 4
     for (unsigned int t = 0; t < mesh_.getNTri(); t++) {
-        const Triangle3D thistri = mesh_.getTriangle(t);
+        const Triangle thistri = mesh_.getTriangle(t);
         if ( (vtx_face[thistri.getIndex(0)]) || (vtx_face[thistri.getIndex(1)]) || (vtx_face[thistri.getIndex(2)]) ){
             cameras_[faceCam].tri_ratings_[t] *= 4;
         }

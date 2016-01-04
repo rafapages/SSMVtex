@@ -64,8 +64,8 @@ void Unwrapper::unwrapSplats(){
     //     unw.m_.addVector(vp3, mesh_.getTriangle(i+1).getIndex(1));
 
     //     const float triArea = (vp1 - vp0).norm() * (vp2 - vp1).norm() * 0.5;
-        
-        
+
+
     //     // vp0.orig3D = tri[i].i[0];
     //     // vp1.orig3D = tri[i].i[1];
     //     // vp2.orig3D = tri[i].i[2];
@@ -160,7 +160,7 @@ void Unwrapper::findTriangleNeighbors(std::vector<unsigned int>& _adj_count, std
 	// which triangles contain each vertex
     std::vector<int> *vtx2tri = new std::vector<int> [mesh_.getNVtx()];
     for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
-    	const Triangle3D thistri = mesh_.getTriangle(i);
+    	const Triangle thistri = mesh_.getTriangle(i);
         for (unsigned int j = 0; j < 3; j++){
             vtx2tri[thistri.getIndex(j)].push_back(i);
         }

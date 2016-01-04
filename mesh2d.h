@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "triangle3d.h"
+#include "triangle.h"
 
 class Mesh2D
 {
@@ -13,11 +13,11 @@ public:
 
     // Data access
     Vector2f getVertex(unsigned int _index) const;
-    Triangle3D getTriangle(unsigned int _index) const;
+    Triangle getTriangle(unsigned int _index) const;
     void addVector (const Vector2f& _vector);
     void addVector (const Vector2f& _vector, unsigned int _3dindex);
-    void addTriangle(const Triangle3D& _triangle);
-    void addTriangle(const Triangle3D& _triangle, unsigned int _3dindex);
+    void addTriangle(const Triangle& _triangle);
+    void addTriangle(const Triangle& _triangle, unsigned int _3dindex);
     unsigned int getNVtx() const;
     unsigned int getNTri() const;
 
@@ -30,7 +30,7 @@ public:
 private:
 
 	std::vector<Vector2f> vtx_;
-	std::vector<Triangle3D> tri_;
+	std::vector<Triangle> tri_;
 	unsigned int nVtx_, nTri_;
 
     // Correspondance of each vertex with its 3D version

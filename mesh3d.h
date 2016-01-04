@@ -5,14 +5,14 @@
 #include <fstream>
 #include <vector>
 
-#include "triangle3d.h"
+#include "triangle.h"
 
 class Mesh3D {
 
  public:
     Mesh3D();
     Mesh3D(const std::string _fileName); // Currently only reads OBJs
-    Mesh3D(const std::vector<Vector3f>& _vtx, const std::vector<Triangle3D> _tri);
+    Mesh3D(const std::vector<Vector3f>& _vtx, const std::vector<Triangle> _tri);
     ~Mesh3D();
 
     // I/O
@@ -21,9 +21,9 @@ class Mesh3D {
 
     // Data access
     Vector3f getVertex(unsigned int _index) const;
-    Triangle3D getTriangle(unsigned int _index) const;
+    Triangle getTriangle(unsigned int _index) const;
     void addVector(const Vector3f& _vector);
-    void addTriangle(const Triangle3D& _triangle);
+    void addTriangle(const Triangle& _triangle);
     unsigned int getNVtx() const;
     unsigned int getNTri() const;
 
@@ -34,7 +34,7 @@ class Mesh3D {
  private:
 
     std::vector<Vector3f> vtx_;
-    std::vector<Triangle3D> tri_;
+    std::vector<Triangle> tri_;
     unsigned int nVtx_, nTri_;
 
 };

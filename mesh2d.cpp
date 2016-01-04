@@ -20,13 +20,13 @@ void Mesh2D::addVector(const Vector2f& _vector, unsigned int _3dindex){
     nVtx_++;
 }
 
-void Mesh2D::addTriangle(const Triangle3D& _triangle){
+void Mesh2D::addTriangle(const Triangle& _triangle){
     tri_.push_back(_triangle);
     origTri_.push_back(-1);
     nTri_++;
 }
 
-void Mesh2D::addTriangle(const Triangle3D& _triangle, unsigned int _3dindex){
+void Mesh2D::addTriangle(const Triangle& _triangle, unsigned int _3dindex){
     tri_.push_back(_triangle);
     origTri_.push_back(_3dindex);
     nTri_++;
@@ -44,7 +44,7 @@ Vector2f Mesh2D::getVertex(unsigned int _index) const {
     return vtx_[_index];
 }
 
-Triangle3D Mesh2D::getTriangle(unsigned int _index) const {
+Triangle Mesh2D::getTriangle(unsigned int _index) const {
     return tri_[_index];
 }
 

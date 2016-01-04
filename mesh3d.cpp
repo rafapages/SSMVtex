@@ -11,7 +11,7 @@ Mesh3D::Mesh3D(const std::string _fileName){
 
 }
 
-Mesh3D::Mesh3D(const std::vector<Vector3f> &_vtx, const std::vector<Triangle3D> _tri){
+Mesh3D::Mesh3D(const std::vector<Vector3f> &_vtx, const std::vector<Triangle> _tri){
     vtx_ = _vtx;
     tri_ = _tri;
     nVtx_ = _vtx.size();
@@ -45,7 +45,7 @@ void Mesh3D::readOBJ(const std::string& _fileName){
             } else if (initline.compare("f ") == 0) {
                 unsigned int a, b, c;
                 sscanf(line.c_str(), "f %d %d %d", &a, &b, &c);
-                this->addTriangle(Triangle3D(a-1,b-1,c-1)); // OBJ indices start at 1
+                this->addTriangle(Triangle(a-1,b-1,c-1)); // OBJ indices start at 1
             } else {
                 // Do nothing by now...
             }
@@ -97,7 +97,7 @@ void Mesh3D::addVector(const Vector3f& _vector){
     nVtx_++;
 }
 
-void Mesh3D::addTriangle(const Triangle3D& _triangle){
+void Mesh3D::addTriangle(const Triangle& _triangle){
     tri_.push_back(_triangle);
     nTri_++;
 }
@@ -114,7 +114,7 @@ Vector3f Mesh3D::getVertex(unsigned int _index) const {
     return vtx_[_index];
 }
 
-Triangle3D Mesh3D::getTriangle(unsigned int _index) const {
+Triangle Mesh3D::getTriangle(unsigned int _index) const {
     return tri_[_index];
 }
 

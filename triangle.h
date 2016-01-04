@@ -1,18 +1,18 @@
-#ifndef TRIANGLE3D_H
-#define TRIANGLE3D_H
+#ifndef TRIANGLE_H
+#define TRIANGLE_H
 
 #include <eigen3/Eigen/Dense>
 #include <iostream>
 
 using namespace Eigen;
 
-class Triangle3D{
+class Triangle{
 
  public:
 
-    Triangle3D();
-    Triangle3D(unsigned int _i0, unsigned int _i1, unsigned int _i2);
-    ~Triangle3D();
+    Triangle();
+    Triangle(unsigned int _i0, unsigned int _i1, unsigned int _i2);
+    ~Triangle();
 
     // Data access
     Vector3i getIndices() const;
@@ -25,4 +25,4 @@ private:
     Vector3d u_,v_; //double u[3], v[3]; // Texture coords of vertices (default 0)
 };
 
-#endif // TRIANGLE3D_H
+#endif // TRIANGLE_H
