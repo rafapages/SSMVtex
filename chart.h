@@ -26,11 +26,13 @@ public:
 
 	void addOffset2BoundingBox(float _offset);
 
+	
+	std::list<Edge> perimeter_;
+	Mesh2D m_;
+
 
 private:
 
-	std::list<Edge> perimeter_;
-	Mesh2D m_;
 
 	int nEdgePos;
 	int order;

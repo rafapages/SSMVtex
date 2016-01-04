@@ -266,6 +266,10 @@ void Multitexturer::evaluateCameraRatings(){
 
 void Multitexturer::meshUnwrap(){
 
+    Unwrapper unwrapper;
+    unwrapper.setInputMesh(mesh_);
+    unwrapper.unwrapMesh();
+
 }
 
 void Multitexturer::chartPacking(){

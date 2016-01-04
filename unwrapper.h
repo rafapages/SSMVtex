@@ -15,8 +15,14 @@ public:
 	void setInputMesh(const Mesh3D& _mesh);
 	void getCharts(std::vector<Chart>& _charts); // OJO CON EL TEMA REFERNCIAS
 
-	void unwrap();
-	
+	// Transforms the 3D mesh into a group
+	// of 2D charts
+	void unwrapMesh();
+
+	// Transforms the 3D splats into individual
+	// 2D charts that can get packed later
+	void unwrapSplats();
+
 
 private:
 
