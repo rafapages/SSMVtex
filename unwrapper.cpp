@@ -21,7 +21,7 @@ void Unwrapper::unwrap(){
 
 	findTriangleNeighbors(adj_count, triNeighbor);
 
- 
+
 }
 
 void Unwrapper::findTriangleNeighbors(std::vector<unsigned int>& _adj_count, std::vector<int>& _triNeighbor){

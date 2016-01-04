@@ -23,7 +23,6 @@ private:
     // IMPORTANT!!! CHECK IF cam_ IS STILL USED AT ALL
     int cam_; // -1 : Not assigned (default); -2 : new texture; 0+ : old texture
     Vector3d u_,v_; //double u[3], v[3]; // Texture coords of vertices (default 0)
-
 };
 
 #endif // TRIANGLE3D_H

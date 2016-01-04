@@ -60,7 +60,7 @@ void Mesh3D::readOBJ(const std::string& _fileName){
 
     std::cerr << "3D Mesh file " << _fileName << " read with " << nVtx_ << " vertices and " << nTri_ << " triangles." << std::endl;
     meshFile.close();
-}
+}   
 
 void Mesh3D::writeOBJ(const std::string& _fileName){
 
