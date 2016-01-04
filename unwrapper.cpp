@@ -41,10 +41,10 @@ void Unwrapper::findTriangleNeighbors(std::vector<unsigned int>& _adj_count, std
 
         for(; ita != vtx2tri[i].end(); ita++){
             std::vector<int>::iterator itb = vtx2tri[i].begin();
-            
+
             for(; itb != vtx2tri[i].end(); itb++){
 
-            	// in case both iterators are pointing to the same vertex
+            	// in case both iterators are pointing to the same triangle
                 if ((*ita)==(*itb))
                     continue;
 
@@ -60,8 +60,8 @@ void Unwrapper::findTriangleNeighbors(std::vector<unsigned int>& _adj_count, std
                 vb2 = mesh_.getTriangle(*itb).getIndex(2);
 
                 if ((((va0==vb0)||(va0==vb1)||(va0==vb2))&&((va1==vb0)||(va1==vb1)||(va1==vb2)))||
-                        (((va0==vb0)||(va0==vb1)||(va0==vb2))&&((va2==vb0)||(va2==vb1)||(va2==vb2)))||
-                        (((va2==vb0)||(va2==vb1)||(va2==vb2))&&((va1==vb0)||(va1==vb1)||(va1==vb2)))) {
+                    (((va0==vb0)||(va0==vb1)||(va0==vb2))&&((va2==vb0)||(va2==vb1)||(va2==vb2)))||
+                    (((va2==vb0)||(va2==vb1)||(va2==vb2))&&((va1==vb0)||(va1==vb1)||(va1==vb2)))) {
 
                     // case it-A
                     switch (_adj_count[*ita]){

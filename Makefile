@@ -1,6 +1,7 @@
 OBJECTS = camera.o main.o mesh2d.o mesh3d.o \
 		multitexturer.o triangle2d.o triangle3d.o \
-		color.o image.o chart.o unwrapper.o
+		color.o image.o chart.o unwrapper.o \
+		packer.o
 
 
 all: multitex

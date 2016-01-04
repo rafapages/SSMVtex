@@ -10,7 +10,8 @@
 
 #include "camera.h"
 #include "image.h"
-#include "chart.h"
+#include "unwrapper.h"
+#include "packer.h"
 
 typedef enum {NONE, COLOR, TEXTURE, POINT} MappingMode;
 typedef enum {NORMAL_VERTEX, NORMAL_BARICENTER, AREA, AREA_OCCL} CamAssignMode;
