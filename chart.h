@@ -24,7 +24,24 @@ public:
 
 	Chart();
 
+	// Data access
+	void setNEdgePos(int _value);
+	void setOrder(int _value);
+	int getNEdgePos() const;
+	int getOrder() const;
+
+	// Displace chart
+	void displace(const Vector2f& _v);
+	// Rotate chart 90º anti-clockwise
+	void rotate();
+
+	// Chart dimensions
+	float getHeight() const;
+	float getWidth() const;
+
+
 	void addOffset2BoundingBox(float _offset);
+
 
 	
 	std::list<Edge> perimeter_;
@@ -34,10 +51,8 @@ public:
 private:
 
 
-	int nEdgePos;
-	int order;
-
-
+	int nEdgePos_;
+	int order_;
 
 };
 

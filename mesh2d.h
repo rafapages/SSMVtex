@@ -20,14 +20,28 @@ public:
     void addTriangle(const Triangle& _triangle, unsigned int _3dindex);
     unsigned int getNVtx() const;
     unsigned int getNTri() const;
+    float getTriArea() const;
+    Vector2f getBBoxMin() const;
+    Vector2f getBBoxMax() const;
 
+    // Original 3D data info
     void setOrigVtx(unsigned int _2dindex, unsigned int _3dindex);
     void setOrigTri(unsigned int _2dindex, unsigned int _3dindex);
     int getOrigVtx(unsigned int _index) const;
     int getOrigTri(unsigned int _index) const;
 
+    // Calculates the area of the triangle given its index
+    float triangleArea(unsigned int _index) const;
+    // Calculates the area of the triangle given its vertices indices
+    float triangleArea(unsigned int _v0, unsigned int _v1, unsigned int _v2) const;
+
+    // Displaces the whole mesh given a vector
+    void displaceMesh(const Vector2f& _v);
+    // Rotates the whole mesh 90º anti-clockwise
+    void rotateMesh();
 
 private:
+
 
 	std::vector<Vector2f> vtx_;
 	std::vector<Triangle> tri_;
@@ -37,6 +51,12 @@ private:
     std::vector<int> origVtx_;
     // Correspondance of each triangle with its 3D version
     std::vector<int> origTri_;
+
+    // Total area of the triangles of the mesh
+    float triarea_;
+
+    // Vector defining the current bounding box of the mesh
+    Vector2f bBoxMin_, bBoxMax_;
 
 };
 
