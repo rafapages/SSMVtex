@@ -41,6 +41,6 @@ void Chart::rotate(){
 }
 
 void Chart::addOffset2BoundingBox(float _offset){
-
+	m_.addOffset2BoundingBox(_offset);
 }
 

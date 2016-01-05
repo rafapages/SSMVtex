@@ -39,6 +39,8 @@ public:
     void displaceMesh(const Vector2f& _v);
     // Rotates the whole mesh 90º anti-clockwise
     void rotateMesh();
+    // Add offset to the bounding box
+    void addOffset2BoundingBox(float _offset);
 
 private:
 

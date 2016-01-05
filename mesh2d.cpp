@@ -148,3 +148,15 @@ void Mesh2D::rotateMesh(){
 	displaceMesh(origin - bBoxMin_);
 }
 
+void Mesh2D::addOffset2BoundingBox(float _offset){
+
+	const Vector2f off(_offset, _offset);
+	const Vector2f aux = bBoxMax_ + off;
+	bBoxMax_ = aux;
+
+	std::vector<Vector2f>::iterator it;
+	for (it = vtx_.begin(); it != vtx_.end(); ++it){
+		(*it) = (*it) + off * 0.5;
+	}
+}
+

@@ -20,8 +20,6 @@ void Unwrapper::unwrapMesh(){
 	std::vector<int> triNeighbor(mesh_.getNTri()*3);
 
 	findTriangleNeighbors(adj_count, triNeighbor);
-
-
 }
 
 void Unwrapper::unwrapSplats(){
@@ -56,19 +54,6 @@ void Unwrapper::unwrapSplats(){
         unw.m_.addTriangle(Triangle(0,1,2), i);
         unw.m_.addTriangle(Triangle(2,3,0), i+1);
 
-        // vp0.orig3D = tri[i].i[0];
-        // vp1.orig3D = tri[i].i[1];
-        // vp2.orig3D = tri[i].i[2];
-        // vp3.orig3D = tri[i+1].i[1];
-
-        // unw.m.AddVertex(vp0);
-        // unw.m.AddVertex(vp1);
-        // unw.m.AddVertex(vp2);
-        // unw.m.AddVertex(vp3);
-        // float triArea = (vp1 - vp0).Magnitude() * (vp2 - vp1).Magnitude() * 0.5;
-        // unw.m.AddTriangle(0,1,2, triArea, i);
-        // unw.m.AddTriangle(2,3,0,triArea, i+1);
-
         // Now we update the 4 Edges, though in this case they are unnecessary...
         Edge e1, e2, e3, e4;
         int date = 0; // date increases every time we add an edge to the perimeter
@@ -77,11 +62,6 @@ void Unwrapper::unwrapSplats(){
         e1.b = thistri.getIndex(1);
         e1.pa = unw.m_.getTriangle(0).getIndex(0);
         e1.pb = unw.m_.getTriangle(0).getIndex(1);
-
-        // e1.a = tri[i].i[0];
-        // e1.b = tri[i].i[1];
-        // e1.pa = unw.m.GetTriVtxIndex(0,0);
-        // e1.pb = unw.m.GetTriVtxIndex(0,1);
         e1.birth = date++;
         e1.Present = i;
         e1.Candidate = -1;
@@ -91,10 +71,6 @@ void Unwrapper::unwrapSplats(){
         e2.b = thistri.getIndex(2);
         e2.pa = unw.m_.getTriangle(0).getIndex(1);
         e2.pb = unw.m_.getTriangle(0).getIndex(2);
-        // e2.a = tri[i].i[1];
-        // e2.b = tri[i].i[2];
-        // e2.pa = unw.m.GetTriVtxIndex(0,1);
-        // e2.pb = unw.m.GetTriVtxIndex(0,2);
         e2.birth = date++;
         e2.Present = i;
         e2.Candidate = -1;
@@ -104,10 +80,6 @@ void Unwrapper::unwrapSplats(){
         e3.b = mesh_.getTriangle(i+1).getIndex(1);
         e3.pa = unw.m_.getTriangle(1).getIndex(0);
         e3.pb = unw.m_.getTriangle(1).getIndex(1);
-        // e3.a = tri[i].i[2];
-        // e3.b = tri[i+1].i[1];
-        // e3.pa = unw.m.GetTriVtxIndex(1,0);
-        // e3.pb = unw.m.GetTriVtxIndex(1,1);
         e3.birth = date++;
         e3.Present = i+1;
         e3.Candidate = -1;
@@ -117,10 +89,6 @@ void Unwrapper::unwrapSplats(){
         e4.b = thistri.getIndex(0);
         e4.pa = unw.m_.getTriangle(1).getIndex(1);
         e4.pb = unw.m_.getTriangle(1).getIndex(2);
-        // e4.a = tri[i+1].i[1];
-        // e4.b = tri[i].i[0];
-        // e4.pa = unw.m.GetTriVtxIndex(1,1);
-        // e4.pb = unw.m.GetTriVtxIndex(1,2);
         e4.birth = date++;
         e4.Present = i+1;
         e4.Candidate = -1;
@@ -147,7 +115,6 @@ void Unwrapper::unwrapSplats(){
     float maxWidth = 0.0;
     for(ito = charts_.begin(); ito != charts_.end(); ito++){
         float area = (*ito).getHeight() * (*ito).getWidth();
-        // float area = (*ito).m_.GetHeight()*(*ito).m.GetWidth();
         if (area > maxArea){
             maxArea = area;
             maxWidth = (*ito).getWidth();
