@@ -272,8 +272,13 @@ void Multitexturer::meshUnwrap(){
 
 }
 
-void Multitexturer::chartPacking(){
+void
+ Multitexturer::chartPacking(){
+    Packer packer;
+    packer.setInputCharts(charts_);
+    packer.pack();
 
+    packer.getCharts(charts_);
 }
 
 

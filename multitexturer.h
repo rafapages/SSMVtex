@@ -111,6 +111,12 @@ private:
     // Group of 2D charts created by unwrapping the 3D mesh
     std::vector<Chart> charts_;
 
+    // Dimensions of the final image:
+    // Real-scale floating point coordinates
+    float realWidth_, realHeight_;
+    // Image dimensions
+    unsigned int imWidth_, imHeigh_;
+
     // Options - Default values
     CamAssignMode ca_mode_; //  AREA_OCCL
     MappingMode m_mode_; //  TEXTURE
