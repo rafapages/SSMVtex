@@ -43,12 +43,12 @@ Color Image::getColor (unsigned int _row, unsigned int _column) const{
 
 Color Image::interpolate (float _row, float _column, InterpolateMode _mode) const{
 	
-	float c = _column - 0.5;
-    float r = _row - 0.5;
-    int r_base = (int)floor(r);
-    int c_base = (int)floor(c);
-    float delta1 = r - r_base;
-    float delta2 = c - c_base;
+	const float c = _column - 0.5;
+    const float r = _row - 0.5;
+    const int r_base = (int)floor(r);
+    const int c_base = (int)floor(c);
+    const float delta1 = r - r_base;
+    const float delta2 = c - c_base;
 
     Color final;
     

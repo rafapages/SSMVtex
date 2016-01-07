@@ -272,13 +272,16 @@ void Multitexturer::meshUnwrap(){
 
 }
 
-void
- Multitexturer::chartPacking(){
+void Multitexturer::chartPacking(){
     Packer packer;
     packer.setInputCharts(charts_);
     packer.pack();
 
+    // Are these charts stored correctly??????????????
     packer.getCharts(charts_);
+    realWidth_ = packer.getWidth();
+    realHeight_ = packer.getHeight();
+
 }
 
 
