@@ -11,25 +11,7 @@ class Packer{
 
 public:
 
-	Packer();
-	~Packer();
-
-	// Data access
-	void setInputCharts(const std::vector<Chart>& _charts);
-	void getCharts(std::vector<Chart>& _charts); // OJO CON EL TEMA REFERNCIAS
-	float getWidth() const;
-	float getHeight() const;
-
-
-	void pack();
-
-private:
-
-	std::vector<Chart> charts_;
-
-	// Width and height of the resulting group
-	// of packed charts
-	float width_, height_;
+	static void pack(std::vector<Chart>& _charts, float& _width, float& _height);
 
 };
 

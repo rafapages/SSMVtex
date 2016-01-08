@@ -4,31 +4,31 @@
 
 #include "packer.h"
 
-Packer::Packer(){
+// Packer::Packer(){
 
-}
+// }
 
-Packer::~Packer(){
+// Packer::~Packer(){
 	
-}
+// }
 
-void Packer::setInputCharts(const std::vector<Chart>& _charts){
-	charts_ = _charts;
-}
+// void Packer::setInputCharts(const std::vector<Chart>& _charts){
+// 	_charts = _charts;
+// }
 
-void Packer::getCharts(std::vector<Chart>& _charts){
-	_charts = charts_;
-}
+// void Packer::getCharts(std::vector<Chart>& _charts){
+// 	_charts = _charts;
+// }
 
-float Packer::getWidth() const {
-	return width_;
-}
+// float Packer::getWidth() const {
+// 	return _width;
+// }
 
-float Packer::getHeight() const {
-	return height_;
-}
+// float Packer::getHeight() const {
+// 	return _height;
+// }
 
-void Packer::pack(){
+void Packer::pack(std::vector<Chart>& _charts, float& _width, float& _height){
 
     std::cerr << "Block packing started..." << std::endl;
 
@@ -36,10 +36,10 @@ void Packer::pack(){
 
     float totArea = 0.0;
 
-    std::vector<Chart>::iterator ituw =  charts_.begin();
+    std::vector<Chart>::iterator ituw =  _charts.begin();
     std::multimap<float,Chart> ordCharts;
 
-    for (; ituw != charts_.end(); ituw++){
+    for (; ituw != _charts.end(); ituw++){
         float maxArea = 0.0;
 
         // We calculate the area of each BBox;
@@ -59,7 +59,7 @@ void Packer::pack(){
     // Step 2: Approximation used to calculate the image width.
     //         Image widht is fixed and height is calculated at the end
 
-    const float nelem = (float) (charts_.size());
+    const float nelem = (float) (_charts.size());
     int divisor = 4;
 //     if (in_mode != SPLAT){
 //         divisor = 4; /
@@ -98,11 +98,11 @@ void Packer::pack(){
             c_w = unw_h;
             c_h = unw_w;
             (*itordunw).second.rotate();
-            charts_[(*itordunw).second.getOrder()].rotate();
+            _charts[(*itordunw).second.getOrder()].rotate();
         }
         // the unwrap is placed in its new position
         vdisplace = vpresent;
-        charts_[(*itordunw).second.getOrder()].displace(vdisplace);
+        _charts[(*itordunw).second.getOrder()].displace(vdisplace);
 
         // for each unwrap placed, the new contours are updated
         Contour c;
@@ -121,7 +121,7 @@ void Packer::pack(){
         vpresent(0) = lastw;
     }
 
-    width_ = lastw;
+    _width = lastw;
 
     // Step 4: The rest of the charts are inserted
 
@@ -191,7 +191,7 @@ void Packer::pack(){
                     }
 
                     // Second case: the contour shares x1 with the maximum width -> a left neighbor is identified
-                } else if (cpres.x2 == width_){
+                } else if (cpres.x2 == _width){
                     x2temp = (*itneighbor).second.x2;
                     if ( x2temp == cpres.x1){
                         itneighborLeft = itneighbor;
@@ -233,11 +233,11 @@ void Packer::pack(){
             // we rotate it if necessary
             if (rotated){
                 (*it_min_diff).second.rotate();
-                charts_[(*it_min_diff).second.getOrder()].rotate();
+                _charts[(*it_min_diff).second.getOrder()].rotate();
             }
             // places the unwrap in the new position
             vdisplace = vpresent;
-            charts_[(*it_min_diff).second.getOrder()].displace(vdisplace);
+            _charts[(*it_min_diff).second.getOrder()].displace(vdisplace);
 
             Contour c1;
             c1.x1 = cpres.x1;
@@ -257,6 +257,6 @@ void Packer::pack(){
     }
 
     // after placing all the unwraps, we can calculate the maximum height
-    height_ = (*(--contList.end())).second.y;
+    _height = (*(--contList.end())).second.y;
     std::cerr << "\rdone!      " << std::endl;
 }

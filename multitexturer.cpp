@@ -266,24 +266,13 @@ void Multitexturer::evaluateCameraRatings(){
 
 void Multitexturer::meshUnwrap(){
 
-    // Unwrapper unwrapper;
-    // Unwrapper::setInputMesh(mesh_);
     Unwrapper::unwrapMesh(mesh_, charts_);
-
-    // std::cerr << "número de charts: " << charts_.size() << std::endl;
-    // charts_[0].testExportOBJ();
 
 }
 
 void Multitexturer::chartPacking(){
-    Packer packer;
-    packer.setInputCharts(charts_);
-    packer.pack();
 
-    // Are these charts stored correctly??????????????
-    packer.getCharts(charts_);
-    realWidth_ = packer.getWidth();
-    realHeight_ = packer.getHeight();
+    Packer::pack(charts_, realWidth_, realHeight_);
 
 }
 
