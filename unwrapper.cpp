@@ -10,17 +10,17 @@
 #define ISONE(x)  ((1-EPSILON < x) && (x < 1+EPSILON))
 
 
-void Unwrapper::unwrapMesh(const Mesh3D& mesh_, std::vector<Chart>& charts_){
+void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
 
-	std::vector<unsigned int> adj_count (mesh_.getNTri(), 0); // we start with zero neighbors per triangle
-	std::vector<int> triNeighbor(mesh_.getNTri()*3);
+	std::vector<unsigned int> adj_count (_mesh.getNTri(), 0); // we start with zero neighbors per triangle
+	std::vector<int> triNeighbor(_mesh.getNTri()*3);
 
-	findTriangleNeighbors(mesh_, adj_count, triNeighbor);
+	findTriangleNeighbors(_mesh, adj_count, triNeighbor);
 
     std::cerr << "Unwrapping mesh..." << std::endl;
 
     // Array which determines is a triangle has already been used
-    std::vector<bool> usedTri(mesh_.getNTri(), false);
+    std::vector<bool> usedTri(_mesh.getNTri(), false);
 
     // Order value assigned to each Chart
     int unw_order = 0;
@@ -32,7 +32,7 @@ void Unwrapper::unwrapMesh(const Mesh3D& mesh_, std::vector<Chart>& charts_){
     // To keep track of the used triangle indices, we have uTri
     std::vector<int> uTri;
     std::vector<int>::iterator usit;
-    for (unsigned int i = 0; i < mesh_.getNTri(); i++){
+    for (unsigned int i = 0; i < _mesh.getNTri(); i++){
         uTri.push_back(i);
     }
 
@@ -66,10 +66,10 @@ void Unwrapper::unwrapMesh(const Mesh3D& mesh_, std::vector<Chart>& charts_){
 
         // It extracts the three components of the triangle and searchs
         // for the longest edge of the first triangle (q)
-        const Triangle thistri = mesh_.getTriangle(q);
-        const Vector3f v0 = mesh_.getVertex(thistri.getIndex(0));
-        const Vector3f v1 = mesh_.getVertex(thistri.getIndex(1));
-        const Vector3f v2 = mesh_.getVertex(thistri.getIndex(2));
+        const Triangle thistri = _mesh.getTriangle(q);
+        const Vector3f v0 = _mesh.getVertex(thistri.getIndex(0));
+        const Vector3f v1 = _mesh.getVertex(thistri.getIndex(1));
+        const Vector3f v2 = _mesh.getVertex(thistri.getIndex(2));
 
         float eleng[3];
         int le;
@@ -172,7 +172,7 @@ void Unwrapper::unwrapMesh(const Mesh3D& mesh_, std::vector<Chart>& charts_){
 
 
             for (unsigned int j=0; j < adj_count[q]; j++){
-                const Triangle t1 = mesh_.getTriangle(triNeighbor[3*q+j]);
+                const Triangle t1 = _mesh.getTriangle(triNeighbor[3*q+j]);
 
                 // If the neighbor triangle really shares the edge
                 if( ((t1.getIndex(0) == ed.a)  &&  (t1.getIndex(1) == ed.b)) ||
@@ -231,7 +231,7 @@ void Unwrapper::unwrapMesh(const Mesh3D& mesh_, std::vector<Chart>& charts_){
 
             // Hypothetical new vertex and edges
 
-            const Triangle cand = mesh_.getTriangle(e.Candidate);
+            const Triangle cand = _mesh.getTriangle(e.Candidate);
             int newVtx;
             const int c0 = cand.getIndex(0);
             const int c1 = cand.getIndex(1);
@@ -265,7 +265,7 @@ void Unwrapper::unwrapMesh(const Mesh3D& mesh_, std::vector<Chart>& charts_){
 
             // Candidate for ed1
             for (unsigned int j = 0; j < adj_count[e.Candidate]; j++){
-                const Triangle t1 = mesh_.getTriangle(triNeighbor[3*(e.Candidate)+j]);
+                const Triangle t1 = _mesh.getTriangle(triNeighbor[3*(e.Candidate)+j]);
                 if( ((t1.getIndex(0) == ed1.a)  &&  (t1.getIndex(1) == ed1.b)) ||
                         ((t1.getIndex(1) == ed1.a)  &&  (t1.getIndex(2) == ed1.b)) ||
                         ((t1.getIndex(2) == ed1.a)  &&  (t1.getIndex(0) == ed1.b)) ||
@@ -282,7 +282,7 @@ void Unwrapper::unwrapMesh(const Mesh3D& mesh_, std::vector<Chart>& charts_){
 
             // Candidate for ed2
             for (int j=0; j<adj_count[e.Candidate]; j++){
-                const Triangle t1 = mesh_.getTriangle(triNeighbor[3*(e.Candidate)+j]);
+                const Triangle t1 = _mesh.getTriangle(triNeighbor[3*(e.Candidate)+j]);
                 if( ((t1.getIndex(0) == ed2.a)  &&  (t1.getIndex(1) == ed2.b)) ||
                         ((t1.getIndex(1) == ed2.a)  &&  (t1.getIndex(2) == ed2.b)) ||
                         ((t1.getIndex(2) == ed2.a)  &&  (t1.getIndex(0) == ed2.b)) ||
@@ -301,8 +301,8 @@ void Unwrapper::unwrapMesh(const Mesh3D& mesh_, std::vector<Chart>& charts_){
             // 3D
             // double ang;
 
-            const Vector3f x_na = mesh_.getVertex(e.b) - mesh_.getVertex(e.a); // 3D equivalent of edge "e"
-            const Vector3f e_na = mesh_.getVertex(newVtx) - mesh_.getVertex(e.a); // 3D equivalent of edge "ed1"
+            const Vector3f x_na = _mesh.getVertex(e.b) - _mesh.getVertex(e.a); // 3D equivalent of edge "e"
+            const Vector3f e_na = _mesh.getVertex(newVtx) - _mesh.getVertex(e.a); // 3D equivalent of edge "ed1"
             double xna = x_na.norm();
             double ena = e_na.norm(); // REMEMBER: Same magnitude in 3D and 2D
 
@@ -434,20 +434,20 @@ void Unwrapper::unwrapMesh(const Mesh3D& mesh_, std::vector<Chart>& charts_){
             float hypoth_tri_area = unw.m_.getTriArea () + triarea;
 
             //_
-            float relation_mesh_bbox_area = (float)(0.7/200) * unw.m_.getNTri ();
+            float relation__meshbbox_area = (float)(0.7/200) * unw.m_.getNTri ();
             //_
 
             float current_bbox_area = unw.getHeight() * unw.getWidth();
             float current_tri_area  = unw.m_.getTriArea();
-            float current_relation_mesh_bbox_area = current_tri_area / current_bbox_area;
+            float current_relation__meshbbox_area = current_tri_area / current_bbox_area;
 
-            //float relation_mesh_bbox_area = 0.7 * (unw.m.GetNTri() > 10 ? 1.0 : 0.3);
-            //float relation_mesh_bbox_area = 0.5;
+            //float relation__meshbbox_area = 0.7 * (unw.m.GetNTri() > 10 ? 1.0 : 0.3);
+            //float relation__meshbbox_area = 0.5;
 
-            //                if ((unw.m.GetNTri() > 5) &&  ((hypoth_tri_area/hypoth_bbox_area)   <   current_relation_mesh_bbox_area   )) {
+            //                if ((unw.m.GetNTri() > 5) &&  ((hypoth_tri_area/hypoth_bbox_area)   <   current_relation__meshbbox_area   )) {
             //                    continue;
             //                }
-            if (   (hypoth_tri_area/hypoth_bbox_area)   <   relation_mesh_bbox_area   ){
+            if (   (hypoth_tri_area/hypoth_bbox_area)   <   relation__meshbbox_area   ){
                 continue;
             }
 
@@ -475,14 +475,14 @@ void Unwrapper::unwrapMesh(const Mesh3D& mesh_, std::vector<Chart>& charts_){
             usit=uTri.begin();
 
             int int2del;
-            for (unsigned int cn= 0; cn != mesh_.getNTri(); cn++){
+            for (unsigned int cn= 0; cn != _mesh.getNTri(); cn++){
                 if (uTri[cn]==tri2del){
                     int2del = cn;
                     break;
                 }
             }
 
-            for (unsigned int cn= 0; cn != mesh_.getNTri(); cn++){
+            for (unsigned int cn= 0; cn != _mesh.getNTri(); cn++){
                 if (cn!=int2del){
                     usit++;
                 } else {
@@ -494,7 +494,7 @@ void Unwrapper::unwrapMesh(const Mesh3D& mesh_, std::vector<Chart>& charts_){
 
 
 
-            std::cerr << "\r" << (float)tri_count/mesh_.getNTri()*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
+            std::cerr << "\r" << (float)tri_count/_mesh.getNTri()*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
             
             //----------------------------------------------------------------------------------
 
@@ -516,7 +516,7 @@ void Unwrapper::unwrapMesh(const Mesh3D& mesh_, std::vector<Chart>& charts_){
         unw.setOrder(unw_order++);
         Vector2f origin(0.0,0.0);
         unw.displace(origin - unw.m_.getBBoxMin());
-        charts_.push_back(unw);
+        _charts.push_back(unw);
     }
 
     //EdgeOrganizer(mUnwrap);
@@ -527,7 +527,7 @@ void Unwrapper::unwrapMesh(const Mesh3D& mesh_, std::vector<Chart>& charts_){
     std::vector<Chart>::iterator ito;
     float maxArea = 0.0;
     float maxWidth = 0.0;
-    for(ito = charts_.begin(); ito != charts_.end(); ++ito){
+    for(ito = _charts.begin(); ito != _charts.end(); ++ito){
         float area = (*ito).getHeight()*(*ito).getWidth();
         if (area > maxArea){
             maxArea = area;
@@ -536,14 +536,14 @@ void Unwrapper::unwrapMesh(const Mesh3D& mesh_, std::vector<Chart>& charts_){
     }
 
     float offset = (maxWidth)*prc;
-    for(ito = charts_.begin(); ito != charts_.end(); ++ito){
+    for(ito = _charts.begin(); ito != _charts.end(); ++ito){
         (*ito).addOffset2BoundingBox(offset);
     }
 
 
-    std::cerr << "número de chartsXXX: " << charts_.size() << std::endl;
-    // charts_[2].testExportOBJ();
-    charts_[0].testExportOBJ();
+    std::cerr << "número de chartsXXX: " << _charts.size() << std::endl;
+    // _charts[2].testExportOBJ();
+    _charts[0].testExportOBJ();
 
     std::cerr << "\rdone!   " << std::endl;
 
@@ -552,23 +552,23 @@ void Unwrapper::unwrapMesh(const Mesh3D& mesh_, std::vector<Chart>& charts_){
 
 }
 
-void Unwrapper::unwrapSplats(const Mesh3D& mesh_, std::vector<Chart>& charts_){
+void Unwrapper::unwrapSplats(const Mesh3D& _mesh, std::vector<Chart>& _charts){
 
     std::cerr << "Analizing splats...";
 
     int unw_order = 0;
-    for (unsigned int i = 0; i < mesh_.getNTri(); i++){
+    for (unsigned int i = 0; i < _mesh.getNTri(); i++){
 
-        const Triangle thistri = mesh_.getTriangle(i);
+        const Triangle thistri = _mesh.getTriangle(i);
         // The current chart is created
         Chart unw;
 
         Vector3f v0, v1, v2, v3;
 
-        v0 = mesh_.getVertex(thistri.getIndex(0));
-        v1 = mesh_.getVertex(thistri.getIndex(1));
-        v2 = mesh_.getVertex(thistri.getIndex(2));
-        v3 = mesh_.getVertex(mesh_.getTriangle(i+1).getIndex(1)); // This is the vertex of the second triangle which is not shared
+        v0 = _mesh.getVertex(thistri.getIndex(0));
+        v1 = _mesh.getVertex(thistri.getIndex(1));
+        v2 = _mesh.getVertex(thistri.getIndex(2));
+        v3 = _mesh.getVertex(_mesh.getTriangle(i+1).getIndex(1)); // This is the vertex of the second triangle which is not shared
 
         // We create 2 2D (planar) triangles and 4 2D vertices
         Vector2f vp0(0.0,0.0);
@@ -579,7 +579,7 @@ void Unwrapper::unwrapSplats(const Mesh3D& mesh_, std::vector<Chart>& charts_){
         unw.m_.addVector(vp0, thistri.getIndex(0));
         unw.m_.addVector(vp1, thistri.getIndex(1));
         unw.m_.addVector(vp2, thistri.getIndex(2));
-        unw.m_.addVector(vp3, mesh_.getTriangle(i+1).getIndex(1));
+        unw.m_.addVector(vp3, _mesh.getTriangle(i+1).getIndex(1));
 
         unw.m_.addTriangle(Triangle(0,1,2), i);
         unw.m_.addTriangle(Triangle(2,3,0), i+1);
@@ -607,7 +607,7 @@ void Unwrapper::unwrapSplats(const Mesh3D& mesh_, std::vector<Chart>& charts_){
 
 
         e3.a = thistri.getIndex(2);
-        e3.b = mesh_.getTriangle(i+1).getIndex(1);
+        e3.b = _mesh.getTriangle(i+1).getIndex(1);
         e3.pa = unw.m_.getTriangle(1).getIndex(0);
         e3.pb = unw.m_.getTriangle(1).getIndex(1);
         e3.birth = date++;
@@ -615,7 +615,7 @@ void Unwrapper::unwrapSplats(const Mesh3D& mesh_, std::vector<Chart>& charts_){
         e3.Candidate = -1;
 
 
-        e4.a = mesh_.getTriangle(i+1).getIndex(1);
+        e4.a = _mesh.getTriangle(i+1).getIndex(1);
         e4.b = thistri.getIndex(0);
         e4.pa = unw.m_.getTriangle(1).getIndex(1);
         e4.pb = unw.m_.getTriangle(1).getIndex(2);
@@ -633,7 +633,7 @@ void Unwrapper::unwrapSplats(const Mesh3D& mesh_, std::vector<Chart>& charts_){
         unw.setNEdgePos(0);
         unw.setOrder(unw_order++);
 
-        charts_.push_back(unw);
+        _charts.push_back(unw);
         i++; // We have used two triangles, so we need to increase the counter again
 
     }
@@ -643,7 +643,7 @@ void Unwrapper::unwrapSplats(const Mesh3D& mesh_, std::vector<Chart>& charts_){
     std::vector<Chart>::iterator ito;
     float maxArea = 0.0;
     float maxWidth = 0.0;
-    for(ito = charts_.begin(); ito != charts_.end(); ito++){
+    for(ito = _charts.begin(); ito != _charts.end(); ito++){
         float area = (*ito).getHeight() * (*ito).getWidth();
         if (area > maxArea){
             maxArea = area;
@@ -652,30 +652,30 @@ void Unwrapper::unwrapSplats(const Mesh3D& mesh_, std::vector<Chart>& charts_){
     }
 
     float offset = (maxWidth)*prc;
-    for(ito = charts_.begin(); ito != charts_.end(); ito++){
+    for(ito = _charts.begin(); ito != _charts.end(); ito++){
         (*ito).addOffset2BoundingBox(offset);
     }
 
     std::cerr << " done!" << std::endl;
-    std::cerr << "Number of charts: " << charts_.size() << std::endl;
+    std::cerr << "Number of charts: " << _charts.size() << std::endl;
 }
 
 
 // This method is too trivial and probably very time consuming,
 // something more efficient should be implemented.
-void Unwrapper::findTriangleNeighbors(const Mesh3D& mesh_, std::vector<unsigned int>& _adj_count, std::vector<int>& _triNeighbor){
+void Unwrapper::findTriangleNeighbors(const Mesh3D& _mesh, std::vector<unsigned int>& _adj_count, std::vector<int>& _triNeighbor){
 
 	// which triangles contain each vertex
-    std::vector<int> *vtx2tri = new std::vector<int> [mesh_.getNVtx()];
-    for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
-    	const Triangle thistri = mesh_.getTriangle(i);
+    std::vector<int> *vtx2tri = new std::vector<int> [_mesh.getNVtx()];
+    for (unsigned int i = 0; i < _mesh.getNTri(); i++) {
+    	const Triangle thistri = _mesh.getTriangle(i);
         for (unsigned int j = 0; j < 3; j++){
             vtx2tri[thistri.getIndex(j)].push_back(i);
         }
     }
 
 
-    for(unsigned int i = 0; i < mesh_.getNVtx(); i++){
+    for(unsigned int i = 0; i < _mesh.getNVtx(); i++){
         std::vector<int>::iterator ita = vtx2tri[i].begin();
 
         for(; ita != vtx2tri[i].end(); ita++){
@@ -691,12 +691,12 @@ void Unwrapper::findTriangleNeighbors(const Mesh3D& mesh_, std::vector<unsigned 
                 int va0, va1, va2;
                 int vb0, vb1, vb2;
 
-                va0 = mesh_.getTriangle(*ita).getIndex(0);
-                va1 = mesh_.getTriangle(*ita).getIndex(1);
-                va2 = mesh_.getTriangle(*ita).getIndex(2);
-                vb0 = mesh_.getTriangle(*itb).getIndex(0);
-                vb1 = mesh_.getTriangle(*itb).getIndex(1);
-                vb2 = mesh_.getTriangle(*itb).getIndex(2);
+                va0 = _mesh.getTriangle(*ita).getIndex(0);
+                va1 = _mesh.getTriangle(*ita).getIndex(1);
+                va2 = _mesh.getTriangle(*ita).getIndex(2);
+                vb0 = _mesh.getTriangle(*itb).getIndex(0);
+                vb1 = _mesh.getTriangle(*itb).getIndex(1);
+                vb2 = _mesh.getTriangle(*itb).getIndex(2);
 
 
                 // In case an edge of each triangle is the same
