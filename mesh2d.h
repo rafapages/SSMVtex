@@ -9,7 +9,7 @@ class Mesh2D
 {
 public:
     Mesh2D();
-    ~Mesh2D();
+    virtual ~Mesh2D();
 
     // Data access
     Vector2f getVertex(unsigned int _index) const;

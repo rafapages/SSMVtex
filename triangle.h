@@ -12,7 +12,7 @@ class Triangle{
 
     Triangle();
     Triangle(unsigned int _i0, unsigned int _i1, unsigned int _i2);
-    ~Triangle();
+    virtual ~Triangle();
 
     // Data access
     Vector3i getIndices() const;

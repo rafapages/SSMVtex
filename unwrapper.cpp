@@ -80,8 +80,8 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
         le = eleng[2] > eleng[le] ? 2 : le;
 
         // We make the seed triangle lie on its longest side, so 
-        // it simplifies geomtric abstractions, but it is not 
-        // really necessary.
+        // it minimizes the area of the bounding box in case of a 
+        // chart of just one triangle, but it is not really necessary. 
 
         // Assign A_w, B_w and E_w
         // A_w : first vertex of longest edge
@@ -122,6 +122,21 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
         if (me==0.0){
             me = EPSILON;
         }
+
+        // float dp = x_w.dot(e_w);
+        // float dpmxme = dp/(mx*me);
+        // dpmxme = dpmxme < -1 ? -1 : dpmxme;
+        // dpmxme = dpmxme >  1 ?  1 : dpmxme;
+
+        // float angxe = acos(dpmxme);
+        // Vector2f xn(mx, 0);
+        // Vector2f en (me*cos(angxe),  me*sin(angxe));
+
+        // // The new vertices and triangle are added to the mesh
+
+        // unw.m_.addVector (Vector2f(0.0, 0.0), thistri.getIndex(vtxCase));
+        // unw.m_.addVector (xn, thistri.getIndex((vtxCase + 1) % 3));
+        // unw.m_.addVector (en, thistri.getIndex((vtxCase + 2) % 3));
 
         // If the new 2D vertices of the triangle are a, b and c:
         // a = (0,0)
@@ -176,11 +191,11 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
 
                 // If the neighbor triangle really shares the edge
                 if( ((t1.getIndex(0) == ed.a)  &&  (t1.getIndex(1) == ed.b)) ||
-                        ((t1.getIndex(1) == ed.a)  &&  (t1.getIndex(2) == ed.b)) ||
-                        ((t1.getIndex(2) == ed.a)  &&  (t1.getIndex(0) == ed.b)) ||
-                        ((t1.getIndex(0) == ed.b)  &&  (t1.getIndex(1) == ed.a)) ||
-                        ((t1.getIndex(1) == ed.b)  &&  (t1.getIndex(2) == ed.a)) ||
-                        ((t1.getIndex(2) == ed.b)  &&  (t1.getIndex(0) == ed.a))  ){
+                    ((t1.getIndex(1) == ed.a)  &&  (t1.getIndex(2) == ed.b)) ||
+                    ((t1.getIndex(2) == ed.a)  &&  (t1.getIndex(0) == ed.b)) ||
+                    ((t1.getIndex(0) == ed.b)  &&  (t1.getIndex(1) == ed.a)) ||
+                    ((t1.getIndex(1) == ed.b)  &&  (t1.getIndex(2) == ed.a)) ||
+                    ((t1.getIndex(2) == ed.b)  &&  (t1.getIndex(0) == ed.a))  ){
                     // and if it hasn't been used before
                     if(!usedTri[triNeighbor[3*q+j]]){
                         // we add that triangle as candidate for that position
@@ -267,11 +282,11 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
             for (unsigned int j = 0; j < adj_count[e.Candidate]; j++){
                 const Triangle t1 = _mesh.getTriangle(triNeighbor[3*(e.Candidate)+j]);
                 if( ((t1.getIndex(0) == ed1.a)  &&  (t1.getIndex(1) == ed1.b)) ||
-                        ((t1.getIndex(1) == ed1.a)  &&  (t1.getIndex(2) == ed1.b)) ||
-                        ((t1.getIndex(2) == ed1.a)  &&  (t1.getIndex(0) == ed1.b)) ||
-                        ((t1.getIndex(0) == ed1.b)  &&  (t1.getIndex(1) == ed1.a)) ||
-                        ((t1.getIndex(1) == ed1.b)  &&  (t1.getIndex(2) == ed1.a)) ||
-                        ((t1.getIndex(2) == ed1.b)  &&  (t1.getIndex(0) == ed1.a))  ){
+                    ((t1.getIndex(1) == ed1.a)  &&  (t1.getIndex(2) == ed1.b)) ||
+                    ((t1.getIndex(2) == ed1.a)  &&  (t1.getIndex(0) == ed1.b)) ||
+                    ((t1.getIndex(0) == ed1.b)  &&  (t1.getIndex(1) == ed1.a)) ||
+                    ((t1.getIndex(1) == ed1.b)  &&  (t1.getIndex(2) == ed1.a)) ||
+                    ((t1.getIndex(2) == ed1.b)  &&  (t1.getIndex(0) == ed1.a))  ){
                     if(!usedTri[triNeighbor[3*(e.Candidate)+j]])
                         ed1.Candidate = triNeighbor[3*(e.Candidate)+j];
                     else
@@ -284,11 +299,11 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
             for (int j=0; j<adj_count[e.Candidate]; j++){
                 const Triangle t1 = _mesh.getTriangle(triNeighbor[3*(e.Candidate)+j]);
                 if( ((t1.getIndex(0) == ed2.a)  &&  (t1.getIndex(1) == ed2.b)) ||
-                        ((t1.getIndex(1) == ed2.a)  &&  (t1.getIndex(2) == ed2.b)) ||
-                        ((t1.getIndex(2) == ed2.a)  &&  (t1.getIndex(0) == ed2.b)) ||
-                        ((t1.getIndex(0) == ed2.b)  &&  (t1.getIndex(1) == ed2.a)) ||
-                        ((t1.getIndex(1) == ed2.b)  &&  (t1.getIndex(2) == ed2.a)) ||
-                        ((t1.getIndex(2) == ed2.b)  &&  (t1.getIndex(0) == ed2.a))  ){
+                    ((t1.getIndex(1) == ed2.a)  &&  (t1.getIndex(2) == ed2.b)) ||
+                    ((t1.getIndex(2) == ed2.a)  &&  (t1.getIndex(0) == ed2.b)) ||
+                    ((t1.getIndex(0) == ed2.b)  &&  (t1.getIndex(1) == ed2.a)) ||
+                    ((t1.getIndex(1) == ed2.b)  &&  (t1.getIndex(2) == ed2.a)) ||
+                    ((t1.getIndex(2) == ed2.b)  &&  (t1.getIndex(0) == ed2.a))  ){
                     if(!usedTri[triNeighbor[3*(e.Candidate)+j]])
                         ed2.Candidate = triNeighbor[3*(e.Candidate)+j];
                     else
@@ -353,11 +368,11 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
                 angu *= -1;
             angr = angu-ang; // Angle of 2D equivalent of edge "ed1"
             double vnx, vny;
-            Vector2f nv, nvu;
+            Vector2f nv;
 
             vnx = ena*cos(angr); // Horizontal coordinate of 2D equivalent of edge "ed1"
             vny = ena*sin(angr); // Vertical coordinate of 2D equivalent of edge "ed1"
-            nvu = Vector2f ((float)vnx, (float)vny);
+            Vector2f nvu((float)vnx, (float)vny);
 
             // "nv" is the position of the hypothetical new vertex
 
@@ -759,7 +774,7 @@ bool Unwrapper::vectorIntersec(const Vector2f& _v1a, const Vector2f& _v1b, const
     const Vector2f v1 = _v1b - _v1a;
     const Vector2f v2 = _v2b - _v2a;
 
-    const float v = ( v1(0) * (_v1a(1) - _v2a(1)) + v1(1) * (_v1a(0) - _v2a(0)) ) / ( v2(1) * v1(0) - v2(0) * v1(1));
+    const float v = ( v1(0) * (_v1a(1) - _v2a(1)) + v1(1) * (_v2a(0) - _v1a(0)) ) / ( v2(1) * v1(0) - v2(0) * v1(1));
     const float u = ( _v2a(0) + v2(0) * v - _v1a(0) ) / v1(0);
 
     if ( ( (u > 0) && (u < 1) ) && ( (v > 0) && (v < 1) ) ){

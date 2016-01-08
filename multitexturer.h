@@ -25,7 +25,7 @@ class Multitexturer
 public:
 
     Multitexturer();
-    ~Multitexturer();
+    virtual ~Multitexturer();
 
     // Parses the command line and sets the options
     void parseCommandLine(int argc, char *argv[]);

@@ -7,7 +7,7 @@ class Camera{
 
  public:
     Camera();
-    ~Camera();
+    virtual ~Camera();
 
     // Read parameters from text line
     void loadCameraParameters(const std::string& _textline);

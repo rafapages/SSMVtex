@@ -23,7 +23,7 @@ class Chart{
 public:
 
 	Chart();
-	~Chart();
+	virtual ~Chart();
 
 	// Data access
 	void setNEdgePos(int _value);

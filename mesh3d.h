@@ -13,7 +13,7 @@ class Mesh3D {
     Mesh3D();
     Mesh3D(const std::string _fileName); // Currently only reads OBJs
     Mesh3D(const std::vector<Vector3f>& _vtx, const std::vector<Triangle> _tri);
-    ~Mesh3D();
+    virtual ~Mesh3D();
 
     // I/O
     void readOBJ(const std::string& _fileName);
