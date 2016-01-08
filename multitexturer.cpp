@@ -266,9 +266,12 @@ void Multitexturer::evaluateCameraRatings(){
 
 void Multitexturer::meshUnwrap(){
 
-    Unwrapper unwrapper;
-    unwrapper.setInputMesh(mesh_);
-    unwrapper.unwrapMesh();
+    // Unwrapper unwrapper;
+    // Unwrapper::setInputMesh(mesh_);
+    Unwrapper::unwrapMesh(mesh_, charts_);
+
+    // std::cerr << "número de charts: " << charts_.size() << std::endl;
+    // charts_[0].testExportOBJ();
 
 }
 

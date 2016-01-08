@@ -44,6 +44,8 @@ public:
     // so they are efficently packed
     void chartPacking();
 
+    // 
+
 
 
 private:
@@ -97,7 +99,7 @@ private:
 
 
     // Input 3D mesh
-    Mesh3D mesh_;
+    Mesh3D  mesh_;
 
     // Input files
     std::vector<Camera> cameras_;

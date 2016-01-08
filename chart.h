@@ -23,10 +23,14 @@ class Chart{
 public:
 
 	Chart();
+	~Chart();
 
 	// Data access
 	void setNEdgePos(int _value);
+	void increaseNEdgePos();
+	void decreaseNEdgePos();
 	void setOrder(int _value);
+	void increaseOrder();
 	int getNEdgePos() const;
 	int getOrder() const;
 
@@ -39,10 +43,9 @@ public:
 	float getHeight() const;
 	float getWidth() const;
 
-
 	void addOffset2BoundingBox(float _offset);
 
-
+	void testExportOBJ();
 	
 	std::list<Edge> perimeter_;
 	Mesh2D m_;

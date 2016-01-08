@@ -24,6 +24,9 @@ public:
     Vector2f getBBoxMin() const;
     Vector2f getBBoxMax() const;
 
+    // Returns the area of the bounding box if vector _nv was added
+    float getHypotheticalBBoxArea (const Vector2f& _nv) const;
+
     // Original 3D data info
     void setOrigVtx(unsigned int _2dindex, unsigned int _3dindex);
     void setOrigTri(unsigned int _2dindex, unsigned int _3dindex);

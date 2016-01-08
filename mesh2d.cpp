@@ -80,6 +80,14 @@ Vector2f Mesh2D::getBBoxMax() const {
 	return bBoxMax_;
 }
 
+float Mesh2D::getHypotheticalBBoxArea (const Vector2f& _nv) const {
+    const float minx = bBoxMin_(0) < _nv(0) ? bBoxMin_(0) : _nv(0);
+    const float maxx = bBoxMax_(0) > _nv(0) ? bBoxMax_(0) : _nv(0);
+    const float miny = bBoxMin_(1) < _nv(1) ? bBoxMin_(1) : _nv(1);
+    const float maxy = bBoxMax_(1) > _nv(1) ? bBoxMax_(1) : _nv(1);
+    return (maxx - minx) * (maxy - miny);
+}
+
 
 void Mesh2D::setOrigVtx(unsigned int _2dindex, unsigned int _3dindex){
 	origVtx_[_2dindex] = (int)_3dindex;

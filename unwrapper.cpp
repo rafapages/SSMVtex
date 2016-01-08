@@ -1,28 +1,558 @@
 #include "unwrapper.h"
 
-Unwrapper::Unwrapper(){
-}
+#include <iomanip>
 
-Unwrapper::~Unwrapper(){
-}
+// This value avoids zeros in some operations
+#define EPSILON 1e-6
+// A simple way to find "almost zero" values
+#define ISZERO(x)    ((-EPSILON < x) && (x < EPSILON))
+// A simple way to find "almost one" values
+#define ISONE(x)  ((1-EPSILON < x) && (x < 1+EPSILON))
 
-void Unwrapper::setInputMesh(const Mesh3D& _mesh){
-	mesh_ = _mesh;
-}
 
-void Unwrapper::getCharts(std::vector<Chart>& _charts) {
-	_charts = charts_;
-}
-
-void Unwrapper::unwrapMesh(){
+void Unwrapper::unwrapMesh(const Mesh3D& mesh_, std::vector<Chart>& charts_){
 
 	std::vector<unsigned int> adj_count (mesh_.getNTri(), 0); // we start with zero neighbors per triangle
 	std::vector<int> triNeighbor(mesh_.getNTri()*3);
 
-	findTriangleNeighbors(adj_count, triNeighbor);
+	findTriangleNeighbors(mesh_, adj_count, triNeighbor);
+
+    std::cerr << "Unwrapping mesh..." << std::endl;
+
+    // Array which determines is a triangle has already been used
+    std::vector<bool> usedTri(mesh_.getNTri(), false);
+
+    // Order value assigned to each Chart
+    int unw_order = 0;
+
+
+    // Each chart starts with a seed triangle which is picked randomnly
+    // from the list of triangles to avoid small charts formed by contiguos triangles. 
+    
+    // To keep track of the used triangle indices, we have uTri
+    std::vector<int> uTri;
+    std::vector<int>::iterator usit;
+    for (unsigned int i = 0; i < mesh_.getNTri(); i++){
+        uTri.push_back(i);
+    }
+
+    int numftri= uTri.size();
+    int tri_count = 0;
+
+    // While the number of unused triangles is still bigger than zero
+    while (numftri > 0){
+
+        numftri = uTri.size();
+
+        // We pick a random triangle here, of index "q"
+        const int randtri = rand() % numftri;
+        int q = uTri[randtri];
+
+        tri_count++;
+        numftri--;
+
+        // The iterator points to the triangle to delete in the list
+        usit = uTri.begin() + randtri;
+        uTri.erase(usit);
+
+        // If it hasn't been used, it becomes the seed of a new chart,
+        // stored in unw:
+        Chart unw;
+
+        int gen = 0; // generation : the date of birth of the edge we are processing now
+        int date = 0; // date increases every time we add an edge to the perimeter
+
+        // Step 1 : place the seed triangle in the 2D mesh
+
+        // It extracts the three components of the triangle and searchs
+        // for the longest edge of the first triangle (q)
+        const Triangle thistri = mesh_.getTriangle(q);
+        const Vector3f v0 = mesh_.getVertex(thistri.getIndex(0));
+        const Vector3f v1 = mesh_.getVertex(thistri.getIndex(1));
+        const Vector3f v2 = mesh_.getVertex(thistri.getIndex(2));
+
+        float eleng[3];
+        int le;
+        eleng[0] = (v0-v1).norm();
+        eleng[1] = (v1-v2).norm();
+        eleng[2] = (v2-v0).norm();
+        le = eleng[1] > eleng [0] ? 1 : 0;
+        le = eleng[2] > eleng[le] ? 2 : le;
+
+        // We make the seed triangle lie on its longest side, so 
+        // it simplifies geomtric abstractions, but it is not 
+        // really necessary.
+
+        // Assign A_w, B_w and E_w
+        // A_w : first vertex of longest edge
+        // B_w : second vertex of longest edge
+        // E_w : the other vertex
+
+        Vector3f A_w, B_w, E_w;
+        int vtxCase;
+
+        if (le == 0) {
+            A_w = v0;
+            B_w = v1;
+            E_w = v2;
+            vtxCase = 0;
+        } else if (le == 1) {
+            A_w = v1;
+            B_w = v2;
+            E_w = v0;
+            vtxCase = 1;
+        } else {
+            A_w = v2;
+            B_w = v0;
+            E_w = v1;
+            vtxCase = 2;
+        }
+
+        // Two sides of the triangle
+        const Vector3f x_w = B_w - A_w;
+        const Vector3f e_w = E_w - A_w;
+
+        float mx = x_w.norm();
+        float me = e_w.norm();
+
+        // We don't want to divide by zero
+        if (mx==0.0){
+            mx = EPSILON;
+        }
+        if (me==0.0){
+            me = EPSILON;
+        }
+
+        // If the new 2D vertices of the triangle are a, b and c:
+        // a = (0,0)
+        // b = (mx, 0)
+        // c = (proj(e_w -> x_w), |e_w - x_w/mx·proj(e_w -> x_w)|) // Important: x_w should be normalized
+
+        const Vector2f a_flat (0,0);
+        const Vector2f b_flat (mx,0);
+        // proj(e_w -> x_w) = me·cos(alpha) = (e_w · x_w) / mx
+        const float dp = x_w.dot(e_w);
+        const float proj = dp / mx;
+        const Vector2f c_flat (proj, (e_w - x_w.normalized() * proj).norm());
+
+       // The new vertices and triangle are added to the mesh
+
+        unw.m_.addVector(a_flat, thistri.getIndex(vtxCase));
+        unw.m_.addVector(b_flat, thistri.getIndex((vtxCase + 1) % 3));
+        unw.m_.addVector(c_flat, thistri.getIndex((vtxCase + 2) % 3));
+
+        const Triangle seed(0,1,2);
+
+        unw.m_.addTriangle(seed, q);
+        usedTri[q] = true;
+
+        unw.setNEdgePos(0);
+
+        // Step 2 : Add the three edges of the triangle to our Edge list
+        for (unsigned int c = 0; c < 3; c++){
+
+            Edge ed;
+            ed.a = thistri.getIndex(c);
+            ed.b = thistri.getIndex((c+1)%3);
+
+            switch (vtxCase){
+            case 0:
+                ed.pa = seed.getIndex(c);
+                ed.pb = seed.getIndex((c+1)%3);
+                break;
+            case 1:
+                ed.pa = seed.getIndex((c+2)%3);
+                ed.pb = seed.getIndex(c);
+                break;
+            case 2:
+                ed.pa = seed.getIndex((c+1)%3);
+                ed.pb = seed.getIndex((c+2)%3);
+                break;
+            }
+
+
+            for (unsigned int j=0; j < adj_count[q]; j++){
+                const Triangle t1 = mesh_.getTriangle(triNeighbor[3*q+j]);
+
+                // If the neighbor triangle really shares the edge
+                if( ((t1.getIndex(0) == ed.a)  &&  (t1.getIndex(1) == ed.b)) ||
+                        ((t1.getIndex(1) == ed.a)  &&  (t1.getIndex(2) == ed.b)) ||
+                        ((t1.getIndex(2) == ed.a)  &&  (t1.getIndex(0) == ed.b)) ||
+                        ((t1.getIndex(0) == ed.b)  &&  (t1.getIndex(1) == ed.a)) ||
+                        ((t1.getIndex(1) == ed.b)  &&  (t1.getIndex(2) == ed.a)) ||
+                        ((t1.getIndex(2) == ed.b)  &&  (t1.getIndex(0) == ed.a))  ){
+                    // and if it hasn't been used before
+                    if(!usedTri[triNeighbor[3*q+j]]){
+                        // we add that triangle as candidate for that position
+                        ed.Candidate = triNeighbor[3*q+j];
+                        unw.increaseNEdgePos();
+                    } else {
+                        // If there is no valid candidate, then we set it to -1
+                        ed.Candidate = -1;
+                    }
+                    break;
+                }
+            }
+
+            ed.birth = date++;
+            ed.Present = q;
+
+            unw.perimeter_.push_back(ed);
+        }
+
+        // Step 3: Fill the rest of the chart with triangles
+
+        // While the number of candidate edges is still above zero
+        while (unw.getNEdgePos() > 0) {
+
+            // Step 3.1: we choos en Edge born in generation "gen"
+
+            std::list<Edge>::iterator itedge;
+            for (itedge = unw.perimeter_.begin(); itedge != unw.perimeter_.end() ; itedge++){
+                if ( ((*itedge).birth) == gen)
+                    break;
+            }
+            Edge e = *itedge;
+
+            gen++;
+
+            // If it doesn't have a candidate, reevaluate "while" condition
+            if (itedge->Candidate == -1)
+                continue;
+
+            unw.decreaseNEdgePos();
+
+            // If its candidate (not yet added when the edge was created)
+            // has been added to the 2D mesh, reevaluate "while" condition
+            if (usedTri[e.Candidate])
+                continue;
+
+            // Step 3.2 : Check if the new triangle overlaps with the chart
+
+            // Hypothetical new vertex and edges
+
+            const Triangle cand = mesh_.getTriangle(e.Candidate);
+            int newVtx;
+            const int c0 = cand.getIndex(0);
+            const int c1 = cand.getIndex(1);
+            const int c2 = cand.getIndex(2);
+
+            if ( ((e.a == c0) && (e.b == c1))  ||  ((e.b == c0) && (e.a == c1)) ) {
+                newVtx = c2;
+            } else if ( ((e.a == c1) && (e.b == c2))  ||  ((e.b == c1) && (e.a == c2)) ) {
+                newVtx = c0;
+            } else if ( ((e.a == c2) && (e.b == c0))  ||  ((e.b == c2) && (e.a == c0)) ) {
+                newVtx = c1;
+            }
+
+            // New hypothetical edges of the new triangle
+
+            Edge ed1, ed2;
+
+            // We have to respect the order in the perimeter, so...
+            ed1.a = e.a;
+            ed1.b = newVtx;
+            ed1.pa = e.pa;
+            ed1.pb =  unw.m_.getNVtx();
+
+            ed2.a = newVtx;
+            ed2.b = e.b;
+            ed2.pa = unw.m_.getNVtx();
+            ed2.pb = e.pb;
+
+            //// QUESTION: should this candite stuff be calculated here? or better after checking if
+            ////           they overlap with the chart? In the second case I think we save calculations
+
+            // Candidate for ed1
+            for (unsigned int j = 0; j < adj_count[e.Candidate]; j++){
+                const Triangle t1 = mesh_.getTriangle(triNeighbor[3*(e.Candidate)+j]);
+                if( ((t1.getIndex(0) == ed1.a)  &&  (t1.getIndex(1) == ed1.b)) ||
+                        ((t1.getIndex(1) == ed1.a)  &&  (t1.getIndex(2) == ed1.b)) ||
+                        ((t1.getIndex(2) == ed1.a)  &&  (t1.getIndex(0) == ed1.b)) ||
+                        ((t1.getIndex(0) == ed1.b)  &&  (t1.getIndex(1) == ed1.a)) ||
+                        ((t1.getIndex(1) == ed1.b)  &&  (t1.getIndex(2) == ed1.a)) ||
+                        ((t1.getIndex(2) == ed1.b)  &&  (t1.getIndex(0) == ed1.a))  ){
+                    if(!usedTri[triNeighbor[3*(e.Candidate)+j]])
+                        ed1.Candidate = triNeighbor[3*(e.Candidate)+j];
+                    else
+                        ed1.Candidate = -1;
+                    break;
+                }
+            }
+
+            // Candidate for ed2
+            for (int j=0; j<adj_count[e.Candidate]; j++){
+                const Triangle t1 = mesh_.getTriangle(triNeighbor[3*(e.Candidate)+j]);
+                if( ((t1.getIndex(0) == ed2.a)  &&  (t1.getIndex(1) == ed2.b)) ||
+                        ((t1.getIndex(1) == ed2.a)  &&  (t1.getIndex(2) == ed2.b)) ||
+                        ((t1.getIndex(2) == ed2.a)  &&  (t1.getIndex(0) == ed2.b)) ||
+                        ((t1.getIndex(0) == ed2.b)  &&  (t1.getIndex(1) == ed2.a)) ||
+                        ((t1.getIndex(1) == ed2.b)  &&  (t1.getIndex(2) == ed2.a)) ||
+                        ((t1.getIndex(2) == ed2.b)  &&  (t1.getIndex(0) == ed2.a))  ){
+                    if(!usedTri[triNeighbor[3*(e.Candidate)+j]])
+                        ed2.Candidate = triNeighbor[3*(e.Candidate)+j];
+                    else
+                        ed2.Candidate = -1;
+                    break;
+                }
+            }
+
+            // Similarly as we did in Step 1: we calculate the 2D position of these edges
+            // 3D
+            // double ang;
+
+            const Vector3f x_na = mesh_.getVertex(e.b) - mesh_.getVertex(e.a); // 3D equivalent of edge "e"
+            const Vector3f e_na = mesh_.getVertex(newVtx) - mesh_.getVertex(e.a); // 3D equivalent of edge "ed1"
+            double xna = x_na.norm();
+            double ena = e_na.norm(); // REMEMBER: Same magnitude in 3D and 2D
+
+            // We still don't want to divide by zero
+            if (xna == 0.0)
+                xna=EPSILON;
+            if (ena == 0.0)
+                ena=EPSILON;    
+
+            const double dpn = x_na.dot(e_na);
+            const double proj = dpn / xna;
+            // const double nproj = proj / xna; // This value represents the proportion of the projection with respect to vector x_na
+
+            // 2D
+            // const Vector2f x_na_flat = unw.m_.getVertex(e.pb) - unw.m_.getVertex(e.pa); // 2D equivalent of edge "e"
+            // const Vector2f x_na_perp (-x_na_flat(1), x_na_flat(0));
+            // // We are searching for the 2D position of newVtx so, its components k1, k2 with respect edge e are:
+            // const Vector2f k1 = proj * x_na_flat / xna;
+            // const Vector2f k2 = (e_na - x_na.normalized()*proj).norm() * x_na_perp / xna;
+            // const Vector2f nv = unw.m_.getVertex(e.pa) + k1 + k2; // 2D version of newVtx
+
+
+
+
+
+            // -----------------------------------------------------------------------------
+            // This is the old way to calculate the point:
+
+            double dpnxnaena = dpn/(xna*ena);
+            dpnxnaena = dpnxnaena < -1.0 ? -1.0 : dpnxnaena; // double precision
+            dpnxnaena = dpnxnaena >  1.0 ?  1.0 : dpnxnaena;
+            double ang = acos(dpnxnaena); // REMEMBER: Same angle in 3D and 2D
+
+            // 2D
+
+            Vector2f pab;
+            double dpu, angu, angr;
+
+            pab = unw.m_.getVertex(e.pb) - unw.m_.getVertex(e.pa); // 2D equivalent of edge "e"
+            dpu = pab(0);
+
+            double dpuinvxna = dpu/xna;
+            dpuinvxna = dpuinvxna < -1.0 ? -1.0 : dpuinvxna; // double precision
+            dpuinvxna = dpuinvxna >  1.0 ?  1.0 : dpuinvxna;
+            angu = acos(dpuinvxna); // Angle of 2D equivalent of edge "e"
+
+            if (pab(1) < 0)
+                angu *= -1;
+            angr = angu-ang; // Angle of 2D equivalent of edge "ed1"
+            double vnx, vny;
+            Vector2f nv, nvu;
+
+            vnx = ena*cos(angr); // Horizontal coordinate of 2D equivalent of edge "ed1"
+            vny = ena*sin(angr); // Vertical coordinate of 2D equivalent of edge "ed1"
+            nvu = Vector2f ((float)vnx, (float)vny);
+
+            // "nv" is the position of the hypothetical new vertex
+
+            nv = nvu + unw.m_.getVertex(e.pa); // newVtx in 2D
+            // nv.orig3D = newVtx;
+            //-----------------------------------------------------------------------------
+
+            // Check if the new edges intersect with any other
+
+            bool overlap = false;
+
+            Vector2f ed1a = unw.m_.getVertex(ed1.pa);
+            Vector2f ed2b = unw.m_.getVertex(ed2.pb);
+
+            // First: Edge ed1
+            // This edge cannot intersect with the actual edge or with the previous one
+
+            std::list<Edge>::iterator forb = itedge;
+            if (forb == unw.perimeter_.begin()) {
+                forb = unw.perimeter_.end();
+                forb--;
+            } else {
+                forb--;
+            }
+
+            std::list<Edge>::iterator traveler;
+
+            for (traveler = unw.perimeter_.begin(); traveler != unw.perimeter_.end(); ++traveler)  {
+                if ((traveler == itedge) || (traveler == forb))
+                    continue;
+                Edge ec = *traveler;
+                const Vector2f ec_a = unw.m_.getVertex(ec.pa);
+                const Vector2f ec_b = unw.m_.getVertex(ec.pb);
+                if (vectorIntersec(ec_a, ec_b, ed1a, nv)){
+                    overlap = true;
+                    break;
+                }
+            }
+
+            if (overlap)
+                continue;
+
+            // Second: ed2: this edge cannot interesect with the actual edge and with the following
+            // so we skip these two
+
+            forb = itedge;
+            forb++;
+            if (forb == unw.perimeter_.end())
+                forb = unw.perimeter_.begin();
+
+            for (traveler = unw.perimeter_.begin(); traveler != unw.perimeter_.end(); ++traveler)  {
+                if ((traveler == itedge) || (traveler == forb))
+                    continue;
+                Edge ec = *traveler;
+                const Vector2f ec_a = unw.m_.getVertex(ec.pa);
+                const Vector2f ec_b = unw.m_.getVertex(ec.pb);
+                if (vectorIntersec(ec_a, ec_b, nv, ed2b)){
+                    overlap = true;
+                    break;
+                }
+            }
+
+            if (overlap)
+                continue;
+
+            // We get to this point if the new triangle doesn't overlap the 2D mesh
+            // We still have to check whether the area ratio is acceptable
+
+            // Step 3.3 : Check the area ratio
+
+            float hypoth_bbox_area = unw.m_.getHypotheticalBBoxArea(nv);
+
+            float triarea = ((nv-ed1a)(0) * (ed2b-ed1a)(1) - (nv-ed1a)(1) * (ed2b-ed1a)(0)) / 2; // OJO CON LA NOMENCLATURA AQUÍ
+            float hypoth_tri_area = unw.m_.getTriArea () + triarea;
+
+            //_
+            float relation_mesh_bbox_area = (float)(0.7/200) * unw.m_.getNTri ();
+            //_
+
+            float current_bbox_area = unw.getHeight() * unw.getWidth();
+            float current_tri_area  = unw.m_.getTriArea();
+            float current_relation_mesh_bbox_area = current_tri_area / current_bbox_area;
+
+            //float relation_mesh_bbox_area = 0.7 * (unw.m.GetNTri() > 10 ? 1.0 : 0.3);
+            //float relation_mesh_bbox_area = 0.5;
+
+            //                if ((unw.m.GetNTri() > 5) &&  ((hypoth_tri_area/hypoth_bbox_area)   <   current_relation_mesh_bbox_area   )) {
+            //                    continue;
+            //                }
+            if (   (hypoth_tri_area/hypoth_bbox_area)   <   relation_mesh_bbox_area   ){
+                continue;
+            }
+
+            if (   unw.m_.getNTri() == 200   ) {
+                continue;
+            }
+
+            // STEP 2.3.4 : IF ALL TESTS HAVE BEEN PASSED, ADD TRIANGLE, VERTEX AND EDGES
+
+            int newVtx2D = unw.m_.getNVtx();
+
+            unw.m_.addVector(nv, newVtx);
+            const Triangle newtri(e.pa, newVtx2D, e.pb);
+            unw.m_.addTriangle(newtri, e.Candidate );
+
+            // unw.m.AddTriangle (e.pa, newVtx2D, e.pb, triarea, e.Candidate);
+
+            usedTri[itedge->Candidate] = true;
+
+            //----------------------------------------------------------------------------------
+
+            tri_count++;
+
+            int tri2del = itedge->Candidate;
+            usit=uTri.begin();
+
+            int int2del;
+            for (unsigned int cn= 0; cn != mesh_.getNTri(); cn++){
+                if (uTri[cn]==tri2del){
+                    int2del = cn;
+                    break;
+                }
+            }
+
+            for (unsigned int cn= 0; cn != mesh_.getNTri(); cn++){
+                if (cn!=int2del){
+                    usit++;
+                } else {
+                    break;
+                }
+            }
+            numftri--;
+            uTri.erase(usit);
+
+
+
+            std::cerr << "\r" << (float)tri_count/mesh_.getNTri()*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
+            
+            //----------------------------------------------------------------------------------
+
+            // the old Edge is now deleted, and the new ones are inserted in its place
+            itedge = unw.perimeter_.erase(itedge);
+            ed1.birth = date++;
+
+            ed1.Present = e.Candidate;
+            ed2.Present = e.Candidate;
+            ed2.birth = date++;
+            unw.perimeter_.insert(itedge, ed1);
+            unw.perimeter_.insert(itedge, ed2);
+            if (ed1.Candidate != -1)
+                unw.increaseNEdgePos();
+            if (ed2.Candidate != -1)
+                unw.increaseNEdgePos();
+        }
+        // unw.order = unw_order++;
+        unw.setOrder(unw_order++);
+        Vector2f origin(0.0,0.0);
+        unw.displace(origin - unw.m_.getBBoxMin());
+        charts_.push_back(unw);
+    }
+
+    //EdgeOrganizer(mUnwrap);
+
+    // it is necessary to add some offset around the unwraps for the later dilation
+//    float prc = (float)0.040;
+    float prc = (float)0.010;
+    std::vector<Chart>::iterator ito;
+    float maxArea = 0.0;
+    float maxWidth = 0.0;
+    for(ito = charts_.begin(); ito != charts_.end(); ++ito){
+        float area = (*ito).getHeight()*(*ito).getWidth();
+        if (area > maxArea){
+            maxArea = area;
+            maxWidth = (*ito).getWidth();
+        }
+    }
+
+    float offset = (maxWidth)*prc;
+    for(ito = charts_.begin(); ito != charts_.end(); ++ito){
+        (*ito).addOffset2BoundingBox(offset);
+    }
+
+
+    std::cerr << "número de chartsXXX: " << charts_.size() << std::endl;
+    // charts_[2].testExportOBJ();
+    charts_[0].testExportOBJ();
+
+    std::cerr << "\rdone!   " << std::endl;
+
+
+
+
 }
 
-void Unwrapper::unwrapSplats(){
+void Unwrapper::unwrapSplats(const Mesh3D& mesh_, std::vector<Chart>& charts_){
 
     std::cerr << "Analizing splats...";
 
@@ -133,7 +663,7 @@ void Unwrapper::unwrapSplats(){
 
 // This method is too trivial and probably very time consuming,
 // something more efficient should be implemented.
-void Unwrapper::findTriangleNeighbors(std::vector<unsigned int>& _adj_count, std::vector<int>& _triNeighbor){
+void Unwrapper::findTriangleNeighbors(const Mesh3D& mesh_, std::vector<unsigned int>& _adj_count, std::vector<int>& _triNeighbor){
 
 	// which triangles contain each vertex
     std::vector<int> *vtx2tri = new std::vector<int> [mesh_.getNVtx()];
@@ -221,6 +751,21 @@ void Unwrapper::findTriangleNeighbors(std::vector<unsigned int>& _adj_count, std
     }
     delete [] vtx2tri;
 
+}
+
+
+bool Unwrapper::vectorIntersec(const Vector2f& _v1a, const Vector2f& _v1b, const Vector2f& _v2a, const Vector2f& _v2b)  {
+    
+    const Vector2f v1 = _v1b - _v1a;
+    const Vector2f v2 = _v2b - _v2a;
+
+    const float v = ( v1(0) * (_v1a(1) - _v2a(1)) + v1(1) * (_v1a(0) - _v2a(0)) ) / ( v2(1) * v1(0) - v2(0) * v1(1));
+    const float u = ( _v2a(0) + v2(0) * v - _v1a(0) ) / v1(0);
+
+    if ( ( (u > 0) && (u < 1) ) && ( (v > 0) && (v < 1) ) ){
+        return true;
+    }
+    return false;
 }
 
 
