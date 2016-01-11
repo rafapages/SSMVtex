@@ -32,7 +32,6 @@ private:
 	// Checks if 2D vector v1 (from v1a to v1b) intersects with v2 or not
 	static bool vectorIntersec(const Vector2f& _v1a, const Vector2f& _v1b, const Vector2f& _v2a, const Vector2f& _v2b);
 
-
 };
 
 

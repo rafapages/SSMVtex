@@ -42,6 +42,7 @@ public:
 	// Chart dimensions
 	float getHeight() const;
 	float getWidth() const;
+	float getArea() const;
 
 	void addOffset2BoundingBox(float _offset);
 	

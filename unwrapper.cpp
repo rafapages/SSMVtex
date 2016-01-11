@@ -2,15 +2,12 @@
 
 #include <iomanip>
 
-// This value avoids zeros in some operations
-#define EPSILON 1e-6
-// A simple way to find "almost zero" values
-#define ISZERO(x)    ((-EPSILON < x) && (x < EPSILON))
-// A simple way to find "almost one" values
-#define ISONE(x)  ((1-EPSILON < x) && (x < 1+EPSILON))
-
 
 void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
+
+    // This value avoids zeros in some operations
+    const float EPSILON = 1e-6;
+
 
 	std::vector<unsigned int> adj_count (_mesh.getNTri(), 0); // we start with zero neighbors per triangle
 	std::vector<int> triNeighbor(_mesh.getNTri()*3);

@@ -49,6 +49,10 @@ float Chart::getHeight() const {
 	return fabs(bboxmax(1) - bboxmin(1));
 }
 
+float Chart::getArea() const {
+	return getHeight() * getWidth();
+}
+
 void Chart::displace(const Vector2f& _v){
 	m_.displaceMesh(_v);
 }

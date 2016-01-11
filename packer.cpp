@@ -20,9 +20,7 @@ void Packer::pack(std::vector<Chart>& _charts, float& _width, float& _height){
         float maxArea = 0.0;
 
         // We calculate the area of each BBox;
-        const float wside = (*ituw).getWidth();
-        const float hside = (*ituw).getHeight();
-        const float unwArea = wside * hside;
+        const float unwArea = (*ituw).getArea();
 
         // We increase the total area;
         totArea += unwArea;
@@ -46,8 +44,6 @@ void Packer::pack(std::vector<Chart>& _charts, float& _width, float& _height){
 //     }
 
     const int sideElem = (int)(floor(sqrt(nelem)/divisor)); ////
-    // preparation variables
-
 
     // Step 3: place the first line of charts.
 
