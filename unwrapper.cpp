@@ -555,11 +555,6 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
         (*ito).addOffset2BoundingBox(offset);
     }
 
-
-    std::cerr << "número de chartsXXX: " << _charts.size() << std::endl;
-    // _charts[2].testExportOBJ();
-    _charts[0].testExportOBJ();
-
     std::cerr << "\rdone!   " << std::endl;
 
 

@@ -44,8 +44,6 @@ public:
 	float getWidth() const;
 
 	void addOffset2BoundingBox(float _offset);
-
-	void testExportOBJ();
 	
 	std::list<Edge> perimeter_;
 	Mesh2D m_;

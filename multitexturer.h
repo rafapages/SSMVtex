@@ -44,7 +44,8 @@ public:
     // so they are efficently packed
     void chartPacking();
 
-    // TEST obj exporter
+    // TEST chart exporter: the packed charts are exported
+    // as a flat 3D mesh in OBJ format
     void exportOBJcharts(const std::string& _fileName);
 
 

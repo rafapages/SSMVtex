@@ -1,5 +1,6 @@
 #include <map>
 #include <iomanip>
+#include <limits>
 
 
 #include "packer.h"
@@ -26,7 +27,7 @@ void Packer::pack(std::vector<Chart>& _charts, float& _width, float& _height){
         // We increase the total area;
         totArea += unwArea;
 
-        // We organize the unwraps from smallest to biggest
+        // We organize the charts from smallest to biggest
         ordCharts.insert(std::pair<float, Chart>(unwArea, *ituw));
     }
 
@@ -59,14 +60,14 @@ void Packer::pack(std::vector<Chart>& _charts, float& _width, float& _height){
     int counter = 0;
 
     for(unsigned int i = 0; i < sideElem ; i++){
-        // starting from the last (biggest) unwrap of the list
+        // starting from the last (biggest) chart of the list
         itordunw = ordCharts.end();
         itordunw--;
         float unw_h, unw_w, c_h, c_w;
         unw_h = (*itordunw).second.getHeight();
         unw_w = (*itordunw).second.getWidth();
 
-        // if it is taller than wider, it rotates the unwrap;
+        // if it is taller than wider, it rotates the chart;
         if (unw_w > unw_h){
             c_w = unw_w;
             c_h = unw_h;
@@ -76,11 +77,11 @@ void Packer::pack(std::vector<Chart>& _charts, float& _width, float& _height){
             (*itordunw).second.rotate();
             _charts[(*itordunw).second.getOrder()].rotate();
         }
-        // the unwrap is placed in its new position
+        // the chart is placed in its new position
         vdisplace = vpresent;
         _charts[(*itordunw).second.getOrder()].displace(vdisplace);
 
-        // for each unwrap placed, the new contours are updated
+        // for each chart placed, the new contours are updated
         Contour c;
 
         c.x1 = vpresent(0);
@@ -101,38 +102,36 @@ void Packer::pack(std::vector<Chart>& _charts, float& _width, float& _height){
 
     // Step 4: The rest of the charts are inserted
 
-
     while (ordCharts.size() > 0){
         // we extract the present contour: the one with lower height
         Contour cpres = (*(contList.begin())).second;
         vpresent(0) = cpres.x1;
         vpresent(1) = cpres.y;
 
-        // we take the contour with less height and we search for an unwrap with a similar side lenght
+        // we take the contour with less height and we search for an chart with a similar side lenght
         std::multimap<float, Chart>::iterator itun;
-        // the following interator points to the unwrap with the side length most similar to the contour
+        // the following interator points to the chart with the side length most similar to the contour
         std::multimap<float, Chart>::iterator it_min_diff = ordCharts.end();
         int unwsize = ordCharts.size();
 
-        // if the unwrap is taller than wider -> rotated = true;
+        // if the chart is taller than wider -> rotated = true;
         bool rotated = false;
-        float cw, uw, uh, diffw, diffh, mindiff;
-        mindiff = 100000.0;
+        float mindiff = std::numeric_limits<float>::max();
         // contour width
 
-        cw = cpres.x2 - cpres.x1;
+        const float cw = cpres.x2 - cpres.x1;
         int s;
 
-        // we search for the most similar side among the unwraps
+        // we search for the most similar side among the charts
         // it checks width and height and rotates it if necessary
-        for(itun = ordCharts.end(), s=0; s < unwsize ; s++){
+        for(itun = ordCharts.end(), s=0; s < unwsize ; ++s){
             itun--;
 
 
-            uw = (*itun).second.getWidth();
-            uh = (*itun).second.getHeight();
-            diffw = cw - uw;
-            diffh = cw - uh;
+            const float uw = (*itun).second.getWidth();
+            const float uh = (*itun).second.getHeight();
+            const float diffw = cw - uw;
+            const float diffh = cw - uh;
 
             // if the difference is minimum, we save ii
             if ((diffw > 0) && (diffw < mindiff)){
@@ -147,7 +146,7 @@ void Packer::pack(std::vector<Chart>& _charts, float& _width, float& _height){
             }
         }
 
-        // if it does not find an unwrap which fits in the gap determined by the contour
+        // if it does not find an chart which fits in the gap determined by the contour
         // the contour is deleted, and the one sharing beginning or end is updated
         if (it_min_diff == ordCharts.end()){
 
@@ -204,14 +203,14 @@ void Packer::pack(std::vector<Chart>& _charts, float& _width, float& _height){
                     contList.erase(contList.begin());
                 }
             }
-            // if we have found and unwraps which fits in the contuor gap
+            // if we have found and charts which fits in the contuor gap
         } else {
             // we rotate it if necessary
             if (rotated){
                 (*it_min_diff).second.rotate();
                 _charts[(*it_min_diff).second.getOrder()].rotate();
             }
-            // places the unwrap in the new position
+            // places the chart in the new position
             vdisplace = vpresent;
             _charts[(*it_min_diff).second.getOrder()].displace(vdisplace);
 
@@ -232,7 +231,7 @@ void Packer::pack(std::vector<Chart>& _charts, float& _width, float& _height){
           std::cerr << "\r" << (float)counter/nelem * 100 << std::setw(4) << std::setprecision(4) <<"%    " << std::flush;
     }
 
-    // after placing all the unwraps, we can calculate the maximum height
+    // after placing all the charts, we can calculate the maximum height
     _height = (*(--contList.end())).second.y;
     std::cerr << "\rdone!      " << std::endl;
 }
