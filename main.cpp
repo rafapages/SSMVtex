@@ -14,6 +14,8 @@ int main(int argc, char *argv[]){
     multitex.meshUnwrap();
     multitex.chartPacking();
 
+    multitex.exportOBJcharts("hola.obj");
+
 
     return 0;
 }

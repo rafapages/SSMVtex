@@ -4,30 +4,6 @@
 
 #include "packer.h"
 
-// Packer::Packer(){
-
-// }
-
-// Packer::~Packer(){
-	
-// }
-
-// void Packer::setInputCharts(const std::vector<Chart>& _charts){
-// 	_charts = _charts;
-// }
-
-// void Packer::getCharts(std::vector<Chart>& _charts){
-// 	_charts = _charts;
-// }
-
-// float Packer::getWidth() const {
-// 	return _width;
-// }
-
-// float Packer::getHeight() const {
-// 	return _height;
-// }
-
 void Packer::pack(std::vector<Chart>& _charts, float& _width, float& _height){
 
     std::cerr << "Block packing started..." << std::endl;

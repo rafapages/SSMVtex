@@ -44,7 +44,8 @@ public:
     // so they are efficently packed
     void chartPacking();
 
-    // 
+    // TEST obj exporter
+    void exportOBJcharts(const std::string& _fileName);
 
 
 

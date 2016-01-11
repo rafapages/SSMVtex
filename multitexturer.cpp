@@ -894,4 +894,33 @@ bool Multitexturer::findFaceInImage(float& _face_min_x, float& _face_max_x, floa
 }
 
 
+void Multitexturer::exportOBJcharts(const std::string& _fileName){
+
+    std::ofstream outMesh(_fileName.c_str());
+
+    int vtxindex = 0;
+
+    for (unsigned int c = 0; c < charts_.size(); c++){
+
+        const Chart thischart = charts_[c];
+
+        for (unsigned int i = 0; i < thischart.m_.getNVtx(); i++){
+            const Vector2f current = thischart.m_.getVertex(i);
+            outMesh << "v " << current(0) << " " << current(1) << " 0\n";
+        }
+        for (unsigned int i = 0; i < thischart.m_.getNTri(); i++){
+            const Vector3i current = thischart.m_.getTriangle(i).getIndices();
+            outMesh << "f";
+            for (unsigned int j = 0; j < 3; j++){
+                outMesh << " " << current(j)+1+vtxindex; // OBJ indices start at 1
+            }
+            outMesh << "\n";        
+        }
+        vtxindex += thischart.m_.getNVtx();
+
+    }
+
+    outMesh.close();
+}
+
 
