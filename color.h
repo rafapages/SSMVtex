@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-class Color{
+class Color {
 
 public:
 

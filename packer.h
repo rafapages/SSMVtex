@@ -7,7 +7,7 @@ struct Contour{
 	float y, x1, x2;
 };
 
-class Packer{
+class Packer {
 
 public:
 

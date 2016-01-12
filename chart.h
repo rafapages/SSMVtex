@@ -18,7 +18,7 @@ struct Edge{
 };
 
 
-class Chart{
+class Chart {
 
 public:
 

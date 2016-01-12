@@ -120,21 +120,6 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
             me = EPSILON;
         }
 
-        // float dp = x_w.dot(e_w);
-        // float dpmxme = dp/(mx*me);
-        // dpmxme = dpmxme < -1 ? -1 : dpmxme;
-        // dpmxme = dpmxme >  1 ?  1 : dpmxme;
-
-        // float angxe = acos(dpmxme);
-        // Vector2f xn(mx, 0);
-        // Vector2f en (me*cos(angxe),  me*sin(angxe));
-
-        // // The new vertices and triangle are added to the mesh
-
-        // unw.m_.addVector (Vector2f(0.0, 0.0), thistri.getIndex(vtxCase));
-        // unw.m_.addVector (xn, thistri.getIndex((vtxCase + 1) % 3));
-        // unw.m_.addVector (en, thistri.getIndex((vtxCase + 2) % 3));
-
         // If the new 2D vertices of the triangle are a, b and c:
         // a = (0,0)
         // b = (mx, 0)
@@ -217,7 +202,7 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
         // While the number of candidate edges is still above zero
         while (unw.getNEdgePos() > 0) {
 
-            // Step 3.1: we choos en Edge born in generation "gen"
+            // Step 3.1: we choose en Edge born in generation "gen"
 
             std::list<Edge>::iterator itedge;
             for (itedge = unw.perimeter_.begin(); itedge != unw.perimeter_.end() ; itedge++){
@@ -271,9 +256,6 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
             ed2.b = e.b;
             ed2.pa = unw.m_.getNVtx();
             ed2.pb = e.pb;
-
-            //// QUESTION: should this candite stuff be calculated here? or better after checking if
-            ////           they overlap with the chart? In the second case I think we save calculations
 
             // Candidate for ed1
             for (unsigned int j = 0; j < adj_count[e.Candidate]; j++){
@@ -335,8 +317,6 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
             // const Vector2f k1 = proj * x_na_flat / xna;
             // const Vector2f k2 = (e_na - x_na.normalized()*proj).norm() * x_na_perp / xna;
             // const Vector2f nv = unw.m_.getVertex(e.pa) + k1 + k2; // 2D version of newVtx
-
-
 
 
 
@@ -467,7 +447,7 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
                 continue;
             }
 
-            // STEP 2.3.4 : IF ALL TESTS HAVE BEEN PASSED, ADD TRIANGLE, VERTEX AND EDGES
+            // Step 3.4 : If all tests are passed, we add the vertex, triangle, and edges
 
             int newVtx2D = unw.m_.getNVtx();
 
@@ -475,11 +455,7 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
             const Triangle newtri(e.pa, newVtx2D, e.pb);
             unw.m_.addTriangle(newtri, e.Candidate );
 
-            // unw.m.AddTriangle (e.pa, newVtx2D, e.pb, triarea, e.Candidate);
-
             usedTri[itedge->Candidate] = true;
-
-            //----------------------------------------------------------------------------------
 
             tri_count++;
 
@@ -508,8 +484,6 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
 
             std::cerr << "\r" << (float)tri_count/_mesh.getNTri()*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
             
-            //----------------------------------------------------------------------------------
-
             // the old Edge is now deleted, and the new ones are inserted in its place
             itedge = unw.perimeter_.erase(itedge);
             ed1.birth = date++;
@@ -531,7 +505,6 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
         _charts.push_back(unw);
     }
 
-    //EdgeOrganizer(mUnwrap);
 
     // it is necessary to add some offset around the unwraps for the later dilation
 //    float prc = (float)0.040;
@@ -553,8 +526,6 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
     }
 
     std::cerr << "\rdone!   " << std::endl;
-
-
 
 
 }

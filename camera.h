@@ -3,7 +3,7 @@
 
 #include "mesh3d.h"
 
-class Camera{
+class Camera {
 
  public:
     Camera();

@@ -5,8 +5,8 @@
 
 #include "triangle.h"
 
-class Mesh2D
-{
+class Mesh2D {
+    
 public:
     Mesh2D();
     virtual ~Mesh2D();

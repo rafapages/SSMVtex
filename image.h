@@ -9,7 +9,7 @@
 
 typedef enum {BICUBIC, BILINEAR} InterpolateMode;
 
-class Image{
+class Image {
 
 public:
 

@@ -19,8 +19,7 @@ typedef enum {NORMAL_VERTEX, NORMAL_BARICENTER, AREA, AREA_OCCL} CamAssignMode;
 typedef enum {LIGHT, SHADOW, DARK} VtxMode;
 typedef enum {MESH, SPLAT} InputMode;
 
-class Multitexturer
-{
+class Multitexturer {
 
 public:
 

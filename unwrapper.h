@@ -4,7 +4,7 @@
 #include "mesh3d.h"
 #include "chart.h"
 
-class Unwrapper{
+class Unwrapper {
 
 public:
 
