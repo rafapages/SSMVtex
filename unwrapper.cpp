@@ -436,9 +436,9 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
             //float relation__meshbbox_area = 0.7 * (unw.m.GetNTri() > 10 ? 1.0 : 0.3);
             //float relation__meshbbox_area = 0.5;
 
-            //                if ((unw.m.GetNTri() > 5) &&  ((hypoth_tri_area/hypoth_bbox_area)   <   current_relation__meshbbox_area   )) {
-            //                    continue;
-            //                }
+         //    if ((unw.m.GetNTri() > 5) &&  ((hypoth_tri_area/hypoth_bbox_area)   <   current_relation__meshbbox_area   )) {
+         //         continue;
+         //     }
             if (   (hypoth_tri_area/hypoth_bbox_area)   <   relation__meshbbox_area   ){
                 continue;
             }
