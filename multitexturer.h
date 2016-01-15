@@ -100,9 +100,12 @@ private:
     // Stores the corners of the box where the face is contained
     bool findFaceInImage(float& _face_min_x, float& _face_max_x, float& _face_min_y, float& _face_max_y) const;
 
-
+    // Chart coloring functions:
     // This functions calculates the output image size
     void calculateImageSize();
+
+    // Finds the borders of every chart and fills in the corresponding arrays
+    void findChartBorders(ArrayXXi& _pix_frontier, ArrayXXi& pix_triangle);
 
 
     // Input 3D mesh

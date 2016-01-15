@@ -946,19 +946,143 @@ void Multitexturer::chartColoring() {
     std::vector<float> pix_ratings (nCam_, 0.0);
 
 
+    // Step 1: Borders of every chart are found
+    findChartBorders(pix_frontier, pix_triangle);
+
+
+
+    // Output test
+    std::ofstream testfile("test.txt");
+    testfile << "frontier:\n" << pix_frontier << std::endl;
+    testfile << "triangle:\n" << pix_triangle << std::endl;
+    testfile.close();
+
+
+}
+
+void Multitexturer::findChartBorders(ArrayXXi& _pix_frontier, ArrayXXi& _pix_triangle){
+
+    // This algorithm is a custom version of Bressenham's line algotithm, accross all charts
+
+    const float invimwidth = 1/((float) imWidth_);
+
     // We iterate through all the packed charts
     std::vector<Chart>::iterator unwit;
     for (unwit = charts_.begin(); unwit != charts_.end(); ++unwit){
 
+        // we look for the positions in our "pixel grid" of each edge
+        std::list<Edge>::iterator edgeit;
+        for (edgeit = (*unwit).perimeter_.begin(); edgeit!=(*unwit).perimeter_.end(); edgeit++){
+            Vector2f vtx_a = (*unwit).m_.getVertex((*edgeit).pa);
+            Vector2f vtx_b = (*unwit).m_.getVertex((*edgeit).pb);
 
+            // the vertices related to the current edge are first assigned
+            unsigned int a_pix_x = findPosGrid(vtx_a(0), 0, realWidth_,imWidth_);
+            unsigned int a_pix_y = findPosGrid(vtx_a(1), 0, realHeight_,imHeight_);
+            unsigned int b_pix_x = findPosGrid(vtx_b(0), 0, realWidth_,imWidth_);
+            unsigned int b_pix_y = findPosGrid(vtx_b(1), 0, realHeight_,imHeight_);
+            
+            // Safety stuff
+            if (!(a_pix_x < imWidth_)) std::cout << "x " << a_pix_x << " width " << imWidth_ << std::endl;
+            if (!(a_pix_y < imHeight_)) std::cout << "y " << a_pix_y << " height " << imHeight_ << std::endl;
+            assert(a_pix_x < imWidth_);
+            assert(a_pix_y < imHeight_);
+
+            _pix_frontier(a_pix_y, a_pix_x) = -1;
+            _pix_frontier(b_pix_y, b_pix_x) = -1;
+            _pix_triangle(a_pix_y, a_pix_x) = (*edgeit).Present;
+            _pix_triangle(b_pix_y, b_pix_x) = (*edgeit).Present;
+
+            // minimum and maximum values of pixel height for the edge
+            unsigned int pix_y_min = a_pix_y <= b_pix_y ? a_pix_y : b_pix_y;
+            unsigned int pix_y_max = b_pix_y >= a_pix_y ? b_pix_y : a_pix_y;
+
+            // in case they are in the same column
+            unsigned int col, prow;
+            if (a_pix_x == b_pix_x){
+                for (prow = pix_y_min; prow < pix_y_max; prow++){
+                    _pix_frontier (prow, a_pix_x) = -1;
+                    _pix_triangle (prow, a_pix_x) = (*edgeit).Present;
+                }
+                // in case they are not in the same column
+            } else {
+
+                // slope of the edge, which will determine the straight line related to the edge
+                float slope = 0.0;
+
+                if (vtx_a(0) != vtx_b(0)){ // just in case we are dividing by 0
+                    const Vector2f vtx_o = vtx_b - vtx_a;
+                    slope = (vtx_o(1)) / (vtx_o(0));
+                }
+
+                // minimum and maximum values of pixel width for the edge
+                const unsigned int pix_x_min = a_pix_x < b_pix_x ? a_pix_x : b_pix_x;
+                const unsigned int pix_x_max = b_pix_x > a_pix_x ? b_pix_x : a_pix_x;
+
+                if (slope >= 0){
+                    for (col = pix_x_min; col < pix_x_max; col++){
+                        // the "cuts" of the edge with the pixel grid are determined
+                        const float row_aux = slope * ((col+1) * invimwidth * (realWidth_) - vtx_a(0)) + vtx_a(1);
+                        // and the y-pixel position for each cut
+                        const unsigned int mrow = findPosGrid (row_aux,0,realHeight_,imHeight_);
+                        // both previous and later x-pixels are assigned
+                        _pix_frontier(mrow, col) = -1;
+                        _pix_frontier(mrow, col+1) = -1;
+                        _pix_triangle(mrow, col) = (*edgeit).Present;
+                        _pix_triangle(mrow, col+1) = (*edgeit).Present;
+
+                        // the rest of the pixels in the column are assigned
+                        for (prow = pix_y_min; prow < mrow; prow++){
+                            _pix_frontier(prow, col) = -1;
+                            _pix_triangle(prow, col) = (*edgeit).Present;
+
+                        }
+
+                        pix_y_min = mrow;
+                        // in case the next column is the maximum one, pixels of this column are also assigned
+                        if ((col+1) == pix_x_max){
+                            for (prow = mrow; prow<pix_y_max; prow++){
+                                _pix_frontier(prow, col+1) = -1;
+                                _pix_triangle(prow, col+1) = (*edgeit).Present;
+
+                            }
+                        }
+                    }
+                } else { // slope < 0
+                    for (col = pix_x_max; col > pix_x_min; col--){
+                        const float row_aux = slope * ((col) * invimwidth * (realWidth_) - vtx_a(0)) + vtx_a(1);
+                        const unsigned int mrow = findPosGrid (row_aux,0,realHeight_,imHeight_);
+
+                        _pix_frontier(mrow, col) = -1;
+                        _pix_frontier(mrow, col-1) = -1;
+                        _pix_triangle(mrow, col) = (*edgeit).Present;
+                        _pix_triangle(mrow, col-1) = (*edgeit).Present;
+
+                        for (prow = pix_y_min; prow < mrow; prow++){
+                            _pix_frontier(prow, col) = -1;
+                            _pix_triangle(prow, col) = (*edgeit).Present;
+
+                        }
+                        pix_y_min = mrow;
+
+                        if ((col-1) == pix_x_min){
+                            for (prow = mrow; prow < pix_y_max; prow++){
+                                _pix_frontier(prow, col-1) = -1;
+                                _pix_triangle(prow, col-1) = (*edgeit).Present;
+
+                            }
+                        }
+                    }
+
+                }
+
+            }
+
+        }
 
     }
 
 
-
-
-    // std::cerr << "frontier:\n" << pix_frontier << std::endl;
-    // std::cerr << "triangle:\n" << pix_triangle << std::endl;
 
 }
 
