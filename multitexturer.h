@@ -43,6 +43,9 @@ public:
     // so they are efficently packed
     void chartPacking();
 
+    // 
+    void chartColoring();
+
     // TEST chart exporter: the packed charts are exported
     // as a flat 3D mesh in OBJ format
     void exportOBJcharts(const std::string& _fileName);
@@ -98,6 +101,9 @@ private:
     bool findFaceInImage(float& _face_min_x, float& _face_max_x, float& _face_min_y, float& _face_max_y) const;
 
 
+    // This functions calculates the output image size
+    void calculateImageSize();
+
 
     // Input 3D mesh
     Mesh3D  mesh_;
@@ -118,7 +124,7 @@ private:
     // Real-scale floating point coordinates
     float realWidth_, realHeight_;
     // Image dimensions
-    unsigned int imWidth_, imHeigh_;
+    unsigned int imWidth_, imHeight_;
 
     // Options - Default values
     CamAssignMode ca_mode_; //  AREA_OCCL

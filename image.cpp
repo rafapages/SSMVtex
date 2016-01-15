@@ -41,7 +41,7 @@ Color Image::getColor (unsigned int _row, unsigned int _column) const{
 
 }
 
-Color Image::interpolate (float _row, float _column, InterpolateMode _mode) const{
+Color Image::interpolate (float _row, float _column, InterpolateMode _mode) const {
 	
 	const float c = _column - 0.5;
     const float r = _row - 0.5;
@@ -56,27 +56,25 @@ Color Image::interpolate (float _row, float _column, InterpolateMode _mode) cons
 
     if (_mode == BILINEAR){
 
-    	Color A, B, C, D;
-    	A = getColor(r_base, c_base);
-    	B = getColor(r_base + 1, c_base);
-    	C = getColor(r_base, c_base + 1);
-    	D = getColor(r_base + 1, c_base + 1);
+    	const Color A = getColor(r_base, c_base);
+    	const Color B = getColor(r_base + 1, c_base);
+    	const Color C = getColor(r_base, c_base + 1);
+    	const Color D = getColor(r_base + 1, c_base + 1);
 
     	final = A + (B-A)*delta1 + (C-A)*delta2 + (A+D-B-C)*delta1*delta2;
     
     } else if (_mode == BICUBIC){
     // Bi-Cubic
 
-    	Color M, N, O, P;
     	Color A, B, C;
     	Color row_temp [4];
 
     	for (int i = -1; i < 3; i++) {
 
-    		M = getColor(r_base + i, c_base - 1);
-    		N = getColor(r_base + i, c_base);
-    		O = getColor(r_base + i, c_base + 1);
-    		P = getColor(r_base + i, c_base + 2);
+    		const Color M = getColor(r_base + i, c_base - 1);
+    		const Color N = getColor(r_base + i, c_base);
+    		const Color O = getColor(r_base + i, c_base + 1);
+    		const Color P = getColor(r_base + i, c_base + 2);
 
     		A = P - O;
     		B = N - M;
@@ -90,6 +88,7 @@ Color Image::interpolate (float _row, float _column, InterpolateMode _mode) cons
     	C = row_temp[2] - row_temp[0];
 
     	final = row_temp[1] + ( ( (A+B) * delta1 - A - B - B) * delta1 + C) * delta1;
+
     } else {
     	std::cerr << "Mode " << _mode << " is unknown" << std::endl;
     	final = Color(0,0,0);

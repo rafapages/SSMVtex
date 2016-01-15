@@ -14,6 +14,9 @@ Multitexturer::Multitexturer(){
     imageCacheSize_ = 75;
 
     nCam_ = 0;
+
+    realWidth_ = realHeight_ = 0.0;
+    imWidth_ = imHeight_ = 0;
 }
 
 Multitexturer::~Multitexturer(){
@@ -890,6 +893,72 @@ bool Multitexturer::findFaceInImage(float& _face_min_x, float& _face_max_x, floa
     _face_max_y =  (float)itf->y + itf->height;
 
     return true;
+
+}
+
+void Multitexturer::calculateImageSize() {
+
+    if (realWidth_ == 0 || realHeight_ == 0){
+        std::cerr << "Cannot calculate image size!" << std::endl;
+        return;
+    }
+
+    const float k_hw = realHeight_ / realWidth_;
+    const float area = (float) dimension_;
+    imWidth_ = (unsigned int) floor(sqrt(area/k_hw));
+    imHeight_ = (unsigned int) floor(k_hw * imWidth_);
+
+}
+
+void Multitexturer::chartColoring() {
+
+    std::cerr << "Chart coloring process started..." << std::endl;
+
+    calculateImageSize();
+
+    std::cerr << "Output image dimensions: " << imWidth_ << " x " << imHeight_ << std::endl;
+
+
+    // Output image is initialized
+    Image imout =  Image (imHeight_, imWidth_);
+
+
+    // Arrays with pixel information
+
+    // pix_color: An array storing the color for each pixel
+    //            grey (Color(127,127,127)) if no color is assigned
+    Array<Color, Dynamic, Dynamic> pix_color(imHeight_, imWidth_);
+    const Color grey (127,127,127);
+    for (unsigned int c = 0; c < imWidth_; c++){
+        for (unsigned int r = 0; r < imHeight_; r++){
+            pix_color(r,c) = grey;
+        }
+    }
+    // pix_frontier: this array searches for the unwraps borders
+    //               -1 if there is a border in the pixel, 0 elsewhere
+    //               later on, -2 will be assigned to pixels inside borders
+    ArrayXXi pix_frontier = ArrayXXi::Zero(imHeight_, imWidth_);
+    // pix_triangle: this array contains the corresponding triangle in the 3D mesh of each pixel
+    //               -1 if there is no triangle assigned to the pixel
+    ArrayXXi pix_triangle = ArrayXXi::Zero(imHeight_, imWidth_);
+    pix_triangle += -1;
+    // pix_ratings: this vector contains a rating for each camera. It will be re-used for every pixel 
+    std::vector<float> pix_ratings (nCam_, 0.0);
+
+
+    // We iterate through all the packed charts
+    std::vector<Chart>::iterator unwit;
+    for (unwit = charts_.begin(); unwit != charts_.end(); ++unwit){
+
+
+
+    }
+
+
+
+
+    // std::cerr << "frontier:\n" << pix_frontier << std::endl;
+    // std::cerr << "triangle:\n" << pix_triangle << std::endl;
 
 }
 

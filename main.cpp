@@ -16,6 +16,9 @@ int main(int argc, char *argv[]){
 
     multitex.exportOBJcharts("hola.obj");
 
+    multitex.chartColoring();
+
+
 
     return 0;
 }
