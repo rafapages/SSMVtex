@@ -30,4 +30,13 @@ int Triangle::getIndex(unsigned int _index) const {
     return i_(_index);
 }
 
+void Triangle::setUV(const Vector3d& _u, const Vector3d& _v){
+    u_ = _u;
+    v_ = _v;
+}
+
+void Triangle::setCam(int _cam){
+    cam_ = _cam;
+}
+
 

@@ -135,4 +135,12 @@ Vector3f Mesh3D::getTriangleNormal(unsigned int _index) const{
     return getTriangleNormal(vertices[0], vertices[1], vertices[2]);
 }
 
+void Mesh3D::setTriangleUV(unsigned int _index, const Vector3d& _u, const Vector3d& _v){
+    tri_[_index].setUV(_u, _v);
+}
+
+void Mesh3D::setTriangleCam(unsigned int _index, int _cam){
+    tri_[_index].setCam(_cam);
+}
+
 

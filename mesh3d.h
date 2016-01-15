@@ -26,6 +26,8 @@ class Mesh3D {
     void addTriangle(const Triangle& _triangle);
     unsigned int getNVtx() const;
     unsigned int getNTri() const;
+    void setTriangleUV(unsigned int _index, const Vector3d& _u, const Vector3d& _v);
+    void setTriangleCam(unsigned int _index, int _cam);
 
     // Triangle normal, normalized
     Vector3f getTriangleNormal(unsigned int _index) const;

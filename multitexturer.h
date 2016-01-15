@@ -104,8 +104,11 @@ private:
     // This functions calculates the output image size
     void calculateImageSize();
 
+    //
+    void rasterizeTriangles(ArrayXXi& _pix_frontier, ArrayXXi& _pix_triangle);
+
     // Finds the borders of every chart and fills in the corresponding arrays
-    void findChartBorders(ArrayXXi& _pix_frontier, ArrayXXi& pix_triangle);
+    void findChartBorders(Chart& _chart, ArrayXXi& _pix_frontier, ArrayXXi& _pix_triangle);
 
 
     // Input 3D mesh
