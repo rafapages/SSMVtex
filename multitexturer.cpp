@@ -623,7 +623,7 @@ void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
                 for (std::vector<int>::iterator it = candidates.begin(); it != candidates.end(); it++) {
                     // unsigned int * vl = tri[*it].i;
                     const Triangle vl = mesh_.getTriangle(*it);
-                    if (vtx_in_tri(vtx_s[i], vtx_t[i], vtx_s[vl.getIndex(0)], vtx_t[vl.getIndex(0)], vtx_s[vl.getIndex(1)], vtx_t[vl.getIndex(1)], vtx_s[vl.getIndex(2)], vtx_t[vl.getIndex(2)])) {
+                    if (isPinsideTri(Vector2f(vtx_s[i], vtx_t[i]), Vector2f(vtx_s[vl.getIndex(0)], vtx_t[vl.getIndex(0)]), Vector2f(vtx_s[vl.getIndex(1)], vtx_t[vl.getIndex(1)]), Vector2f(vtx_s[vl.getIndex(2)], vtx_t[vl.getIndex(2)]))) {
                         // Check if triangle vertex is eclipsed
                         if (isVertexEclipsed(i, *it, c)){
                             vtx_seen[i] = SHADOW;
@@ -813,48 +813,17 @@ bool Multitexturer::isVertexEclipsed (int _v, int _t, int _c) const {
     return ((dpnacam > 0 && dpnav < 0) || (dpnacam < 0 && dpnav > 0));
 }
 
-bool Multitexturer::vtx_in_tri (float pt_s, float pt_t, float a_s, float a_t,
-                float  b_s, float  b_t, float c_s, float c_t) {
+bool Multitexturer::isPinsideTri (const Vector2f& _p, const Vector2f& _a, const Vector2f& _b, const Vector2f& _c) const {
 
-                    Vector3f A, B, C, P;
-                    A(0) = a_s; A(1) = a_t; A(2) = 0;
-                    B(0) = b_s; B(1) = b_t; B(2) = 0;
-                    C(0) = c_s; C(1) = c_t; C(2) = 0;
-                    P(0) = pt_s; P(1) = pt_t; P(2) = 0;
+    const Vector2f uv = uvPtri(_p, _a, _b, _c);
+    const float u = uv(0);
+    const float v = uv(1);
 
-                    Vector3f v0, v1, v2;
-                    v0 = C; v1 = B; v2 = P;
-                    v0 -= A; 
-                    v1 -= A;
-                    v2 -= A;
+    return (u > 0) && (v > 0) && (u + v < 1);
 
-                    float invDenom = 1 / (v0(0) * v1(1) - v1(0) * v0(1));
-                    
-                    float u = invDenom * (v1(1) * v2(0) - v1(0) * v2(1));
-                    float v = invDenom * (v0(0) * v2(1) - v0(1) * v2(0));
-
-                    return (u > 0) && (v > 0) && (u + v < 1);
 }
 
-Vector2f Multitexturer::lineIntersect(const Vector2f& _a, const Vector2f& _va, const Vector2f& _b, const Vector2f& _vb) const {
-    const float u = (_va(1) * (_b(0) -_a(0)) + _va(0) * (_a(1) - _b(1))) / (_va(0) * _vb(1) - _va(1) * _vb(0));
-    return _b + _vb * u;
-}
-
-
-Vector2f Multitexturer::uv_tri (const Vector2f& _p, const Vector2f& _a, const Vector2f& _b, const Vector2f& _c) const {
-
-    // Vector A, B, C, P;
-    // A.x = a_s; A.y = a_t; A.z = 0;
-    // B.x = b_s; B.y = b_t; B.z = 0;
-    // C.x = c_s; C.y = c_t; C.z = 0;
-    // P.x = pt_s; P.y = pt_t; P.z = 0;
-
-    // Vector2f v0, v1, v2;
-    // v0 = _c; v1 = _b; v2 = _p;
-    // v0 -= A;
-    // v1 -= A;
-    // v2 -= A;
+Vector2f Multitexturer::uvPtri (const Vector2f& _p, const Vector2f& _a, const Vector2f& _b, const Vector2f& _c) const {
 
     const Vector2f v0 = _c - _a;
     const Vector2f v1 = _b - _a;
@@ -868,6 +837,14 @@ Vector2f Multitexturer::uv_tri (const Vector2f& _p, const Vector2f& _a, const Ve
     return Vector2f(u,v);
 
 }
+
+Vector2f Multitexturer::lineIntersect(const Vector2f& _a, const Vector2f& _va, const Vector2f& _b, const Vector2f& _vb) const {
+    const float u = (_va(1) * (_b(0) -_a(0)) + _va(0) * (_a(1) - _b(1))) / (_va(0) * _vb(1) - _va(1) * _vb(0));
+    return _b + _vb * u;
+}
+
+
+
 
 int Multitexturer::findCameraInList(const std::string& _fileName) const{
 
@@ -1107,7 +1084,7 @@ void Multitexturer::rasterizeTriangles(ArrayXXi& _pix_frontier, ArrayXXi& _pix_t
                     pixcenter(0) = (float)(colp + 0.5) * maxwbyimwidth;
                     pixcenter(1) = (float)(rowp + 0.5) * maxwbyimwidth;
                     // if the pixel is inside the triangle or we are in the frontier
-                    const bool condition = vtx_in_tri (pixcenter(0), pixcenter(1), vt0(0), vt0(1), vt1(0), vt1(1), vt2(0), vt2(1));
+                    const bool condition = isPinsideTri (pixcenter, vt0, vt1, vt2);
                     if (    condition || ((_pix_frontier(rowp, colp) == -1) &&
                                           (_pix_triangle(rowp, colp) == tpres_orig3D)) ){
                         // if the pixel is inside the triangle and is not a frontier -> -2
@@ -1399,7 +1376,7 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
                         // Color Assignment:
                         // 2D
                         // u,v, coordinates are calculated
-                        const Vector2f pix_uv = uv_tri(pixcenter, vt0, vt1, vt2);
+                        const Vector2f pix_uv = uvPtri(pixcenter, vt0, vt1, vt2);
 
                         // 3D
                         // pixcenter of the 3D image is calculated

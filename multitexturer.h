@@ -15,7 +15,6 @@
 
 typedef enum {NONE, COLOR, TEXTURE, POINT} MappingMode;
 typedef enum {NORMAL_VERTEX, NORMAL_BARICENTER, AREA, AREA_OCCL} CamAssignMode;
-//typedef enum {OBJ, TXT, WRL, OBJCAM, PNG, UNKNOWN} Extension;
 typedef enum {LIGHT, SHADOW, DARK} VtxMode;
 typedef enum {MESH, SPLAT} InputMode;
 
@@ -43,7 +42,7 @@ public:
     // so they are efficently packed
     void chartPacking();
 
-    // 
+    // Creates a texture atlas and colors it
     void chartColoring();
 
     // TEST chart exporter: the packed charts are exported
@@ -65,17 +64,16 @@ private:
     // Geometry stuff ***
     // According to camera c, is vertex v eclipsed by triangle t ?
     bool isVertexEclipsed(int _v, int _t, int _c) const;
-    // OJO CUIDADO!!!!
+    // Samples x with respect to the given resolution
     unsigned int findPosGrid (float _x, float _min, float _max, unsigned int _resolution);
-    // OJO CUIDADO!!!! Is the point pt included in the triangle defined by vertices a, b and c ?
-    bool vtx_in_tri (float pt_s, float pt_t, float a_s, float a_t,
-                     float  b_s, float  b_t, float c_s, float c_t); 
-    // Returns the intersecting point of two lines defined by point _a and vector _va and _b and _vb
-    Vector2f lineIntersect(const Vector2f& _a, const Vector2f& _va, const Vector2f& _b, const Vector2f& _vb) const;
+    // Checks if the point p is included in the triangle defined by vertices a, b and c
+    bool isPinsideTri (const Vector2f& _p, const Vector2f& _a, const Vector2f& _b, const Vector2f& _c) const; 
     // This function returns a 2D Vector containing the u,v, image coordinates
     // of a point (_p) in relation to a triangle (_a, _b, _c)
-    Vector2f uv_tri (const Vector2f& _p, const Vector2f& _a, const Vector2f& _b, const Vector2f& _c) const;
-
+    Vector2f uvPtri (const Vector2f& _p, const Vector2f& _a, const Vector2f& _b, const Vector2f& _c) const;
+    // Returns the intersecting point of two lines defined by point _a and vector _va and _b and _vb
+    Vector2f lineIntersect(const Vector2f& _a, const Vector2f& _va, const Vector2f& _b, const Vector2f& _vb) const;
+ 
 
 
     // Different ways to estimate camera weights:
