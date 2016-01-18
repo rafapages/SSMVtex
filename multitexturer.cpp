@@ -965,11 +965,12 @@ void Multitexturer::rasterizeTriangles(ArrayXXi& _pix_frontier, ArrayXXi& _pix_t
 
 
     std::vector<Chart>::iterator unwit;
+    int trcnt = 0;
+
     for (unwit = charts_.begin(); unwit != charts_.end(); ++unwit){
 
         findChartBorders(*unwit, _pix_frontier, _pix_triangle);
 
-        int trcnt = 0;
         // for each triangle we find a bounding box determined by its maximum and minimum values of x and y pixels
         for (unsigned int i = 0; i < (*unwit).m_.getNTri(); i++){
             Triangle tpres = (*unwit).m_.getTriangle(i);
@@ -1052,18 +1053,41 @@ void Multitexturer::rasterizeTriangles(ArrayXXi& _pix_frontier, ArrayXXi& _pix_t
                 v2 = vt1dy/maxhd;
             }
 
-            //          // image coordinates are assignated and camera mode is initialized to -2
+            // image coordinates are assignated and camera mode is initialized to -2
             const Vector3d tri_u(u0,u1,u2);
             const Vector3d tri_v(1-v0, 1-v1, 1-v2); // OJO!!!! en realidad esto no es necesario at all!!!! es por el exportador de VRML
 
             mesh_.setTriangleCam(i, -2);
             mesh_.setTriangleUV(i, tri_u, tri_v);
 
-            // TODAVÍA QUEDAN COSAS -> asignar valores a pix_blabla
+            // To avoid divisions...
+            const float maxwbyimwidth =realWidth_/imWidth_;
+
+            // For every pixel in the triangle bounding box
+            for (unsigned int colp = xminp; colp < xmaxp; colp++){ // En la original aquí había un <=
+                for (unsigned int rowp = yminp; rowp < ymaxp; rowp++){ // y Aquí también 
+                    // pixel center is calculated
+                    Vector2f pixcenter;
+                    pixcenter(0) = (float)(colp + 0.5) * maxwbyimwidth;
+                    pixcenter(1) = (float)(rowp + 0.5) * maxwbyimwidth;
+                    // if the pixel is inside the triangle or we are in the frontier
+                    const bool condition = vtx_in_tri (pixcenter(0), pixcenter(1), vt0(0), vt0(1), vt1(0), vt1(1), vt2(0), vt2(1));
+                    if (    condition || ((_pix_frontier(rowp, colp) == -1) &&
+                                          (_pix_triangle(rowp, colp) == tpres_orig3D)) ){
+                        // if the pixel is inside the triangle and is not a frontier -> -2
+                        if (_pix_frontier(rowp, colp) != -1){
+                            _pix_frontier(rowp, colp) = -2;     
+                            _pix_triangle(rowp, colp) = tpres_orig3D;
+                        }
+                    }
+                }
+            }
+         
+            std::cerr << "\r" << (float)trcnt/mesh_.getNTri()*100 << std::setw(4) << std::setprecision(4) << "% of triangles rasterized.      ";
+
         }
     }
-
-
+    std::cerr << "\n";
 }
 
 void Multitexturer::findChartBorders(Chart& _chart, ArrayXXi& _pix_frontier, ArrayXXi& _pix_triangle){
