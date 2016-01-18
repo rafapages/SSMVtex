@@ -70,6 +70,11 @@ private:
     // OJO CUIDADO!!!! Is the point pt included in the triangle defined by vertices a, b and c ?
     bool vtx_in_tri (float pt_s, float pt_t, float a_s, float a_t,
                      float  b_s, float  b_t, float c_s, float c_t); 
+    // Returns the intersecting point of two lines defined by point _a and vector _va and _b and _vb
+    Vector2f lineIntersect(const Vector2f& _a, const Vector2f& _va, const Vector2f& _b, const Vector2f& _vb) const;
+    // This function returns a 2D Vector containing the u,v, image coordinates
+    // of a point (_p) in relation to a triangle (_a, _b, _c)
+    Vector2f uv_tri (const Vector2f& _p, const Vector2f& _a, const Vector2f& _b, const Vector2f& _c) const;
 
 
 
@@ -95,6 +100,9 @@ private:
     // if the camera is not found, -1 is returned
     int findCameraInList(const std::string& _fileName) const;
 
+    // Loads the selected image to the cache
+    void loadImageToCache(const std::string& _fileName);
+
     // Finds a face in the determined image
     // Returns true if found or false if not
     // Stores the corners of the box where the face is contained
@@ -104,11 +112,15 @@ private:
     // This functions calculates the output image size
     void calculateImageSize();
 
-    //
+    // Fills arrays _pix_frontier and _pix_triangle, which represent the final image
     void rasterizeTriangles(ArrayXXi& _pix_frontier, ArrayXXi& _pix_triangle);
 
     // Finds the borders of every chart and fills in the corresponding arrays
     void findChartBorders(Chart& _chart, ArrayXXi& _pix_frontier, ArrayXXi& _pix_triangle);
+
+    // Performs the multi-texturing and returns a texture image
+    Image colorTextureAtlas(const ArrayXXi& _pix_frontier, const ArrayXXi& _pix_triangle, Array<Color, Dynamic, Dynamic>& _pix_color);
+
 
 
     // Input 3D mesh
@@ -121,7 +133,7 @@ private:
 
     // Images are stored in a cache
     // so there are no memory issues
-    std::map<std::string, Image> imageCache;
+    std::map<std::string, Image> imageCache_;
 
     // Group of 2D charts created by unwrapping the 3D mesh
     std::vector<Chart> charts_;

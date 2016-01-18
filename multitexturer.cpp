@@ -1,5 +1,5 @@
 #include <iomanip>
-
+#include <algorithm>
 
 #include "multitexturer.h"
 
@@ -836,6 +836,39 @@ bool Multitexturer::vtx_in_tri (float pt_s, float pt_t, float a_s, float a_t,
                     return (u > 0) && (v > 0) && (u + v < 1);
 }
 
+Vector2f Multitexturer::lineIntersect(const Vector2f& _a, const Vector2f& _va, const Vector2f& _b, const Vector2f& _vb) const {
+    const float u = (_va(1) * (_b(0) -_a(0)) + _va(0) * (_a(1) - _b(1))) / (_va(0) * _vb(1) - _va(1) * _vb(0));
+    return _b + _vb * u;
+}
+
+
+Vector2f Multitexturer::uv_tri (const Vector2f& _p, const Vector2f& _a, const Vector2f& _b, const Vector2f& _c) const {
+
+    // Vector A, B, C, P;
+    // A.x = a_s; A.y = a_t; A.z = 0;
+    // B.x = b_s; B.y = b_t; B.z = 0;
+    // C.x = c_s; C.y = c_t; C.z = 0;
+    // P.x = pt_s; P.y = pt_t; P.z = 0;
+
+    // Vector2f v0, v1, v2;
+    // v0 = _c; v1 = _b; v2 = _p;
+    // v0 -= A;
+    // v1 -= A;
+    // v2 -= A;
+
+    const Vector2f v0 = _c - _a;
+    const Vector2f v1 = _b - _a;
+    const Vector2f v2 = _p - _a;
+
+    const float invDenom = 1 / (v0(0) * v1(1) - v1(0) * v0(1));
+
+    const float u = invDenom * (v1(1) * v2(0) - v1(0) * v2(1));
+    const float v = invDenom * (v0(0) * v2(1) - v0(1) * v2(0));
+
+    return Vector2f(u,v);
+
+}
+
 int Multitexturer::findCameraInList(const std::string& _fileName) const{
 
     for (unsigned int i = 0; i < nCam_; i++){
@@ -845,6 +878,16 @@ int Multitexturer::findCameraInList(const std::string& _fileName) const{
     }
     std::cerr << "There is no image file " << _fileName << " in the image list." << std::endl;
     return -1;
+
+}
+
+void Multitexturer::loadImageToCache(const std::string& _fileName){
+
+    if (imageCache_.size() == imageCacheSize_){
+        imageCache_.clear();
+    }
+
+    imageCache_[_fileName] = Image(_fileName);
 
 }
 
@@ -918,11 +961,6 @@ void Multitexturer::chartColoring() {
 
     std::cerr << "Output image dimensions: " << imWidth_ << " x " << imHeight_ << std::endl;
 
-
-    // Output image is initialized
-    Image imout =  Image (imHeight_, imWidth_);
-
-
     // Arrays with pixel information
 
     // pix_color: An array storing the color for each pixel
@@ -942,15 +980,13 @@ void Multitexturer::chartColoring() {
     //               -1 if there is no triangle assigned to the pixel
     ArrayXXi pix_triangle = ArrayXXi::Zero(imHeight_, imWidth_);
     pix_triangle += -1;
-    // pix_ratings: this vector contains a rating for each camera. It will be re-used for every pixel 
-    std::vector<float> pix_ratings (nCam_, 0.0);
 
-
-    // Step 1: Borders of every chart are found
-    // findChartBorders(pix_frontier, pix_triangle);
+    // Triangles are firstly rasterized:
+    // pix_frontier and pix_triangle arrays are filled
     rasterizeTriangles(pix_frontier, pix_triangle);
 
-
+    Image imout = colorTextureAtlas(pix_frontier, pix_triangle, pix_color);
+    imout.save("prueba.jpg");
 
     // Output test
     std::ofstream testfile("test.txt");
@@ -967,13 +1003,16 @@ void Multitexturer::rasterizeTriangles(ArrayXXi& _pix_frontier, ArrayXXi& _pix_t
     std::vector<Chart>::iterator unwit;
     int trcnt = 0;
 
+    // To avoid divisions...
+    const float maxwbyimwidth =realWidth_/imWidth_;
+
     for (unwit = charts_.begin(); unwit != charts_.end(); ++unwit){
 
         findChartBorders(*unwit, _pix_frontier, _pix_triangle);
 
         // for each triangle we find a bounding box determined by its maximum and minimum values of x and y pixels
         for (unsigned int i = 0; i < (*unwit).m_.getNTri(); i++){
-            Triangle tpres = (*unwit).m_.getTriangle(i);
+            const Triangle tpres = (*unwit).m_.getTriangle(i);
             trcnt++;
 
             // Vector2f vt0,vt1,vt2;
@@ -1059,9 +1098,6 @@ void Multitexturer::rasterizeTriangles(ArrayXXi& _pix_frontier, ArrayXXi& _pix_t
 
             mesh_.setTriangleCam(i, -2);
             mesh_.setTriangleUV(i, tri_u, tri_v);
-
-            // To avoid divisions...
-            const float maxwbyimwidth =realWidth_/imWidth_;
 
             // For every pixel in the triangle bounding box
             for (unsigned int colp = xminp; colp < xmaxp; colp++){ // En la original aquí había un <=
@@ -1203,6 +1239,221 @@ void Multitexturer::findChartBorders(Chart& _chart, ArrayXXi& _pix_frontier, Arr
             }
         }
     } 
+}
+
+
+Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const ArrayXXi& _pix_triangle, Array<Color, Dynamic, Dynamic>& _pix_color){
+
+    // Output image is initialized
+    Image imout =  Image (imHeight_, imWidth_);
+
+    // pix_ratings: this vector contains a rating for each camera. It will be re-used for every pixel 
+    std::vector<float> pix_ratings (nCam_, 0.0);
+    // ratings_cam:
+    std::multimap<float,int> ratings_cam;
+
+    std::vector<Chart>::iterator unwit;
+
+    // To avoid divisions...
+    const float maxwbyimwidth =realWidth_/imWidth_;
+
+    int trcnt = 0;
+    for (unwit = charts_.begin(); unwit != charts_.end(); ++unwit){
+
+        for (unsigned int i = 0; i < (*unwit).m_.getNTri(); i++){
+            
+            const Triangle tpres = (*unwit).m_.getTriangle(i);
+            const int tpres_orig3D = (*unwit).m_.getOrigTri(i);
+
+            trcnt++;
+
+            // Vector2f vt0,vt1,vt2;
+            // vertices of the triangle
+            const Vector2f vt0 = (*unwit).m_.getVertex(tpres.getIndex(0));
+            const Vector2f vt1 = (*unwit).m_.getVertex(tpres.getIndex(1));
+            const Vector2f vt2 = (*unwit).m_.getVertex(tpres.getIndex(2));
+
+            float xmax, xmin, ymax, ymin;
+
+            // maximum x value
+            xmax = vt0(0) > vt1(0) ? vt0(0) : vt1(0);
+            xmax = xmax > vt2(0) ? xmax : vt2(0);
+            // minimum x value
+            xmin = vt0(0) < vt1(0) ? vt0(0) : vt1(0);
+            xmin = xmin < vt2(0) ? xmin : vt2(0);
+            // maximum y value
+            ymax = vt0(1) > vt1(1) ? vt0(1) : vt1(1);
+            ymax = ymax > vt2(1) ? ymax : vt2(1);
+            // minimum y value
+            ymin = vt0(1) < vt1(1) ? vt0(1) : vt1(1);
+            ymin = ymin < vt2(1) ? ymin : vt2(1);
+
+            unsigned int xmaxp = findPosGrid(xmax, 0, realWidth_, imWidth_);
+            unsigned int xminp = findPosGrid(xmin, 0, realHeight_, imHeight_);
+            unsigned int ymaxp = findPosGrid(ymax, 0, realWidth_, imWidth_);
+            unsigned int yminp = findPosGrid(ymin, 0, realHeight_, imHeight_);
+
+
+            const int vt0_orig3D = (*unwit).m_.getOrigVtx(tpres.getIndex(0));
+            const int vt1_orig3D = (*unwit).m_.getOrigVtx(tpres.getIndex(1));
+            const int vt2_orig3D = (*unwit).m_.getOrigVtx(tpres.getIndex(2));
+
+            for (unsigned int colp = xminp; colp < xmaxp; colp++){ // <= en la versión clásica
+                for (unsigned int rowp = yminp; rowp < ymaxp; rowp++){
+                    // pixel center is calculated
+                    Vector2f pixcenter;
+                    pixcenter(0) = (float)(colp + 0.5) * maxwbyimwidth;
+                    pixcenter(1) = (float)(rowp + 0.5) * maxwbyimwidth;
+                    // if the pixel is inside the triangle or we are in the frontier
+                    if (_pix_triangle(rowp, colp) != -1){
+ 
+                        const Vector2f R = vt2 - vt1;
+                        const Vector2f vt2vt0 = vt2-vt0;
+                        const Vector2f vt1vt0 = vt1-vt0;
+
+                        // E and D are the proyections of the pixel center in
+                        // two of the sides of the triangle following a parallel
+                        // line to the third side
+                        Vector2f E = lineIntersect(vt0, vt2vt0, pixcenter, R);
+                        Vector2f D = lineIntersect(vt0, vt1vt0, pixcenter, R);
+
+                        const float vt0_E = (E - vt0).norm();
+                        const float vt0_vt2 = (vt2 - vt0).norm();
+                        const float E_D = (D - E).norm();
+                        const float E_F = (pixcenter - E).norm();
+                        
+                        float ro, delta;
+                        if (pixcenter == vt0){
+                            ro = 0;
+                            delta = 0;
+                        } else if (pixcenter == vt1){
+                            ro = 1;
+                            delta = 1;
+                        } else if (pixcenter == vt2){
+                            ro = 1;
+                            delta = 0;
+                        } else { // ro and delta should be € [0,1]
+                            ro = std::max(vt0_E/vt0_vt2, 0.0f);
+                            ro = std::min(ro, 1.0f);
+                            delta = std::max(E_F/E_D, 0.0f);
+                            delta = std::min(delta, 1.0f);
+                        }
+
+                        // Weights for each vertex    
+                        const float weight0 = (1-ro); // delta*(1-ro) + (1-delta)*(1-ro) = 1 -ro
+                        const float weight1 = delta*ro;
+                        const float weight2 = (1-delta)*ro;
+
+
+                        // we calculate the rate for the pixel for each camera
+                        for (unsigned int c = 0; c < nCam_; c++){
+                            if (cameras_[c].tri_ratings_[tpres_orig3D] == 0){
+                                pix_ratings[c] = 0;
+                                continue;
+                            }
+
+                            const float vt0rat = cameras_[c].vtx_ratings_[vt0_orig3D];
+                            const float vt1rat = cameras_[c].vtx_ratings_[vt1_orig3D];
+                            const float vt2rat = cameras_[c].vtx_ratings_[vt2_orig3D];
+                            // this expression comes from a triple linear interpolation of the vertex ratings
+                            const float Frat =  weight0 * vt0rat + weight1 * vt1rat + weight2 * vt2rat;
+                            pix_ratings[c] = Frat;
+                        }
+
+                        // Best cameras are assigned
+                        ratings_cam.clear();
+                        for (unsigned int c = 0; c < nCam_; c++) {
+                            if (pix_ratings[c] != 0){
+                                ratings_cam.insert(std::pair<float,int>(pix_ratings[c],c));
+                            }
+                        }
+                        // Number of cameras to mix is the minimun between:
+                        // our input value and the number of cameras available for the current pixel
+                        const unsigned int tomix = ratings_cam.size() < (unsigned int) num_cam_mix_ ? ratings_cam.size() : num_cam_mix_;
+
+
+                        // Calculation of the weights
+                        // int *cameras_order;
+                        // float *weights_order;
+                        std::vector<int> cameras_order;
+                        std::vector<float> weights_order;
+                        if (tomix != 0) {
+                            unsigned int p;
+                            float sumratings = 0;
+                            cameras_order.resize(tomix);
+                            weights_order.resize(tomix);
+
+                            // Naïve way of calculating weights... could be improved
+                            std::multimap<float, int>::iterator it;
+                            for (it = ratings_cam.end(), p = 0; p < tomix; ++p) {
+                                it--;
+                                sumratings += (*it).first;
+                                cameras_order[p] = (*it).second;
+                            }
+                            for (it = ratings_cam.end(), p = 0; p < tomix; ++p) {
+                                it--;
+                                weights_order[p] = (*it).first/sumratings;
+                            }
+                        }
+
+                        // Color Assignment:
+                        // 2D
+                        // u,v, coordinates are calculated
+                        const Vector2f pix_uv = uv_tri(pixcenter, vt0, vt1, vt2);
+
+                        // 3D
+                        // pixcenter of the 3D image is calculated
+                        // Vector pixcenter3D, vA, vB, vC, vAB, vAC;
+                        const Vector3f vA = mesh_.getVertex(vt0_orig3D);
+                        const Vector3f vB = mesh_.getVertex(vt1_orig3D);
+                        const Vector3f vC = mesh_.getVertex(vt2_orig3D);
+                        const Vector3f vAB = vB-vA;
+                        const Vector3f vAC = vC-vA;
+
+                        // we use the 2D u,v, coodinates to assign the 3D pixcenter
+                        const Vector3f pixcenter3D = vAB * pix_uv(1) + vAC * pix_uv(0) + vA; //
+                        // Colors
+                        Color col;
+                        for (unsigned int p = 0; p < tomix; p++) {
+                            int camera = cameras_order[p];
+                            float weight = weights_order[p];
+
+                            // cache stuff
+                            std::string imageName = imageList_[camera];
+                            if (imageCache_.find(imageName) == imageCache_.end()){
+                                loadImageToCache(imageName);
+                            }
+
+                            // Vector3f v = pixcenter3D.CoordTransform(&cam[camera]);
+                            Vector2f v = cameras_[camera].transform2uvCoord(pixcenter3D);
+                            // Projection coordinates
+                            float proj_s = v(0);
+                            float proj_t = v(1);
+
+                            if (p==0) {// Difference : = vs. +=
+                                col = imageCache_[imageName].interpolate(imageCache_[imageName].getHeight() - proj_t, proj_s) * weight;
+
+                            } else {
+                                col += imageCache_[imageName].interpolate(imageCache_[imageName].getHeight() - proj_t, proj_s) * weight;
+                            }
+                        }
+
+                        // color is assigned to the pixel
+                        _pix_color(rowp, colp) = col;
+                        imout.setColor(col, rowp, colp);
+                    }
+                }
+            }
+
+            std::cerr << "\r" << (float)trcnt/mesh_.getNTri()*100 << std::setw(4) << std::setprecision(4) << "% of triangles colored. ";
+            std::cerr << (float)imageCache_.size()/imageCacheSize_ * 100 << std::setw(4) << std::setprecision(4) << "% of cache usage (";
+            std::cerr << imageCache_.size() << "/" << imageCacheSize_ << ").      " << std::flush;
+        }
+    }
+
+    std::cerr << "\n";
+
+    return imout;
 }
 
 
