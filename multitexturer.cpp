@@ -1071,12 +1071,14 @@ void Multitexturer::rasterizeTriangles(ArrayXXi& _pix_frontier, ArrayXXi& _pix_t
 
             // image coordinates are assignated and camera mode is initialized to -2
             const Vector3d tri_u(u0,u1,u2);
+            // std::cerr << "Triangle " << i << " u:\n";
+            // std::cerr << tri_u << std::endl;
             // const Vector3d tri_v(1-v0, 1-v1, 1-v2); // OJO!!!! en realidad esto no es necesario at all!!!! es por el exportador de VRML97
             const Vector3d tri_v(v0, v1, v2);
 
 
-            mesh_.setTriangleCam(i, -2);
-            mesh_.setTriangleUV(i, tri_u, tri_v);
+            mesh_.setTriangleCam(tpres_orig3D, -2);
+            mesh_.setTriangleUV(tpres_orig3D, tri_u, tri_v);
 
             // For every pixel in the triangle bounding box
             for (unsigned int colp = xminp; colp < xmaxp; colp++){ // En la original aquí había un <=

@@ -247,7 +247,6 @@ void Mesh3D::writeVRML(const std::string& _fileName, const std::string& _texture
         nTriThisCam++;
         // Print translated indices of vertices
         fOut << "\t" << LUT[triPtr->getIndex(0)] << " " << LUT[triPtr->getIndex(1)] << " " << LUT[triPtr->getIndex(2)] << " -1 \n";
-
     }
     fOut << "      ] # coordIndex\n";
 
