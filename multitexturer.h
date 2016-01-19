@@ -45,6 +45,8 @@ public:
     // Creates a texture atlas and colors it
     void chartColoring();
 
+    void exportTexturedOBJ();
+
     // TEST chart exporter: the packed charts are exported
     // as a flat 3D mesh in OBJ format
     void exportOBJcharts(const std::string& _fileName);

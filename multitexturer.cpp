@@ -963,13 +963,13 @@ void Multitexturer::chartColoring() {
     rasterizeTriangles(pix_frontier, pix_triangle);
 
     Image imout = colorTextureAtlas(pix_frontier, pix_triangle, pix_color);
-    imout.save("prueba.jpg");
+    imout.save(fileNameTexOut_);
 
-    // Output test
-    std::ofstream testfile("test.txt");
-    testfile << "frontier:\n" << pix_frontier << std::endl;
-    testfile << "triangle:\n" << pix_triangle << std::endl;
-    testfile.close();
+    // // Output test
+    // std::ofstream testfile("test.txt");
+    // testfile << "frontier:\n" << pix_frontier << std::endl;
+    // testfile << "triangle:\n" << pix_triangle << std::endl;
+    // testfile.close();
 
 
 }
@@ -1071,7 +1071,10 @@ void Multitexturer::rasterizeTriangles(ArrayXXi& _pix_frontier, ArrayXXi& _pix_t
 
             // image coordinates are assignated and camera mode is initialized to -2
             const Vector3d tri_u(u0,u1,u2);
-            const Vector3d tri_v(1-v0, 1-v1, 1-v2); // OJO!!!! en realidad esto no es necesario at all!!!! es por el exportador de VRML
+            // const Vector3d tri_v(1-v0, 1-v1, 1-v2); // OJO!!!! en realidad esto no es necesario at all!!!! es por el exportador de VRML97
+            const Vector3d tri_v(v0, v1, v2); // OJO!!!! en realidad esto no es necesario at all!!!! es por el exportador de VRML
+
+
 
             mesh_.setTriangleCam(i, -2);
             mesh_.setTriangleUV(i, tri_u, tri_v);
@@ -1433,7 +1436,10 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
     return imout;
 }
 
+void Multitexturer::exportTexturedOBJ(){
 
+    mesh_.writeOBJ(fileNameOut_, fileNameTexOut_);
+}
 
 
 void Multitexturer::exportOBJcharts(const std::string& _fileName){

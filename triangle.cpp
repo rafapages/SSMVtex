@@ -39,4 +39,12 @@ void Triangle::setCam(int _cam){
     cam_ = _cam;
 }
 
+Vector3d Triangle::getU() const {
+    return u_;
+}
+
+Vector3d Triangle::getV() const {
+    return v_;
+}
+
 

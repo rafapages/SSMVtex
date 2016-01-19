@@ -18,6 +18,7 @@ class Mesh3D {
     // I/O
     void readOBJ(const std::string& _fileName);
     void writeOBJ(const std::string& _fileName);
+    void writeOBJ(const std::string& _fileName, const std::string& _textureFile);
 
     // Data access
     Vector3f getVertex(unsigned int _index) const;
@@ -34,6 +35,9 @@ class Mesh3D {
     Vector3f getTriangleNormal(const Vector3f& _a, const Vector3f& _b, const Vector3f& _c) const;
 
  private:
+
+    void writeOBJheader(std::ofstream& _outFile);
+    void writeMTLfile(const std::string& _fileName, const std::string& _textureFile);
 
     std::vector<Vector3f> vtx_;
     std::vector<Triangle> tri_;

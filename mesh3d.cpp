@@ -66,7 +66,7 @@ void Mesh3D::writeOBJ(const std::string& _fileName){
 
     std::ofstream outMesh(_fileName.c_str());
 
-    // I should first print a header...
+    writeOBJheader(outMesh);
 
     // Vertices
     for (unsigned int i = 0; i < nVtx_; i++){
@@ -78,6 +78,7 @@ void Mesh3D::writeOBJ(const std::string& _fileName){
         outMesh << "\n";
     }
 
+    // Triangles
     for (unsigned int i = 0; i < nTri_; i++){
         const Vector3i current = tri_[i].getIndices();
         outMesh << "f";
@@ -91,6 +92,78 @@ void Mesh3D::writeOBJ(const std::string& _fileName){
 
     outMesh.close();
 }
+
+void Mesh3D::writeOBJ(const std::string& _fileName, const std::string& _textureFile){
+
+    std::ofstream outMesh(_fileName.c_str());
+
+    writeOBJheader(outMesh);
+    writeMTLfile(_fileName + ".mtl", _textureFile);
+
+    outMesh << "mtllib ./" << _fileName << ".mtl" << std::endl;
+
+    // Vertices
+    for (unsigned int i = 0; i < nVtx_; i++){
+        const Vector3f current = vtx_[i];
+        outMesh << "v";
+        for (unsigned int j = 0; j < 3; j++){
+            outMesh << " " << current(j);
+        }
+        outMesh << "\n";
+    }
+
+    outMesh << "\nusemtl material_0" << std::endl;
+
+    // Triangles and texture coordinates
+    // Note: this is a bit inneficient yet...
+    unsigned int texIndex = 1;
+    for (unsigned int i = 0; i < nTri_; i++){
+        const Vector3i current = tri_[i].getIndices();
+        const Vector3d u = tri_[i].getU();
+        const Vector3d v = tri_[i].getV();
+
+        for (unsigned int j = 0; j < 3; j++){
+            outMesh << "vt " << u(j) << " " << v(j) << std::endl;
+        }
+
+        outMesh << "f";
+        for (unsigned int j = 0; j < 3; j++){
+            outMesh << " " << current(j)+1 << "/" << j+texIndex; // OBJ indices start at 1
+        }
+        texIndex += 3;
+        outMesh << "\n";
+    }
+}
+
+void Mesh3D::writeOBJheader(std::ofstream& _outFile){
+
+    if (_outFile.is_open()){
+
+        _outFile << "# " << nVtx_ << " vertices and " << nTri_ << " triangles." << std::endl;
+
+    } else {
+        std::cerr << "Unable to write OBJ header." << std::endl;
+    }
+}
+
+void Mesh3D::writeMTLfile(const std::string& _fileName, const std::string& _textureFile){
+
+    std::ofstream mtlFile(_fileName.c_str());
+
+    mtlFile << "newmtl material_0\n";
+    mtlFile << "Ka 0.200000 0.200000 0.200000\n";
+    mtlFile << "Kd 1.000000 1.000000 1.000000\n";
+    mtlFile << "Ks 1.000000 1.000000 1.000000\n";
+    mtlFile << "Tr 1.000000\n";
+    mtlFile << "illum 2\n";
+    mtlFile << "Ns 0.000000\n";
+    mtlFile << "map_Kd " << _textureFile << std::endl;
+    
+    mtlFile.close();
+
+}
+
+
 
 void Mesh3D::addVector(const Vector3f& _vector){
     vtx_.push_back(_vector);

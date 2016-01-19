@@ -19,6 +19,8 @@ class Triangle{
     int getIndex(unsigned int _index) const; // 0, 1 or 2
     void setUV(const Vector3d& _u, const Vector3d& _v);
     void setCam(int _cam);
+    Vector3d getU() const;
+    Vector3d getV() const;
 
 private:
     Vector3i i_;
