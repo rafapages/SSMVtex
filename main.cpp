@@ -18,7 +18,7 @@ int main(int argc, char *argv[]){
 
     multitex.chartColoring();
 
-    multitex.exportTexturedOBJ();
+    multitex.exportTexturedVRML();
 
     return 0;
 }

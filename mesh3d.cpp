@@ -163,6 +163,117 @@ void Mesh3D::writeMTLfile(const std::string& _fileName, const std::string& _text
 
 }
 
+void Mesh3D::writeVRML(const std::string& _fileName, const std::string& _textureFile){
+
+    std::ofstream fOut;
+    std::vector<int> LUT (nVtx_, -1);   // Look Up Table for vertex indices
+
+    fOut.open(_fileName.c_str());
+    if (!fOut.is_open()){
+        std::cerr << "ExportVRML: unable to write output file: " << _fileName << std::endl;
+        return;
+    }
+
+    std::cerr << "Writing to output file " << nTri_ << " triangles and " << nVtx_ << " vertices... " << std::endl;
+
+    std::string header[] = {
+        "#VRML V2.0 utf8",
+        "",
+        "WorldInfo { info \"Created with Multitex, (c) 2016 "
+        "by Rafael Pagés, Francisco Morán + Daniel Berjón + Sergio Arnaldo"
+        "(GTI-UPM)\" }",
+        "",
+        "Background { skyColor 1 1 1 }",
+        "",
+    };
+
+    for (unsigned int i=0; i < sizeof(header)/sizeof(header[0]); i++){
+        fOut << header[i] << std::endl;
+    }
+
+    fOut << "DEF Object Group { children [\n";
+    fOut << "  DEF Seen Shape {\n";
+    fOut << "    appearance Appearance {\n";
+    fOut << "      texture ImageTexture { url \"" << _textureFile << "\" }\n";
+    fOut << "      material Material { diffuseColor 1.0 1.0 1.0 }\n"; 
+
+    fOut << "    }\n";
+
+    // IndexedFaceSet:
+    // coord
+
+    fOut << "    geometry IndexedFaceSet {\n";
+    fOut << "      coord Coordinate { point [\n";
+
+    // Find triangles this camera was assigned to
+    std::vector<Triangle>::iterator triPtr;
+    unsigned int nv = 0;
+    for (triPtr = tri_.begin(); triPtr != tri_.end(); ++triPtr) {
+        // Find vertices not already printed
+        for (unsigned int k = 0; k < 3; k++) {
+            if (LUT[triPtr->getIndex(k)] == -1) {
+                // Print vertex coords
+                const Vector3f thisV = vtx_[triPtr->getIndex(k)];
+                fOut << "\t" <<  thisV(0) << " " << thisV(1) << " " << thisV(2) << "\n";
+                LUT[triPtr->getIndex(k)] = nv++;
+            }
+        }
+    }
+
+    fOut << "      ] } # point, Coordinate\n";
+
+    // texCoord
+
+    fOut << "      texCoord TextureCoordinate { point [\n";
+
+    for (triPtr = tri_.begin(); triPtr != tri_.end(); ++triPtr) {
+        const Vector3d u = triPtr->getU();
+        const Vector3d v = triPtr->getV();
+
+        for (unsigned int k = 0; k < 3; k++) {
+            fOut << "\t" << u(k) << " " << v(k)<< "\n"; /// 1-v ponía!
+        }
+    }
+        
+    fOut << "      ] } # point, TextureCoordinate\n";
+
+    // coordIndex
+
+    unsigned int nTriThisCam = 0;
+    fOut << "      coordIndex [\n";
+    // Find triangles this camera was assigned to
+    triPtr = tri_.begin();
+    for (unsigned int j = 0; j < nTri_; j++, ++triPtr){
+        nTriThisCam++;
+        // Print translated indices of vertices
+        fOut << "\t" << LUT[triPtr->getIndex(0)] << " " << LUT[triPtr->getIndex(1)] << " " << LUT[triPtr->getIndex(2)] << " -1 \n";
+
+    }
+    fOut << "      ] # coordIndex\n";
+
+
+    // texCoordIndex
+    
+    fOut << "      texCoordIndex [\n";
+    int s = 0;
+    for (unsigned int j = 0; j < nTriThisCam; j++) {
+        fOut << "\t" << s << " " << s+1 << " "<< s+2 << " -1\n";
+        s = s+3;
+    }
+    fOut << "      ] # texCoordIndex\n";
+
+
+    // IFS & Shape ending
+
+    fOut << "    } # IndexedFaceSet\n";
+    fOut << "  } # " << "Seen" << "\n";
+    fOut << "] } # Object\n\n";
+
+    std::cerr << "done!" << std::endl;
+
+    fOut.close();
+}
+
 
 
 void Mesh3D::addVector(const Vector3f& _vector){

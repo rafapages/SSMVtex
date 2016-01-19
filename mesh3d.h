@@ -19,6 +19,7 @@ class Mesh3D {
     void readOBJ(const std::string& _fileName);
     void writeOBJ(const std::string& _fileName);
     void writeOBJ(const std::string& _fileName, const std::string& _textureFile);
+    void writeVRML(const std::string& _fileName, const std::string& _textureFile);
 
     // Data access
     Vector3f getVertex(unsigned int _index) const;

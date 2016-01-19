@@ -1072,8 +1072,7 @@ void Multitexturer::rasterizeTriangles(ArrayXXi& _pix_frontier, ArrayXXi& _pix_t
             // image coordinates are assignated and camera mode is initialized to -2
             const Vector3d tri_u(u0,u1,u2);
             // const Vector3d tri_v(1-v0, 1-v1, 1-v2); // OJO!!!! en realidad esto no es necesario at all!!!! es por el exportador de VRML97
-            const Vector3d tri_v(v0, v1, v2); // OJO!!!! en realidad esto no es necesario at all!!!! es por el exportador de VRML
-
+            const Vector3d tri_v(v0, v1, v2);
 
 
             mesh_.setTriangleCam(i, -2);
@@ -1439,6 +1438,10 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
 void Multitexturer::exportTexturedOBJ(){
 
     mesh_.writeOBJ(fileNameOut_, fileNameTexOut_);
+}
+
+void Multitexturer::exportTexturedVRML(){
+    mesh_.writeVRML(fileNameOut_, fileNameTexOut_);
 }
 
 
