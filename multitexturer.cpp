@@ -7,6 +7,7 @@ Multitexturer::Multitexturer(){
     ca_mode_ = AREA_OCCL;
     m_mode_ = TEXTURE;
     in_mode_ = MESH;
+    out_extension_ = VRML;
     num_cam_mix_ = 1;
     alpha_ = 0.5;
     beta_ = 1.0;
@@ -170,8 +171,26 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
         // And we add the optionlist as part of the name, and the new extensions
         fileNameOut_ += optionlist;
         fileNameTexOut_ = fileNameOut_;
+        out_extension_ = VRML;
         fileNameOut_ += ".wrl";
         fileNameTexOut_ += ".jpg";
+    } else {
+
+        std::string extension = fileNameOut_.substr(fileNameOut_.size()-3, fileNameOut_.size());
+        if (extension.compare("obj") == 0 || extension.compare("OBJ") == 0){
+            out_extension_ = OBJ;
+            std::cerr << "OBJ ola k ase" << std::endl;
+        } else if (extension.compare("wrl") == 0 || extension.compare("WRL") == 0){
+            out_extension_ = VRML;
+            std::cerr << "VRML ola k ase" << std::endl;
+        } else if (extension.compare("ply") == 0 || extension.compare("PLY") == 0){
+            out_extension_ = PLY;
+            std::cerr << "PLY ola k ase" << std::endl;
+        } else {
+            std::cerr << extension << " extension is Unknown!" << std::endl;
+            printHelp();
+        }
+
     }
 
     std::cerr << "Output files will be: " << std::endl;
@@ -1437,15 +1456,22 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
     return imout;
 }
 
-void Multitexturer::exportTexturedOBJ(){
+void Multitexturer::exportTexturedModel(){
 
-    mesh_.writeOBJ(fileNameOut_, fileNameTexOut_);
+    if (out_extension_ == OBJ){
+        mesh_.writeOBJ(fileNameOut_, fileNameTexOut_);
+    } else if (out_extension_ == VRML){
+        mesh_.writeVRML(fileNameOut_, fileNameTexOut_);
+    } else if (out_extension_ == PLY){
+        std::cerr << ":,( PLY exporter not supported yet, sorry!\n";
+        std::cerr << "OBJ will be chosen instead..." << std::endl;
+        std::string newname = fileNameOut_.substr(0, fileNameOut_.size()-3);
+        mesh_.writeOBJ(newname + "obj", fileNameTexOut_);
+    } else {
+        std::cerr << "Unknown extension!" << std::endl;
+    }
+
 }
-
-void Multitexturer::exportTexturedVRML(){
-    mesh_.writeVRML(fileNameOut_, fileNameTexOut_);
-}
-
 
 void Multitexturer::exportOBJcharts(const std::string& _fileName){
 

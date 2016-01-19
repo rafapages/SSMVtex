@@ -17,6 +17,7 @@ typedef enum {NONE, COLOR, TEXTURE, POINT} MappingMode;
 typedef enum {NORMAL_VERTEX, NORMAL_BARICENTER, AREA, AREA_OCCL} CamAssignMode;
 typedef enum {LIGHT, SHADOW, DARK} VtxMode;
 typedef enum {MESH, SPLAT} InputMode;
+typedef enum {VRML, OBJ, PLY} OutputExtension;
 
 class Multitexturer {
 
@@ -46,8 +47,7 @@ public:
     void chartColoring();
 
     //
-    void exportTexturedOBJ();
-    void exportTexturedVRML();
+    void exportTexturedModel();
 
     // TEST chart exporter: the packed charts are exported
     // as a flat 3D mesh in OBJ format
@@ -150,6 +150,7 @@ private:
     CamAssignMode ca_mode_; //  AREA_OCCL
     MappingMode m_mode_; //  TEXTURE
     InputMode in_mode_; //  MESH
+    OutputExtension out_extension_; // VRML
     int num_cam_mix_; //  1
     float alpha_; // 0.5
     float beta_; // 1.0
