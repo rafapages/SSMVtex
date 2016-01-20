@@ -34,6 +34,14 @@ Image::Image(unsigned int _height, unsigned int _width, Color _background){
 
 Color Image::getColor (unsigned int _row, unsigned int _column) const{
 
+    if ( _row > height_){
+        std::cerr << _row << "/" << height_ << " row is wrong!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+    }
+
+    if ( _column > width_){
+        std::cerr << _column << "/" << width_ << " column is wrong!!!!!!!!!!!!!!!!!" << std::endl;
+    }
+
     RGBQUAD col;
     imageFile_.getPixelColor(_column,_row, &col);
     Color color ((float)col.rgbRed, (float)col.rgbGreen, (float)col.rgbBlue);
@@ -47,6 +55,9 @@ Color Image::interpolate (float _row, float _column, InterpolateMode _mode) cons
     const float r = _row - 0.5;
     const int r_base = (int)floor(r);
     const int c_base = (int)floor(c);
+    // std::cerr << "r / r_base " << r << " / " << r_base << std::endl;
+    // std::cerr << "c / c_base " << c << " / " << c_base << std::endl;
+
     const float delta1 = r - r_base;
     const float delta2 = c - c_base;
 

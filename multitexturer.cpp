@@ -228,7 +228,6 @@ void Multitexturer::evaluateCameraRatings(){
     std::vector<int> *vtx2tri = new std::vector<int> [mesh_.getNVtx()];
     for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
         for (unsigned int j = 0; j < 3; j++)
-            // vtx2tri[tri[i].i[j]].push_back(i);
             vtx2tri[mesh_.getTriangle(i).getIndex(j)].push_back(i);
     }
     // tri2tri is a list containing every neigbor of eac triangle
@@ -437,8 +436,29 @@ void Multitexturer::evaluateNormal(){
             mf -= cameras_[j].getPosition();
             Vector3f nf = mf.normalized();
             const float dp = n.dot(nf);
+
+
+            // test : true if all coordinates in [0,1]
+            std::vector<Vector2f> uv_vtx;
+            for (unsigned int k = 0; k < 3; k++) {
+                const Vector3f vc = mesh_.getVertex(thistri.getIndex(k));
+                Vector2f uv = cameras_[j].transform2uvCoord(vc);
+                uv_vtx.push_back(uv);
+            }
+
+            bool test = true;
+            for (unsigned int k = 0; k < uv_vtx.size(); k++){
+                const Vector2f thisUV = uv_vtx[k];
+                if ( thisUV(0) < 0 || cameras_[j].getImageWidth()  < thisUV(0) ||
+                   thisUV(1) < 0 || cameras_[j].getImageHeight() < thisUV(1) ){
+                    test = false;
+                }
+            }
+
+            if (test){
             // In case the camera is facing back, the rating assigned is 0
             cameras_[j].tri_ratings_[i] = (dp < 0) ? ( -1 * dp) : 0;
+            }
         }
 
         std::cerr << "\r" << (float)i/mesh_.getNTri()*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
@@ -473,12 +493,23 @@ void Multitexturer::evaluateArea(){
                     uv_vtx.push_back(uv);
                 }
 
-                const Vector2f v0 = uv_vtx[0];
-                const Vector2f v1 = uv_vtx[1];
-                const Vector2f v2 = uv_vtx[2];
-                float area = 0.5 * ((v0(1)-v2(1)) * (v1(0)-v2(0)) - (v0(0)-v2(0)) * (v1(1)-v2(1)));
-                    //area = (v[0]-v[2]) * (u[1]-u[2]) - (u[0]-u[2]) * (v[1]-v[2]);
-                cameras_[j].tri_ratings_[i] = area;
+                // test : true if all coordinates in [0,1]
+                bool test = true;
+                for (unsigned int k = 0; k < uv_vtx.size(); k++){
+                    const Vector2f thisUV = uv_vtx[k];
+                    if ( thisUV(0) < 0 || cameras_[j].getImageWidth()  < thisUV(0) ||
+                         thisUV(1) < 0 || cameras_[j].getImageHeight() < thisUV(1) ){
+                        test = false;
+                    }
+                }
+
+                if (test) {
+                    const Vector2f v0 = uv_vtx[0];
+                    const Vector2f v1 = uv_vtx[1];
+                    const Vector2f v2 = uv_vtx[2];
+                    float area = (v0(1)-v2(1)) * (v1(0)-v2(0)) - (v0(0)-v2(0)) * (v1(1)-v2(1)); // should be divided by 2, but it really does not matter
+                    cameras_[j].tri_ratings_[i] = area;
+                }
 
             } // else -> tri_ratings_ stays 0
         }
@@ -718,7 +749,7 @@ void Multitexturer::evaluateWeightNormal(){
     for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
 
         // Find camera most orthogonal to this triangle
-        Vector3f n = mesh_.getTriangleNormal(i);
+        const Vector3f n = mesh_.getTriangleNormal(i);
         const Triangle thistri = mesh_.getTriangle(i);
         for (unsigned int j = 0; j < nCam_; j++) {
             // We calculate the baricenter (centroid) of the triangle
@@ -1247,8 +1278,45 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
     // Output image is initialized
     Image imout =  Image (imHeight_, imWidth_);
 
+    // ___________________________________________________________________________
+    // Tests para ver qué mierdas pasa con las imágenes
+    Image imtest = Image(imHeight_, imWidth_);
+    for (unsigned int row = 0; row < imHeight_; row++){
+        for (unsigned int col = 0; col < imWidth_; col++){
+            if (_pix_frontier(row,col) == -1){
+                Color c (255,255,0);
+                imtest.setColor(c, row, col);
+            } else if (_pix_frontier(row,col) == -2){
+                Color c (0,0,255);
+                imtest.setColor(c, row, col);
+            } else {
+                Color c (0,0,0);
+                imtest.setColor(c, row, col);
+            }
+        }
+    }
+    imtest.save("test_image_frontier.png");
+
+    Image imtest2 = Image(imHeight_, imWidth_);
+    for (unsigned int row = 0; row < imHeight_; row++){
+        for (unsigned int col = 0; col < imWidth_; col++){
+            if (_pix_triangle(row,col) != -1){
+                Color c (0,0,255);
+                imtest2.setColor(c, row, col);
+            } else {
+                Color c (0,0,0);
+                imtest2.setColor(c, row, col);
+            }
+        }
+    }
+    imtest2.save("test_image_triangle.png");
+
+    // ___________________________________________________________________________
+
+
     // pix_ratings: this vector contains a rating for each camera. It will be re-used for every pixel 
     std::vector<float> pix_ratings (nCam_, 0.0);
+
     // ratings_cam:
     std::multimap<float,int> ratings_cam;
 
@@ -1340,7 +1408,7 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
                         }
 
                         // Weights for each vertex    
-                        const float weight0 = (1-ro); // delta*(1-ro) + (1-delta)*(1-ro) = 1 -ro
+                        const float weight0 = delta*(1-ro) + (1-delta)*(1-ro); //(1-ro); // delta*(1-ro) + (1-delta)*(1-ro) = 1 -ro
                         const float weight1 = delta*ro;
                         const float weight2 = (1-delta)*ro;
 
@@ -1373,8 +1441,6 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
 
 
                         // Calculation of the weights
-                        // int *cameras_order;
-                        // float *weights_order;
                         std::vector<int> cameras_order;
                         std::vector<float> weights_order;
                         if (tomix != 0) {
@@ -1414,6 +1480,11 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
                         const Vector3f pixcenter3D = vAB * pix_uv(1) + vAC * pix_uv(0) + vA; //
                         // Colors
                         Color col;
+                        if (tomix == 0){
+                            _pix_color(rowp, colp) = Color(255,255,0);
+                            imout.setColor(Color(255,255,0),rowp,colp);
+                            continue;
+                        }
                         for (unsigned int p = 0; p < tomix; p++) {
                             int camera = cameras_order[p];
                             float weight = weights_order[p];
@@ -1425,16 +1496,26 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
                             }
 
                             // Vector3f v = pixcenter3D.CoordTransform(&cam[camera]);
-                            Vector2f v = cameras_[camera].transform2uvCoord(pixcenter3D);
+                            const Vector2f v_st = cameras_[camera].transform2uvCoord(pixcenter3D);
                             // Projection coordinates
-                            float proj_s = v(0);
-                            float proj_t = v(1);
+                            const float proj_s = v_st(0);
+                            const float proj_t = v_st(1);
 
-                            if (p==0) {// Difference : = vs. +=
+                            if (proj_s < 0.0 || proj_t < 0.0){ // This may happen and it's very wrong
+                                continue;
+                            }
+
+
+                            // std::cerr << "proj_s / proj_t " << proj_s << " / " << proj_t << std::endl; 
+                            // std::cerr << "getImageHeight: " << imageCache_[imageName].getHeight() << std::endl;
+
+                            if (p == 0) {// Difference : = vs. +=
                                 col = imageCache_[imageName].interpolate(imageCache_[imageName].getHeight() - proj_t, proj_s) * weight;
-
+                                // col = imageCache_[imageName].getColor((unsigned int)(imageCache_[imageName].getHeight() - proj_t), (unsigned int)proj_s) * weight;    
                             } else {
                                 col += imageCache_[imageName].interpolate(imageCache_[imageName].getHeight() - proj_t, proj_s) * weight;
+                                // col += imageCache_[imageName].getColor((unsigned int)(imageCache_[imageName].getHeight() - proj_t), (unsigned int)proj_s) * weight;
+
                             }
                         }
 
