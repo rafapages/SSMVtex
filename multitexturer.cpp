@@ -1505,17 +1505,20 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
                                 continue;
                             }
 
-
-                            // std::cerr << "proj_s / proj_t " << proj_s << " / " << proj_t << std::endl; 
-                            // std::cerr << "getImageHeight: " << imageCache_[imageName].getHeight() << std::endl;
+                            float image_row = (float)imageCache_[imageName].getHeight() - proj_t;
+                            float image_col = proj_s;
+                            
+                            // In case a rounding error gives us a pixel outside the image
+                            image_row = std::min (image_row, (float)imageCache_[imageName].getHeight());
+                            image_col = std::min (image_col, (float)imageCache_[imageName].getWidth());
+                            image_row = std::max (image_row, 0.0f);
+                            image_col = std::max (image_col, 0.0f);
 
                             if (p == 0) {// Difference : = vs. +=
-                                col = imageCache_[imageName].interpolate(imageCache_[imageName].getHeight() - proj_t, proj_s) * weight;
-                                // col = imageCache_[imageName].getColor((unsigned int)(imageCache_[imageName].getHeight() - proj_t), (unsigned int)proj_s) * weight;    
-                            } else {
-                                col += imageCache_[imageName].interpolate(imageCache_[imageName].getHeight() - proj_t, proj_s) * weight;
-                                // col += imageCache_[imageName].getColor((unsigned int)(imageCache_[imageName].getHeight() - proj_t), (unsigned int)proj_s) * weight;
+                                col = imageCache_[imageName].interpolate(image_row, image_col, BILINEAR) * weight;
 
+                            } else {
+                                col += imageCache_[imageName].interpolate(image_row, image_col, BILINEAR) * weight;   
                             }
                         }
 

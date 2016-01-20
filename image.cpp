@@ -50,37 +50,45 @@ Color Image::getColor (unsigned int _row, unsigned int _column) const{
 }
 
 Color Image::interpolate (float _row, float _column, InterpolateMode _mode) const {
-	
+
 	const float c = _column - 0.5;
     const float r = _row - 0.5;
-    const int r_base = (int)floor(r);
-    const int c_base = (int)floor(c);
-    // std::cerr << "r / r_base " << r << " / " << r_base << std::endl;
-    // std::cerr << "c / c_base " << c << " / " << c_base << std::endl;
+    int r_base = floor(r);
+    int c_base = floor(c);
 
-    const float delta1 = r - r_base;
-    const float delta2 = c - c_base;
+    const float delta1 = r - (float)r_base;
+    const float delta2 = c - (float)c_base;
+
+    r_base = std::max(r_base, 0);
+    c_base = std::max(c_base, 0);
 
     Color final;
-    
-    // Bilinear
+    Color A,B,C,D;
 
+    // Bilinear
     if (_mode == BILINEAR){
 
-    	const Color A = getColor(r_base, c_base);
-    	const Color B = getColor(r_base + 1, c_base);
-    	const Color C = getColor(r_base, c_base + 1);
-    	const Color D = getColor(r_base + 1, c_base + 1);
+        if (r_base + 1 > height_ || c_base + 1 > width_){
+            // We are in the edge of an image, then we cannot interpolate
+            final = getColor(r_base, c_base);
+        } else {
 
-    	final = A + (B-A)*delta1 + (C-A)*delta2 + (A+D-B-C)*delta1*delta2;
+           A = getColor(r_base, c_base);
+           B = getColor(r_base + 1, c_base);
+           C = getColor(r_base, c_base + 1);
+           D = getColor(r_base + 1, c_base + 1);
+
+           final = A + (B-A) * delta1 + (C-A) * delta2 + (A+D-B-C) * delta1 * delta2;
+        }
     
     } else if (_mode == BICUBIC){
+
     // Bi-Cubic
 
-    	Color A, B, C;
     	Color row_temp [4];
 
     	for (int i = -1; i < 3; i++) {
+
 
     		const Color M = getColor(r_base + i, c_base - 1);
     		const Color N = getColor(r_base + i, c_base);
