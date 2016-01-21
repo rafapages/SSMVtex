@@ -56,8 +56,8 @@ Color Image::interpolate (float _row, float _column, InterpolateMode _mode) cons
     int r_base = floor(r);
     int c_base = floor(c);
 
-    const float delta1 = r - (float)r_base;
-    const float delta2 = c - (float)c_base;
+    const float x = r - (float)r_base;
+    const float y = c - (float)c_base;
 
     r_base = std::max(r_base, 0);
     c_base = std::max(c_base, 0);
@@ -73,12 +73,16 @@ Color Image::interpolate (float _row, float _column, InterpolateMode _mode) cons
             final = getColor(r_base, c_base);
         } else {
 
-           A = getColor(r_base, c_base);
-           B = getColor(r_base + 1, c_base);
-           C = getColor(r_base, c_base + 1);
-           D = getColor(r_base + 1, c_base + 1);
+           A = getColor(r_base, c_base);         // f(0,0)
+           B = getColor(r_base + 1, c_base);     // f(1,0)
+           C = getColor(r_base, c_base + 1);     // f(0,1)
+           D = getColor(r_base + 1, c_base + 1); // f(1,1)
 
-           final = A + (B-A) * delta1 + (C-A) * delta2 + (A+D-B-C) * delta1 * delta2;
+           // Bilinear interpolation definition: 
+           // f(x,y) = f(0,0)(1-x)(1-y) + f(1,0)(x)(1-y) + f(0,1)(1-x)(y) + f(1,1)(x)(y)
+           final = A + (B-A) * x + (C-A) * y + (A+D-B-C) * x * y;
+
+ 
         }
     
     } else if (_mode == BICUBIC){
@@ -99,14 +103,14 @@ Color Image::interpolate (float _row, float _column, InterpolateMode _mode) cons
     		B = N - M;
     		C = O - M;
 
-    		row_temp[i+1] = N + ( ( (A+B) * delta2 - A - B - B) * delta2 + C) * delta2;
+    		row_temp[i+1] = N + ( ( (A+B) * y - A - B - B) * y + C) * y;
     	}
 
     	A = row_temp[3] - row_temp[2];
     	B = row_temp[1] - row_temp[0];
     	C = row_temp[2] - row_temp[0];
 
-    	final = row_temp[1] + ( ( (A+B) * delta1 - A - B - B) * delta1 + C) * delta1;
+    	final = row_temp[1] + ( ( (A+B) * x - A - B - B) * x + C) * x;
 
     } else {
     	std::cerr << "Mode " << _mode << " is unknown" << std::endl;

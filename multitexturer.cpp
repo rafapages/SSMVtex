@@ -1278,40 +1278,40 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
     // Output image is initialized
     Image imout =  Image (imHeight_, imWidth_);
 
-    // ___________________________________________________________________________
-    // Tests para ver qué mierdas pasa con las imágenes
-    Image imtest = Image(imHeight_, imWidth_);
-    for (unsigned int row = 0; row < imHeight_; row++){
-        for (unsigned int col = 0; col < imWidth_; col++){
-            if (_pix_frontier(row,col) == -1){
-                Color c (255,255,0);
-                imtest.setColor(c, row, col);
-            } else if (_pix_frontier(row,col) == -2){
-                Color c (0,0,255);
-                imtest.setColor(c, row, col);
-            } else {
-                Color c (0,0,0);
-                imtest.setColor(c, row, col);
-            }
-        }
-    }
-    imtest.save("test_image_frontier.png");
+    // // ___________________________________________________________________________
+    // // Tests para ver qué mierdas pasa con las imágenes
+    // Image imtest = Image(imHeight_, imWidth_);
+    // for (unsigned int row = 0; row < imHeight_; row++){
+    //     for (unsigned int col = 0; col < imWidth_; col++){
+    //         if (_pix_frontier(row,col) == -1){
+    //             Color c (255,255,0);
+    //             imtest.setColor(c, row, col);
+    //         } else if (_pix_frontier(row,col) == -2){
+    //             Color c (0,0,255);
+    //             imtest.setColor(c, row, col);
+    //         } else {
+    //             Color c (0,0,0);
+    //             imtest.setColor(c, row, col);
+    //         }
+    //     }
+    // }
+    // imtest.save("test_image_frontier.png");
 
-    Image imtest2 = Image(imHeight_, imWidth_);
-    for (unsigned int row = 0; row < imHeight_; row++){
-        for (unsigned int col = 0; col < imWidth_; col++){
-            if (_pix_triangle(row,col) != -1){
-                Color c (0,0,255);
-                imtest2.setColor(c, row, col);
-            } else {
-                Color c (0,0,0);
-                imtest2.setColor(c, row, col);
-            }
-        }
-    }
-    imtest2.save("test_image_triangle.png");
+    // Image imtest2 = Image(imHeight_, imWidth_);
+    // for (unsigned int row = 0; row < imHeight_; row++){
+    //     for (unsigned int col = 0; col < imWidth_; col++){
+    //         if (_pix_triangle(row,col) != -1){
+    //             Color c (0,0,255);
+    //             imtest2.setColor(c, row, col);
+    //         } else {
+    //             Color c (0,0,0);
+    //             imtest2.setColor(c, row, col);
+    //         }
+    //     }
+    // }
+    // imtest2.save("test_image_triangle.png");
 
-    // ___________________________________________________________________________
+    // // ___________________________________________________________________________
 
 
     // pix_ratings: this vector contains a rating for each camera. It will be re-used for every pixel 
