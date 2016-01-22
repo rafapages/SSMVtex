@@ -121,7 +121,11 @@ private:
     void findChartBorders(Chart& _chart, ArrayXXi& _pix_frontier, ArrayXXi& _pix_triangle);
 
     // Performs the multi-texturing and returns a texture image
-    Image colorTextureAtlas(const ArrayXXi& _pix_frontier, const ArrayXXi& _pix_triangle, Array<Color, Dynamic, Dynamic>& _pix_color);
+    Image colorTextureAtlas(const ArrayXXi& _pix_frontier, const ArrayXXi& _pix_triangle);
+
+    // Dilates the atlases by inpainting the background
+    void dilateAtlas(const ArrayXXi& _pix_triangle, Image& _image);
+
 
 
 
@@ -154,8 +158,10 @@ private:
     int num_cam_mix_; //  1
     float alpha_; // 0.5
     float beta_; // 1.0
-    unsigned int dimension_; // 10000000
+    unsigned int dimension_; // 10,000,000
     unsigned int imageCacheSize_; // 75
+
+    //
 
     // File names
     std::string fileNameIn_;

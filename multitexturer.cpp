@@ -1,6 +1,8 @@
 #include <iomanip>
 #include <algorithm>
 
+#include <opencv2/photo/photo.hpp>
+
 #include "multitexturer.h"
 
 Multitexturer::Multitexturer(){
@@ -87,10 +89,11 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
                         }
                         stringValue += opt[i];
                     }
+                    float fValue;
                     std::stringstream ss;
                     ss << stringValue;
-                    ss >> intValue;
-                    dimension_ = intValue;
+                    ss >> fValue;
+                    dimension_ = (unsigned int) fValue * 1000000;
                 } else if (optionValue.compare("alpha") == 0){
                     for (unsigned int i = 2 + optionValue.length() + 1; opt[i] != '\0'; i++){
                         stringValue += opt[i];
@@ -335,7 +338,7 @@ void Multitexturer::printHelp(){
         "                function, in the interval (0, 1). Default: 0.5. ",
         "--beta=<beta>   beta is the curvature of the normal weighting",
         "                function, in the interval [0, inf). Default: 1.",
-        "--dimension=<dimension> resolution of the output image measured in pixels.",
+        "--dimension=<dimension> resolution of the output image measured in Mpixels.",
         "--cache=<cachesize> size of the image cache. Default: 75.",
         "-h\t\tPrint this help message."};
 
@@ -990,15 +993,6 @@ void Multitexturer::chartColoring() {
 
     // Arrays with pixel information
 
-    // pix_color: An array storing the color for each pixel
-    //            grey (Color(127,127,127)) if no color is assigned
-    Array<Color, Dynamic, Dynamic> pix_color(imHeight_, imWidth_);
-    const Color grey (127,127,127);
-    for (unsigned int c = 0; c < imWidth_; c++){
-        for (unsigned int r = 0; r < imHeight_; r++){
-            pix_color(r,c) = grey;
-        }
-    }
     // pix_frontier: this array searches for the unwraps borders
     //               -1 if there is a border in the pixel, 0 elsewhere
     //               later on, -2 will be assigned to pixels inside borders
@@ -1012,15 +1006,9 @@ void Multitexturer::chartColoring() {
     // pix_frontier and pix_triangle arrays are filled
     rasterizeTriangles(pix_frontier, pix_triangle);
 
-    Image imout = colorTextureAtlas(pix_frontier, pix_triangle, pix_color);
+    Image imout = colorTextureAtlas(pix_frontier, pix_triangle);
+    dilateAtlas(pix_triangle, imout);
     imout.save(fileNameTexOut_);
-
-    // // Output test
-    // std::ofstream testfile("test.txt");
-    // testfile << "frontier:\n" << pix_frontier << std::endl;
-    // testfile << "triangle:\n" << pix_triangle << std::endl;
-    // testfile.close();
-
 
 }
 
@@ -1047,9 +1035,6 @@ void Multitexturer::rasterizeTriangles(ArrayXXi& _pix_frontier, ArrayXXi& _pix_t
             const Vector2f vt0 = (*unwit).m_.getVertex(tpres.getIndex(0));
             const Vector2f vt1 = (*unwit).m_.getVertex(tpres.getIndex(1));
             const Vector2f vt2 = (*unwit).m_.getVertex(tpres.getIndex(2));
-            // vt0 = (*unwit).m.vtx[(*ittri).i[0]];
-            // vt1 = (*unwit).m.vtx[(*ittri).i[1]];
-            // vt2 = (*unwit).m.vtx[(*ittri).i[2]];
 
             float xmax, xmin, ymax, ymin;
 
@@ -1095,7 +1080,6 @@ void Multitexturer::rasterizeTriangles(ArrayXXi& _pix_frontier, ArrayXXi& _pix_t
             const int vt0_orig3D = (*unwit).m_.getOrigVtx(tpres.getIndex(0));
             const int vt1_orig3D = (*unwit).m_.getOrigVtx(tpres.getIndex(1));
             if (mesh_.getTriangle(tpres_orig3D).getIndex(0) == vt0_orig3D){
-            // if (tri[tpres.orig3D].i[0] == vt0.orig3D){
                 u0 = vt0dx/maxwd;
                 v0 = vt0dy/maxhd;
                 u1 = vt1dx/maxwd;
@@ -1103,7 +1087,6 @@ void Multitexturer::rasterizeTriangles(ArrayXXi& _pix_frontier, ArrayXXi& _pix_t
                 u2 = vt2dx/maxwd;
                 v2 = vt2dy/maxhd;
             } else if (mesh_.getTriangle(tpres_orig3D).getIndex(0) == vt1_orig3D){
-//            } else if (tri[tpres.orig3D].i[0] == vt1.orig3D){
                 u0 = vt1dx/maxwd;
                 v0 = vt1dy/maxhd;
                 u1 = vt2dx/maxwd;
@@ -1120,10 +1103,7 @@ void Multitexturer::rasterizeTriangles(ArrayXXi& _pix_frontier, ArrayXXi& _pix_t
             }
 
             // image coordinates are assignated and camera mode is initialized to -2
-            const Vector3d tri_u(u0,u1,u2);
-            // std::cerr << "Triangle " << i << " u:\n";
-            // std::cerr << tri_u << std::endl;
-            // const Vector3d tri_v(1-v0, 1-v1, 1-v2); // OJO!!!! en realidad esto no es necesario at all!!!! es por el exportador de VRML97
+            const Vector3d tri_u(u0, u1, u2);
             const Vector3d tri_v(v0, v1, v2);
 
 
@@ -1273,46 +1253,10 @@ void Multitexturer::findChartBorders(Chart& _chart, ArrayXXi& _pix_frontier, Arr
 }
 
 
-Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const ArrayXXi& _pix_triangle, Array<Color, Dynamic, Dynamic>& _pix_color){
+Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const ArrayXXi& _pix_triangle){
 
     // Output image is initialized
     Image imout =  Image (imHeight_, imWidth_);
-
-    // // ___________________________________________________________________________
-    // // Tests para ver qué mierdas pasa con las imágenes
-    // Image imtest = Image(imHeight_, imWidth_);
-    // for (unsigned int row = 0; row < imHeight_; row++){
-    //     for (unsigned int col = 0; col < imWidth_; col++){
-    //         if (_pix_frontier(row,col) == -1){
-    //             Color c (255,255,0);
-    //             imtest.setColor(c, row, col);
-    //         } else if (_pix_frontier(row,col) == -2){
-    //             Color c (0,0,255);
-    //             imtest.setColor(c, row, col);
-    //         } else {
-    //             Color c (0,0,0);
-    //             imtest.setColor(c, row, col);
-    //         }
-    //     }
-    // }
-    // imtest.save("test_image_frontier.png");
-
-    // Image imtest2 = Image(imHeight_, imWidth_);
-    // for (unsigned int row = 0; row < imHeight_; row++){
-    //     for (unsigned int col = 0; col < imWidth_; col++){
-    //         if (_pix_triangle(row,col) != -1){
-    //             Color c (0,0,255);
-    //             imtest2.setColor(c, row, col);
-    //         } else {
-    //             Color c (0,0,0);
-    //             imtest2.setColor(c, row, col);
-    //         }
-    //     }
-    // }
-    // imtest2.save("test_image_triangle.png");
-
-    // // ___________________________________________________________________________
-
 
     // pix_ratings: this vector contains a rating for each camera. It will be re-used for every pixel 
     std::vector<float> pix_ratings (nCam_, 0.0);
@@ -1366,8 +1310,8 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
             const int vt1_orig3D = (*unwit).m_.getOrigVtx(tpres.getIndex(1));
             const int vt2_orig3D = (*unwit).m_.getOrigVtx(tpres.getIndex(2));
 
-            for (unsigned int colp = xminp; colp < xmaxp; colp++){ // <= en la versión clásica
-                for (unsigned int rowp = yminp; rowp < ymaxp; rowp++){
+            for (unsigned int colp = xminp; colp <= xmaxp; colp++){
+                for (unsigned int rowp = yminp; rowp <= ymaxp; rowp++){
                     // pixel center is calculated
                     Vector2f pixcenter;
                     pixcenter(0) = (float)(colp + 0.5) * maxwbyimwidth;
@@ -1408,7 +1352,7 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
                         }
 
                         // Weights for each vertex    
-                        const float weight0 = delta*(1-ro) + (1-delta)*(1-ro); //(1-ro); // delta*(1-ro) + (1-delta)*(1-ro) = 1 -ro
+                        const float weight0 = 1-ro; // delta*(1-ro) + (1-delta)*(1-ro) = 1 -ro
                         const float weight1 = delta*ro;
                         const float weight2 = (1-delta)*ro;
 
@@ -1480,11 +1424,13 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
                         const Vector3f pixcenter3D = vAB * pix_uv(1) + vAC * pix_uv(0) + vA; //
                         // Colors
                         Color col;
+
+                        // If no camera sees the triangle, it's currently painted yellow
                         if (tomix == 0){
-                            _pix_color(rowp, colp) = Color(255,255,0);
                             imout.setColor(Color(255,255,0),rowp,colp);
                             continue;
                         }
+
                         for (unsigned int p = 0; p < tomix; p++) {
                             int camera = cameras_order[p];
                             float weight = weights_order[p];
@@ -1514,7 +1460,7 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
                             image_row = std::max (image_row, 0.0f);
                             image_col = std::max (image_col, 0.0f);
 
-                            if (p == 0) {// Difference : = vs. +=
+                            if (p == 0) { // Difference : = vs. +=
                                 col = imageCache_[imageName].interpolate(image_row, image_col, BILINEAR) * weight;
 
                             } else {
@@ -1523,7 +1469,6 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
                         }
 
                         // color is assigned to the pixel
-                        _pix_color(rowp, colp) = col;
                         imout.setColor(col, rowp, colp);
                     }
                 }
@@ -1538,6 +1483,42 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
     std::cerr << "\n";
 
     return imout;
+
+}
+
+void Multitexturer::dilateAtlas(const ArrayXXi& _pix_triangle, Image& _image){
+
+    cv::Mat mask (imHeight_, imWidth_, CV_8UC1, cv::Scalar(255)); 
+    cv::Mat inImage (imHeight_, imWidth_, CV_8UC3, cv::Scalar(0,0,0));
+
+    std::cerr << "Dilating charts... ";
+
+    for (unsigned int row = 0; row < imHeight_; row++){
+        for (unsigned int col = 0; col < imWidth_; col++){
+            if (_pix_triangle(row,col) != -1){
+                const uchar v = 0;
+                mask.at<uchar>(imHeight_ - row - 1,col) = v; // inverted axis in opencv
+            }
+            const Color color = _image.getColor(row, col);
+            const cv::Vec3b v((unsigned char)color.getBlue(),(unsigned char)color.getGreen(),(unsigned char)color.getRed());
+            inImage.at<cv::Vec3b>(imHeight_ - row - 1,col) = v;
+        }
+    }
+
+    cv::Mat outImage; 
+    cv::inpaint(inImage, mask, outImage, 1, cv::INPAINT_TELEA);
+
+    for (unsigned int row = 0; row < imHeight_; row++){
+        for (unsigned int col = 0; col < imWidth_; col++){
+            if (_pix_triangle(row,col) == -1){
+                const cv::Vec3b color = outImage.at<cv::Vec3b>(imHeight_ - row - 1, col);
+                const Color fcolor ((float) color(2), (float) color(1), (float) color(0));
+                _image.setColor(fcolor, row, col);
+            }
+        }
+    }
+
+    std::cerr << "done!" << std::endl;
 }
 
 void Multitexturer::exportTexturedModel(){
