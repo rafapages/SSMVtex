@@ -14,11 +14,11 @@ To fill in yet…
  
 	multitex [options] <fileNameIn> <fileNameCam> <fileNameImageList> [<fileNameOut> <fileNameTexOut>]
 
-* <fileNameIn> The name of the input text file containing the 3D scene described in OBJ format. Extension : obj.
-* <fileNameCam> The name of the input text file containing the camera calibration matrices. Extension: txt.
-* <fileNameImageList> The name of the input text file containing the list of images that will be used for texturing the mesh. Extension: txt.
-* <fileNameOut> The name of the output text file that'll be created containing the textured model -- if not specified, it'll be built by appending "options" to <fileNameIn>. Extensions: vrml, obj or ply.
-* <fileNameTexOut> The name of the output customized texture that'll be created, -- if not specified, it'll be built by appending "options" to <fileNameIn>. Extension: jpg.
+* _fileNameIn_: The name of the input text file containing the 3D scene described in OBJ format. Extension : obj.
+* _fileNameCam_: The name of the input text file containing the camera calibration matrices. Extension: txt.
+* _fileNameImageList_: The name of the input text file containing the list of images that will be used for texturing the mesh. Extension: txt.
+* _fileNameOut_: The name of the output text file that'll be created containing the textured model -- if not specified, it'll be built by appending "options" to <fileNameIn>. Extensions: vrml, obj or ply.
+* _fileNameTexOut_: The name of the output customized texture that'll be created, -- if not specified, it'll be built by appending "options" to <fileNameIn>. Extension: jpg.
 
 - Options:
 * -{n|b|a|l}	Assing cameras to triangles using (n) their normals, (b) their normals using the baricenter technique, (a) their area,(l)	or their area taking occlusions into account. Default: l.
@@ -26,10 +26,10 @@ To fill in yet…
 * -{1-9}	If B option has been chosen, this argument indicates the maximum amount of images per triangle used in order to create	the customized texture. Default: 1.
 * -{e|u|p|t} Show (e) a naked mesh, (u) a mesh colored per triangle, (p) a mesh colored per vertex or (t) a mesh with textures in the VRML97 file. Default: t.
 * —faceCam=<imageFileName>   in case there a frontal image showing the subject's face.
-* —alpha=<alpha> alpha is the cutoff value of the normal weighting function, in the interval (0, 1). Default: 0.5.
-* —beta=<beta> beta is the curvature of the normal weighting function, in the interval [0, inf). Default: 1.
-* —dimension=<dimension> resolution of the output image measured in Mpixels.
-* —cache=<cachesize> size of the image cache. Default: 75.
+* —alpha=_alpha_ alpha is the cutoff value of the normal weighting function, in the interval (0, 1). Default: 0.5.
+* —beta=_beta_ beta is the curvature of the normal weighting function, in the interval [0, inf). Default: 1.
+* —dimension=_dimension_ resolution of the output image measured in Mpixels.
+* —cache=_cachesize_ size of the image cache. Default: 75.
 * -h		Prints help message.
 
 
