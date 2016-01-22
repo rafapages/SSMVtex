@@ -6,17 +6,21 @@ Further details can be found in the following paper:
 
 [Seamless, Static Multi-Texturing of 3D Meshes] (http://onlinelibrary.wiley.com/doi/10.1111/cgf.12508/abstract)
 
+## Build
+
+To fill in yet…
+
 ## Usage
  
 	multitex [options] <fileNameIn> <fileNameCam> <fileNameImageList> [<fileNameOut> <fileNameTexOut>]
 
-* <fileNameIn> is the name of the input text file containing the 3D scene described in OBJ format. Extension : obj.
-* <fileNameCam> is the name of the input text file containing the camera calibration matrices. Extension: txt.
-* <fileNameImageList> is the name of the input text file containing the list of images that will be used for texturing the mesh. Extension: txt.
-* <fileNameOut> is the name of the output text file that'll be created containing the textured model -- if not specified, it'll be built by appending "options" to <fileNameIn>. Extensions: vrml, obj or ply.
-* <fileNameTexOut> is the name of the output customized texture that'll be created, -- if not specified, it'll be built by appending "options" to <fileNameIn>. Extension: jpg.
+* <fileNameIn> The name of the input text file containing the 3D scene described in OBJ format. Extension : obj.
+* <fileNameCam> The name of the input text file containing the camera calibration matrices. Extension: txt.
+* <fileNameImageList> The name of the input text file containing the list of images that will be used for texturing the mesh. Extension: txt.
+* <fileNameOut> The name of the output text file that'll be created containing the textured model -- if not specified, it'll be built by appending "options" to <fileNameIn>. Extensions: vrml, obj or ply.
+* <fileNameTexOut> The name of the output customized texture that'll be created, -- if not specified, it'll be built by appending "options" to <fileNameIn>. Extension: jpg.
 
-Options:
+- Options:
 * -{n|b|a|l}	Assing cameras to triangles using (n) their normals, (b) their normals using the baricenter technique, (a) their area,(l)	or their area taking occlusions into account. Default: l.
 * -{m|s}	Input value is (m) common 3D mesh or (s) a splat based 3D mesh. Default: m
 * -{1-9}	If B option has been chosen, this argument indicates the maximum amount of images per triangle used in order to create	the customized texture. Default: 1.
