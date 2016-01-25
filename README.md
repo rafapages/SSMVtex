@@ -31,8 +31,8 @@ Navigate to the directory and hit *make*.
 ##### Options:
 * -{n|b|a|l}	Assing cameras to triangles using (n) their normals, (b) their normals using the baricenter technique, (a) their area,(l)	or their area taking occlusions into account. Default: l.
 * -{m|s}	Input value is (m) common 3D mesh or (s) a splat based 3D mesh. Default: m
-* -{1-9}	If B option has been chosen, this argument indicates the maximum amount of images per triangle used in order to create	the customized texture. Default: 1.
-* -{e|u|p|t} Show (e) a naked mesh, (u) a mesh colored per triangle, (p) a mesh colored per vertex or (t) a mesh with textures in the VRML97 file. Default: t.
+* -{1-9}	If B option has been chosen, this argument indicates the maximum amount of images per triangle used in order to create	the customized texture. Default: 2.
+* -{p|t} Show (p) a mesh colored per vertex or (t) a mesh with textures. Default: t.
 * —faceCam=_imageFileName-   in case there a frontal image showing the subject's face.
 * —alpha=_alpha_ is the cutoff value of the normal weighting function, in the interval (0, 1). Default: 0.5.
 * —beta=_beta_ is the curvature of the normal weighting function, in the interval [0, inf). Default: 1.
