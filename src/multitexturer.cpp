@@ -198,6 +198,12 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
     std::cerr << fileNameOut_ << std::endl;
     std::cerr << fileNameTexOut_ << std::endl;
 
+    // TO BE REMOVED WHEN POINT MODE IS IMPLEMENTED!!
+    if (m_mode_ == POINT){
+        std::cerr << "Color per vertex coloring mode still not supported, sorry..." << std::endl;
+        printHelp();
+    }
+
 }
 
 void Multitexturer::evaluateCameraRatings(){
