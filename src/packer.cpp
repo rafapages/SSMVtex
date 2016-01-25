@@ -17,8 +17,6 @@ void Packer::pack(std::vector<Chart>& _charts, float& _width, float& _height){
     std::multimap<float,Chart> ordCharts;
 
     for (; ituw != _charts.end(); ituw++){
-        float maxArea = 0.0;
-
         // We calculate the area of each BBox;
         const float unwArea = (*ituw).getArea();
 

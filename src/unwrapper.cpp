@@ -229,7 +229,7 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
             // Hypothetical new vertex and edges
 
             const Triangle cand = _mesh.getTriangle(e.Candidate);
-            int newVtx;
+            int newVtx = -1;
             const int c0 = cand.getIndex(0);
             const int c1 = cand.getIndex(1);
             const int c2 = cand.getIndex(2);
@@ -307,7 +307,7 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
                 ena=EPSILON;    
 
             const double dpn = x_na.dot(e_na);
-            const double proj = dpn / xna;
+            // const double proj = dpn / xna;
             // const double nproj = proj / xna; // This value represents the proportion of the projection with respect to vector x_na
 
             // 2D
@@ -429,9 +429,9 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
             float relation__meshbbox_area = (float)(0.7/200) * unw.m_.getNTri ();
             //_
 
-            float current_bbox_area = unw.getHeight() * unw.getWidth();
-            float current_tri_area  = unw.m_.getTriArea();
-            float current_relation__meshbbox_area = current_tri_area / current_bbox_area;
+            // float current_bbox_area = unw.getHeight() * unw.getWidth();
+            // float current_tri_area  = unw.m_.getTriArea();
+            // float current_relation__meshbbox_area = current_tri_area / current_bbox_area;
 
             //float relation__meshbbox_area = 0.7 * (unw.m.GetNTri() > 10 ? 1.0 : 0.3);
             //float relation__meshbbox_area = 0.5;

@@ -798,7 +798,7 @@ void Multitexturer::improveFaceRatings(){
         return;
     }
 
-    std::cerr << "\nFace limits:\n";
+    std::cerr << "Face limits:\n";
     std::cerr << "\tface_min_x = " << face_min_x << std::endl;
     std::cerr << "\tface_max_x = " << face_max_x << std::endl;
     std::cerr << "\tface_min_y = " << face_min_y << std::endl;
