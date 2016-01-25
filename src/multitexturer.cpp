@@ -53,8 +53,6 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
             case '8':	num_cam_mix_ = 8;	opts.push_back(c); break;
             case '9':	num_cam_mix_ = 9;   opts.push_back(c); break;
 
-            case 'e':	m_mode_ = NONE;     opts.push_back(c); break;
-            case 'u':	m_mode_ = COLOR;    opts.push_back(c); break;
             case 't':	m_mode_ = TEXTURE;  opts.push_back(c); break;
             case 'p':   m_mode_ = POINT;    opts.push_back(c); break;
 
@@ -331,8 +329,7 @@ void Multitexturer::printHelp(){
         "-{1-9}\t\tIf B option has been chosen, this argument indicates the",
         "\t\tmaximum amount of images per triangle used in order to create",
         "\t\tthe customized texture. Default: 1.",
-        "-{e|u|p|t}\tShow (e) a naked mesh, (u) a mesh colored per triangle, (p) a mesh",
-        "\t\tcolored per vertex or (t) a mesh with textures in the VRML97 file. Default: t.",
+        "-{p|t}\t\tShow (p) a mesh colored per vertex or (t) a mesh with textures. Default: t.",
         "--faceCam=<imageFileName>   in case there a frontal image showing the subject's face.",
         "--alpha=<alpha> alpha is the cutoff value of the normal weighting",
         "                function, in the interval (0, 1). Default: 0.5. ",

@@ -13,7 +13,7 @@
 #include "unwrapper.h"
 #include "packer.h"
 
-typedef enum {NONE, COLOR, TEXTURE, POINT} MappingMode;
+typedef enum {TEXTURE, POINT} MappingMode;
 typedef enum {NORMAL_VERTEX, NORMAL_BARICENTER, AREA, AREA_OCCL} CamAssignMode;
 typedef enum {LIGHT, SHADOW, DARK} VtxMode;
 typedef enum {MESH, SPLAT} InputMode;
