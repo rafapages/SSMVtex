@@ -10,7 +10,7 @@ Multitexturer::Multitexturer(){
     m_mode_ = TEXTURE;
     in_mode_ = MESH;
     out_extension_ = VRML;
-    num_cam_mix_ = 1;
+    num_cam_mix_ = 2;
     alpha_ = 0.5;
     beta_ = 1.0;
     dimension_ = 10000000;
