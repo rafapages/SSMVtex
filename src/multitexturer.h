@@ -161,8 +161,6 @@ private:
     unsigned int dimension_; // 10,000,000
     unsigned int imageCacheSize_; // 75
 
-    //
-
     // File names
     std::string fileNameIn_;
     std::string fileNameCam_;

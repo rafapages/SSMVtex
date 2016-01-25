@@ -6,9 +6,17 @@ Further details can be found in the following paper:
 
 [Seamless, Static Multi-Texturing of 3D Meshes] (http://onlinelibrary.wiley.com/doi/10.1111/cgf.12508/abstract)
 
+(Computer Graphics Forum, Feb. 2015)
+
 ## Build
 
-To fill in yet…
+Navigate to the directory and hit *make*. 
+
+## Dependencies
+
+- FreeImagePlus: to read/write images.
+- OpenCV: to find a face in a given image and improve the texture quality of that particular area.
+- Eigen3: for the linear algebra stuff, mainly.
 
 ## Usage
  
