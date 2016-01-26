@@ -69,7 +69,7 @@ private:
     // According to camera c, is vertex v eclipsed by triangle t ?
     bool isVertexEclipsed(int _v, int _t, int _c) const;
     // Samples x with respect to the given resolution
-    unsigned int findPosGrid (float _x, float _min, float _max, unsigned int _resolution);
+    unsigned int findPosGrid (float _x, float _min, float _max, unsigned int _resolution) const;
     // Checks if the point p is included in the triangle defined by vertices a, b and c
     bool isPinsideTri (const Vector2f& _p, const Vector2f& _a, const Vector2f& _b, const Vector2f& _c) const; 
     // This function returns a 2D Vector containing the u,v, image coordinates
@@ -124,7 +124,7 @@ private:
     Image colorTextureAtlas(const ArrayXXi& _pix_frontier, const ArrayXXi& _pix_triangle);
 
     // Dilates the atlases by inpainting the background
-    void dilateAtlas(const ArrayXXi& _pix_triangle, Image& _image);
+    void dilateAtlas(const ArrayXXi& _pix_triangle, Image& _image) const;
 
 
 

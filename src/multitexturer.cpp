@@ -832,7 +832,7 @@ void Multitexturer::improveFaceRatings(){
 
 }
 
-unsigned int Multitexturer::findPosGrid (float _x, float _min, float _max, unsigned int _resolution) {
+unsigned int Multitexturer::findPosGrid (float _x, float _min, float _max, unsigned int _resolution) const {
     
     unsigned int d = (unsigned int) ((_x - _min) / (_max - _min) * _resolution);
     if (d == _resolution)
@@ -951,12 +951,11 @@ bool Multitexturer::findFaceInImage(float& _face_min_x, float& _face_max_x, floa
     std::vector<cv::Rect> faces;
     cv::Mat gray;
     cv::Mat smallImg( cvRound (image.rows/scale), cvRound(image.cols/scale), CV_8UC1 );
-    cv::cvtColor( image, gray, CV_BGR2GRAY );
+    cvtColor( image, gray, CV_BGR2GRAY );
     cv::resize( gray, smallImg, smallImg.size(), 0, 0, cv::INTER_LINEAR );
     cv::equalizeHist( smallImg, smallImg );
 
-    cascade.detectMultiScale( smallImg, faces, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, cv::Size(30, 30) 
-    );
+    cascade.detectMultiScale( smallImg, faces, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, cv::Size(30, 30) );
 
     if (faces.empty()){
         return false;
@@ -1110,7 +1109,6 @@ void Multitexturer::rasterizeTriangles(ArrayXXi& _pix_frontier, ArrayXXi& _pix_t
             const Vector3d tri_v(v0, v1, v2);
 
 
-            mesh_.setTriangleCam(tpres_orig3D, -2);
             mesh_.setTriangleUV(tpres_orig3D, tri_u, tri_v);
 
             // For every pixel in the triangle bounding box
@@ -1256,7 +1254,7 @@ void Multitexturer::findChartBorders(Chart& _chart, ArrayXXi& _pix_frontier, Arr
 }
 
 
-Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const ArrayXXi& _pix_triangle){
+Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const ArrayXXi& _pix_triangle) {
 
     // Output image is initialized
     Image imout =  Image (imHeight_, imWidth_);
@@ -1489,7 +1487,7 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
 
 }
 
-void Multitexturer::dilateAtlas(const ArrayXXi& _pix_triangle, Image& _image){
+void Multitexturer::dilateAtlas(const ArrayXXi& _pix_triangle, Image& _image) const{
 
     cv::Mat mask (imHeight_, imWidth_, CV_8UC1, cv::Scalar(255)); 
     cv::Mat inImage (imHeight_, imWidth_, CV_8UC3, cv::Scalar(0,0,0));

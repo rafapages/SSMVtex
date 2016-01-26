@@ -1,7 +1,7 @@
 #include "triangle.h"
 
 Triangle::Triangle(){
-    cam_ = -1;
+    // cam_ = -1;
     i_(0) = -1;
     i_(1) = -1;
     i_(2) = -1;
@@ -30,13 +30,17 @@ int Triangle::getIndex(unsigned int _index) const {
     return i_(_index);
 }
 
+void Triangle::setIndices(const Vector3i& _i){
+    i_ = _i;
+}
+
+void Triangle::setIndices(int _a, int _b, int _c){
+    i_ = Vector3i(_a,_b,_c);
+}
+
 void Triangle::setUV(const Vector3d& _u, const Vector3d& _v){
     u_ = _u;
     v_ = _v;
-}
-
-void Triangle::setCam(int _cam){
-    cam_ = _cam;
 }
 
 Vector3d Triangle::getU() const {

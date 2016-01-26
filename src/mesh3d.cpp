@@ -322,8 +322,4 @@ void Mesh3D::setTriangleUV(unsigned int _index, const Vector3d& _u, const Vector
     tri_[_index].setUV(_u, _v);
 }
 
-void Mesh3D::setTriangleCam(unsigned int _index, int _cam){
-    tri_[_index].setCam(_cam);
-}
-
 
