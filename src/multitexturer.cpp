@@ -961,11 +961,21 @@ bool Multitexturer::findFaceInImage(float& _face_min_x, float& _face_max_x, floa
         return false;
     }
 
-    std::vector<cv::Rect>::iterator itf = faces.begin();
-    _face_min_x =  (float)itf->x;
-    _face_max_x =  (float)itf->x + itf->width;
-    _face_min_y =  (float)itf->y;
-    _face_max_y =  (float)itf->y + itf->height;
+    // If there is a false positive of a very size it might be impossible to detect :S
+    int bigFace = 0;
+    int bigArea = -INT_MAX;
+    for (unsigned int i = 0; i < faces.size(); i++){
+        const int area = faces[i].area();
+        if (area > bigArea){
+            bigArea = area;
+            bigFace = i;
+        }
+    }
+
+    _face_min_x =  faces[bigFace].x;
+    _face_max_x =  faces[bigFace].x + faces[bigFace].width;
+    _face_min_y =  faces[bigFace].y;
+    _face_max_y =  faces[bigFace].y + faces[bigFace].height;
 
     return true;
 
