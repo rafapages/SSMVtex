@@ -331,7 +331,7 @@ void Multitexturer::chartPacking(){
 }
 
 
-void Multitexturer::printHelp(){    
+void Multitexturer::printHelp() const {    
     std::string help[] = {
         "",
         "Multitex, a 3D mesh multi-texturing system.",
@@ -1045,7 +1045,7 @@ void Multitexturer::chartColoring() {
     rasterizeTriangles(pix_frontier, pix_triangle);
 
     Image imout = colorTextureAtlas(pix_frontier, pix_triangle);
-    dilateAtlas(pix_triangle, imout);
+    dilateAtlasV2(pix_triangle, imout);
     imout.save(fileNameTexOut_);
 
 }
@@ -1544,6 +1544,48 @@ void Multitexturer::dilateAtlas(const ArrayXXi& _pix_triangle, Image& _image) co
 
     cv::Mat outImage; 
     cv::inpaint(inImage, mask, outImage, 1, cv::INPAINT_TELEA);
+
+    for (unsigned int row = 0; row < imHeight_; row++){
+        for (unsigned int col = 0; col < imWidth_; col++){
+            if (_pix_triangle(row,col) == -1){
+                const cv::Vec3b color = outImage.at<cv::Vec3b>(imHeight_ - row - 1, col);
+                const Color fcolor ((float) color(2), (float) color(1), (float) color(0));
+                _image.setColor(fcolor, row, col);
+            }
+        }
+    }
+
+    std::cerr << "done!" << std::endl;
+}
+
+void Multitexturer::dilateAtlasV2(const ArrayXXi& _pix_triangle, Image& _image) const{
+
+    cv::Mat mask (imHeight_, imWidth_, CV_8UC1, cv::Scalar(255)); 
+    cv::Mat inImage (imHeight_, imWidth_, CV_8UC3, cv::Scalar(0,0,0));
+
+    std::cerr << "Dilating charts... ";
+
+    for (unsigned int row = 0; row < imHeight_; row++){
+        for (unsigned int col = 0; col < imWidth_; col++){
+            if (_pix_triangle(row,col) != -1){
+                const uchar v = 0;
+                mask.at<uchar>(imHeight_ - row - 1,col) = v; // inverted axis in opencv
+            }
+            const Color color = _image.getColor(row, col);
+            const cv::Vec3b v((unsigned char)color.getBlue(),(unsigned char)color.getGreen(),(unsigned char)color.getRed());
+            inImage.at<cv::Vec3b>(imHeight_ - row - 1,col) = v;
+        }
+    }
+
+    cv::Mat mask2 = mask.clone();
+    cv::Mat eroder  = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5,5));
+    cv::erode(mask, mask, eroder);
+
+    cv::Mat finalmask (imHeight_, imWidth_, CV_8UC1, 255); 
+    finalmask = mask2 - mask;
+
+    cv::Mat outImage; 
+    cv::inpaint(inImage, finalmask, outImage, 1, cv::INPAINT_TELEA);
 
     for (unsigned int row = 0; row < imHeight_; row++){
         for (unsigned int col = 0; col < imWidth_; col++){

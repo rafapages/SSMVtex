@@ -75,7 +75,7 @@ public:
 
 private:
 
-    void printHelp(); // DUDA: tiene sentido una función void sin parámetros ser definida const?
+    void printHelp() const;
     
     // Access input data
     void readInputMesh();
@@ -112,7 +112,8 @@ private:
     // Weights the normals with respect to a function with
     // curvature beta_ and cutoff value alpha_
     void evaluateWeightNormal();
-    // 
+    // Finds a face in an image and increases the camera ratings
+    // for that camera in the corresponding facial triangles
     void improveFaceRatings();
 
 
@@ -143,6 +144,7 @@ private:
 
     // Dilates the atlases by inpainting the background
     void dilateAtlas(const ArrayXXi& _pix_triangle, Image& _image) const;
+    void dilateAtlasV2(const ArrayXXi& _pix_triangle, Image& _image) const;
 
 
 

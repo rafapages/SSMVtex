@@ -32,8 +32,6 @@ int main(int argc, char *argv[]){
     multitex.meshUnwrap();
     multitex.chartPacking();
 
-    multitex.exportOBJcharts("hola.obj");
-
     multitex.chartColoring();
 
     multitex.exportTexturedModel();
