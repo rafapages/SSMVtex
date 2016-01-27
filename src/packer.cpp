@@ -59,7 +59,7 @@ void Packer::pack(std::vector<Chart>& _charts, float& _width, float& _height){
 //         divisor = 2;
 //     }
 
-    const int sideElem = (int)(floor(sqrt(nelem)/divisor)); ////
+    const unsigned int sideElem = (int)(floor(sqrt(nelem)/divisor)); ////
 
     // Step 3: place the first line of charts.
 

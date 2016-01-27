@@ -16,8 +16,9 @@
  *
  */
 
-#include "image.h"
+#include <cstring>
 
+#include "image.h"
 
 Image::Image(){
 }
@@ -86,7 +87,7 @@ Color Image::interpolate (float _row, float _column, InterpolateMode _mode) cons
     // Bilinear
     if (_mode == BILINEAR){
 
-        if (r_base + 1 > height_ || c_base + 1 > width_){
+        if (r_base + 1 > (int) height_ || c_base + 1 > (int) width_){
             // We are in the edge of an image, then we cannot interpolate
             final = getColor(r_base, c_base);
         } else {

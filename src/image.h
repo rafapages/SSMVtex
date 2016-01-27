@@ -21,7 +21,7 @@
 
 #include <FreeImagePlus.h>
 #include <iostream>
-#include <Math.h>
+#include <math.h>
 
 #include "color.h"
 

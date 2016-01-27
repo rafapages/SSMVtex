@@ -293,7 +293,7 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
             }
 
             // Candidate for ed2
-            for (int j=0; j<adj_count[e.Candidate]; j++){
+            for (unsigned int j=0; j < adj_count[e.Candidate]; j++){
                 const Triangle t1 = _mesh.getTriangle(triNeighbor[3*(e.Candidate)+j]);
                 if( ((t1.getIndex(0) == ed2.a)  &&  (t1.getIndex(1) == ed2.b)) ||
                     ((t1.getIndex(1) == ed2.a)  &&  (t1.getIndex(2) == ed2.b)) ||
@@ -480,16 +480,16 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
             int tri2del = itedge->Candidate;
             usit=uTri.begin();
 
-            int int2del;
+            unsigned int int2del;
             for (unsigned int cn= 0; cn != _mesh.getNTri(); cn++){
-                if (uTri[cn]==tri2del){
+                if (uTri[cn] == tri2del){
                     int2del = cn;
                     break;
                 }
             }
 
-            for (unsigned int cn= 0; cn != _mesh.getNTri(); cn++){
-                if (cn!=int2del){
+            for (unsigned int cn = 0; cn != _mesh.getNTri(); cn++){
+                if (cn != int2del){
                     usit++;
                 } else {
                     break;
