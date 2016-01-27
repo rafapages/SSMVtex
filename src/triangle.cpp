@@ -19,7 +19,6 @@
 #include "triangle.h"
 
 Triangle::Triangle(){
-    // cam_ = -1;
     i_(0) = -1;
     i_(1) = -1;
     i_(2) = -1;

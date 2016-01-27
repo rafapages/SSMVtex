@@ -216,6 +216,11 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
     std::cerr << fileNameOut_ << std::endl;
     std::cerr << fileNameTexOut_ << std::endl;
 
+    if(in_mode_ == SPLAT && ca_mode_ == AREA_OCCL){
+        std::cerr << "Splat mode is on: splats normally overlap, so occlusions will not be taken into account" << std::endl;
+        ca_mode_ = AREA;
+    }
+
     // TO BE REMOVED WHEN POINT MODE IS IMPLEMENTED!!
     if (m_mode_ == POINT){
         std::cerr << "Color per vertex coloring mode still not supported, sorry..." << std::endl;
@@ -312,8 +317,11 @@ void Multitexturer::evaluateCameraRatings(){
 
 void Multitexturer::meshUnwrap(){
 
-    Unwrapper::unwrapMesh(mesh_, charts_);
-
+    if (in_mode_ == SPLAT){
+        Unwrapper::unwrapSplats(mesh_, charts_);
+    } else {
+        Unwrapper::unwrapMesh(mesh_, charts_);
+    }
 }
 
 void Multitexturer::chartPacking(){
