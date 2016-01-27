@@ -1,3 +1,21 @@
+/* 
+ *  Copyright (c) 2015  Rafael Pagés (rps (at) gti.ssr.upm.es)
+ *    and Universidad Politécnica de Madrid
+ *
+ *  This file is part of Multitex
+ *
+ *  Multitex is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Multitex is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ */
+
 #include <iomanip>
 #include <algorithm>
 
@@ -1030,7 +1048,7 @@ void Multitexturer::rasterizeTriangles(ArrayXXi& _pix_frontier, ArrayXXi& _pix_t
     std::vector<Chart>::iterator unwit;
     int trcnt = 0;
 
-    // To avoid divisions...
+    // To avoid many divisions...
     const float maxwbyimwidth =realWidth_/imWidth_;
 
     for (unwit = charts_.begin(); unwit != charts_.end(); ++unwit){
