@@ -23,7 +23,7 @@
 #include <iostream>
 #include <Math.h>
 
-#include "Color.h"
+#include "color.h"
 
 typedef enum {BICUBIC, BILINEAR} InterpolateMode;
 

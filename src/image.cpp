@@ -16,7 +16,7 @@
  *
  */
 
-#include "Image.h"
+#include "image.h"
 
 
 Image::Image(){

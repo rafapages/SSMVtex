@@ -21,7 +21,7 @@
 
 #include <list>
 
-#include "mesh2D.h"
+#include "mesh2d.h"
 
 struct Edge{
 
