@@ -1532,15 +1532,15 @@ Image Multitexturer::colorFlatCharts(const ArrayXXi& _pix_triangle){
     colorPool.push_back(Color(255,255,0));
     colorPool.push_back(Color(255,255,255));
     colorPool.push_back(Color(0,255,0));
-    colorPool.push_back(Color(0,255,255));
+    // colorPool.push_back(Color(0,255,255));
     colorPool.push_back(Color(0,0,255));
-    colorPool.push_back(Color(255,0,255));
-    colorPool.push_back(Color(127,0,0));
-    colorPool.push_back(Color(127,127,0));
-    colorPool.push_back(Color(0,127,0));
-    colorPool.push_back(Color(0,127,127));
-    colorPool.push_back(Color(0,0,127));
-    colorPool.push_back(Color(127,0,127));
+    // colorPool.push_back(Color(255,0,255));
+    // colorPool.push_back(Color(127,0,0));
+    // colorPool.push_back(Color(127,127,0));
+    // colorPool.push_back(Color(0,127,0));
+    // colorPool.push_back(Color(0,127,127));
+    // colorPool.push_back(Color(0,0,127));
+    // colorPool.push_back(Color(127,0,127));
 
 
     Image imout =  Image (imHeight_, imWidth_);

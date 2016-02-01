@@ -19,6 +19,7 @@
 #include "unwrapper.h"
 
 #include <iomanip>
+#include <cassert>
 
 
 void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
@@ -31,6 +32,17 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
 	std::vector<int> triNeighbor(_mesh.getNTri()*3);
 
 	findTriangleNeighbors(_mesh, adj_count, triNeighbor);
+
+    // for (unsigned int i = 0; i < _mesh.getNTri(); i++){
+    //     if (adj_count[i]==0){
+    //         std::cerr << i << " has " << adj_count[i] << std::endl;
+    //     }
+    //     if (adj_count[i]!=3){
+    //         std::cerr << i << " has " << adj_count[i] << std::endl;
+    //     }
+    // }
+
+
 
     std::cerr << "Unwrapping mesh..." << std::endl;
 
@@ -186,9 +198,10 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
             }
 
 
-            for (unsigned int j=0; j < adj_count[q]; j++){
+            for (unsigned int j = 0; j < adj_count[q]; j++){
                 const Triangle t1 = _mesh.getTriangle(triNeighbor[3*q+j]);
-
+                if (adj_count[q] < 3){
+                }
                 // If the neighbor triangle really shares the edge
                 if( ((t1.getIndex(0) == ed.a)  &&  (t1.getIndex(1) == ed.b)) ||
                     ((t1.getIndex(1) == ed.a)  &&  (t1.getIndex(2) == ed.b)) ||
@@ -223,7 +236,7 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
             // Step 3.1: we choose en Edge born in generation "gen"
 
             std::list<Edge>::iterator itedge;
-            for (itedge = unw.perimeter_.begin(); itedge != unw.perimeter_.end() ; itedge++){
+            for (itedge = unw.perimeter_.begin(); itedge != unw.perimeter_.end() ; ++itedge){
                 if ( ((*itedge).birth) == gen)
                     break;
             }
@@ -252,12 +265,18 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
             const int c1 = cand.getIndex(1);
             const int c2 = cand.getIndex(2);
 
+            // std::cerr << "c0 c1 c2 " << c0 << " " << c1 << " " << c2 << std::endl;
+            // std::cerr << "e.a e.b " << e.a << " " << e.b << std::endl;
+
             if ( ((e.a == c0) && (e.b == c1))  ||  ((e.b == c0) && (e.a == c1)) ) {
                 newVtx = c2;
             } else if ( ((e.a == c1) && (e.b == c2))  ||  ((e.b == c1) && (e.a == c2)) ) {
                 newVtx = c0;
             } else if ( ((e.a == c2) && (e.b == c0))  ||  ((e.b == c2) && (e.a == c0)) ) {
                 newVtx = c1;
+            } else {
+                // there is something wrong, so we better not add this
+                continue;
             }
 
             // New hypothetical edges of the new triangle
@@ -294,6 +313,7 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
 
             // Candidate for ed2
             for (unsigned int j=0; j < adj_count[e.Candidate]; j++){
+
                 const Triangle t1 = _mesh.getTriangle(triNeighbor[3*(e.Candidate)+j]);
                 if( ((t1.getIndex(0) == ed2.a)  &&  (t1.getIndex(1) == ed2.b)) ||
                     ((t1.getIndex(1) == ed2.a)  &&  (t1.getIndex(2) == ed2.b)) ||
@@ -323,7 +343,6 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
                 xna=EPSILON;
             if (ena == 0.0)
                 ena=EPSILON;    
-
             const double dpn = x_na.dot(e_na);
             // const double proj = dpn / xna;
             // const double nproj = proj / xna; // This value represents the proportion of the projection with respect to vector x_na
@@ -335,8 +354,6 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
             // const Vector2f k1 = proj * x_na_flat / xna;
             // const Vector2f k2 = (e_na - x_na.normalized()*proj).norm() * x_na_perp / xna;
             // const Vector2f nv = unw.m_.getVertex(e.pa) + k1 + k2; // 2D version of newVtx
-
-
 
             // -----------------------------------------------------------------------------
             // This is the old way to calculate the point:
@@ -499,7 +516,8 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
             uTri.erase(usit);
 
 
-
+            // std::cerr << "Candidate" << itedge->Candidate << std::endl;
+            // std::cerr << "tricount " << tri_count << std::endl;
             std::cerr << "\r" << (float)tri_count/_mesh.getNTri()*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
             
             // the old Edge is now deleted, and the new ones are inserted in its place
@@ -674,10 +692,10 @@ void Unwrapper::findTriangleNeighbors(const Mesh3D& _mesh, std::vector<unsigned 
     for(unsigned int i = 0; i < _mesh.getNVtx(); i++){
         std::vector<int>::iterator ita = vtx2tri[i].begin();
 
-        for(; ita != vtx2tri[i].end(); ita++){
+        for(; ita != vtx2tri[i].end(); ++ita){
             std::vector<int>::iterator itb = vtx2tri[i].begin();
 
-            for(; itb != vtx2tri[i].end(); itb++){
+            for(; itb != vtx2tri[i].end(); ++itb){
 
             	// in case both iterators are pointing to the same triangle
                 if ((*ita)==(*itb))
