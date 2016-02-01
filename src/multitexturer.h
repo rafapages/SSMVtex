@@ -142,6 +142,9 @@ private:
     // Performs the multi-texturing and returns a texture image
     Image colorTextureAtlas(const ArrayXXi& _pix_frontier, const ArrayXXi& _pix_triangle);
 
+    // This method colors each path on a different flat color... just for illustration purposes...
+    Image colorFlatCharts(const ArrayXXi& _pix_triangle);
+
     // Dilates the atlases by inpainting the background
     void dilateAtlas(const ArrayXXi& _pix_triangle, Image& _image) const;
     void dilateAtlasV2(const ArrayXXi& _pix_triangle, Image& _image) const;

@@ -1044,8 +1044,9 @@ void Multitexturer::chartColoring() {
     // pix_frontier and pix_triangle arrays are filled
     rasterizeTriangles(pix_frontier, pix_triangle);
 
+    // Image imout = colorFlatCharts(pix_triangle);
     Image imout = colorTextureAtlas(pix_frontier, pix_triangle);
-    dilateAtlasV2(pix_triangle, imout);
+    dilateAtlas(pix_triangle, imout);
     imout.save(fileNameTexOut_);
 
 }
@@ -1518,6 +1519,88 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
     }
 
     std::cerr << "\n";
+
+    return imout;
+
+}
+
+Image Multitexturer::colorFlatCharts(const ArrayXXi& _pix_triangle){
+
+    std::vector<Color> colorPool;
+    // pre-defined colors
+    colorPool.push_back(Color(255,0,0));
+    colorPool.push_back(Color(255,255,0));
+    colorPool.push_back(Color(255,255,255));
+    colorPool.push_back(Color(0,255,0));
+    colorPool.push_back(Color(0,255,255));
+    colorPool.push_back(Color(0,0,255));
+    colorPool.push_back(Color(255,0,255));
+    colorPool.push_back(Color(127,0,0));
+    colorPool.push_back(Color(127,127,0));
+    colorPool.push_back(Color(0,127,0));
+    colorPool.push_back(Color(0,127,127));
+    colorPool.push_back(Color(0,0,127));
+    colorPool.push_back(Color(127,0,127));
+
+
+    Image imout =  Image (imHeight_, imWidth_);
+
+    std::vector<Chart>::iterator unwit;
+
+    int trcnt = 0;
+    for (unwit = charts_.begin(); unwit != charts_.end(); ++unwit){
+
+        const int col_index = rand() % colorPool.size();
+        Color chart_col = colorPool[col_index];
+
+
+        for (unsigned int i = 0; i < (*unwit).m_.getNTri(); i++){
+            
+            const Triangle tpres = (*unwit).m_.getTriangle(i);
+
+            trcnt++;
+
+            // Vector2f vt0,vt1,vt2;
+            // vertices of the triangle
+            const Vector2f vt0 = (*unwit).m_.getVertex(tpres.getIndex(0));
+            const Vector2f vt1 = (*unwit).m_.getVertex(tpres.getIndex(1));
+            const Vector2f vt2 = (*unwit).m_.getVertex(tpres.getIndex(2));
+
+            float xmax, xmin, ymax, ymin;
+
+            // maximum x value
+            xmax = vt0(0) > vt1(0) ? vt0(0) : vt1(0);
+            xmax = xmax > vt2(0) ? xmax : vt2(0);
+            // minimum x value
+            xmin = vt0(0) < vt1(0) ? vt0(0) : vt1(0);
+            xmin = xmin < vt2(0) ? xmin : vt2(0);
+            // maximum y value
+            ymax = vt0(1) > vt1(1) ? vt0(1) : vt1(1);
+            ymax = ymax > vt2(1) ? ymax : vt2(1);
+            // minimum y value
+            ymin = vt0(1) < vt1(1) ? vt0(1) : vt1(1);
+            ymin = ymin < vt2(1) ? ymin : vt2(1);
+
+            unsigned int xmaxp = findPosGrid(xmax, 0, realWidth_, imWidth_);
+            unsigned int xminp = findPosGrid(xmin, 0, realHeight_, imHeight_);
+            unsigned int ymaxp = findPosGrid(ymax, 0, realWidth_, imWidth_);
+            unsigned int yminp = findPosGrid(ymin, 0, realHeight_, imHeight_);
+
+
+            for (unsigned int colp = xminp; colp <= xmaxp; colp++){
+                for (unsigned int rowp = yminp; rowp <= ymaxp; rowp++){
+                    if (_pix_triangle(rowp, colp) != -1 ){
+                        imout.setColor(chart_col, rowp, colp);
+                    }
+                }
+            }
+
+            std::cerr << "\r" << (float)trcnt/mesh_.getNTri()*100 << std::setw(4) << std::setprecision(4) << "% of triangles colored. ";
+        }
+    }
+
+    std::cerr << "\n";
+
 
     return imout;
 
