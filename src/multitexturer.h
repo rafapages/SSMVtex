@@ -187,6 +187,7 @@ private:
     float beta_; // 1.0
     unsigned int dimension_; // 10,000,000
     unsigned int imageCacheSize_; // 75
+    bool highlightOcclusions_; // false
 
     // File names
     std::string fileNameIn_;

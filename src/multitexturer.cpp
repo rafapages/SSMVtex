@@ -33,6 +33,7 @@ Multitexturer::Multitexturer(){
     beta_ = 1.0;
     dimension_ = 10000000;
     imageCacheSize_ = 75;
+    highlightOcclusions_ = false;
 
     nCam_ = 0;
 
@@ -75,9 +76,10 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
             case 'p':   m_mode_ = POINT;    opts.push_back(c); break;
             case 'f':   m_mode_ = FLAT;     opts.push_back(c); break;
 
-
             case 'm':   in_mode_ = MESH;    opts.push_back(c); break;
             case 's':   in_mode_ = SPLAT;   opts.push_back(c); break;
+
+            case 'o':   highlightOcclusions_ = true; break;
 
             case 'h':
                 printHelp();
@@ -360,11 +362,11 @@ void Multitexturer::printHelp() const {
         "\t\tnormals using the baricenter technique, (a) their area, (l)",
         "\t\tor their area taking occlusions into account. Default: l.",
         "-{m|s}\t\tInput value is (m) common 3D mesh or (s) a splat based 3D mesh. Default: m",
-        "-{1-9}\t\tIf B option has been chosen, this argument indicates the",
-        "\t\tmaximum amount of images per triangle used in order to create",
-        "\t\tthe customized texture. Default: 1.",
+        "-{1-9}\t\tthis argument indicates the maximum amount of images per triangle",
+        "\t\tused in order to create the customized texture. Default: 1.",
         "-{p|t|f}\tShow (p) a mesh colored per vertex, (t) a mesh with textures or",
         "\t\t(f) a mesh colored with a flat color per chart. Default: t.",
+        "-o\t\thighlights occlusions in yellow.",
         "--faceCam=<imageFileName>   in case there a frontal image showing the subject's face.",
         "--alpha=<alpha> alpha is the cutoff value of the normal weighting",
         "                function, in the interval (0, 1). Default: 0.5. ",
@@ -1477,7 +1479,13 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
 
                         // If no camera sees the triangle, it's currently painted yellow
                         if (tomix == 0){
-                            imout.setColor(Color(255,255,0),rowp,colp);
+                            if (highlightOcclusions_){
+                                imout.setColor(Color(255,255,0),rowp,colp);
+                            } else {
+                                // This should do something else than painting them black...
+                                // but currently it does not do anything else
+                                imout.setColor(Color(0,0,0),rowp,colp);
+                            }
                             continue;
                         }
 
