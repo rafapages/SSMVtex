@@ -19,7 +19,6 @@
 #include "unwrapper.h"
 
 #include <iomanip>
-#include <cassert>
 
 
 void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
@@ -32,16 +31,6 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
 	std::vector<int> triNeighbor(_mesh.getNTri()*3);
 
 	findTriangleNeighbors(_mesh, adj_count, triNeighbor);
-
-    // for (unsigned int i = 0; i < _mesh.getNTri(); i++){
-    //     if (adj_count[i]==0){
-    //         std::cerr << i << " has " << adj_count[i] << std::endl;
-    //     }
-    //     if (adj_count[i]!=3){
-    //         std::cerr << i << " has " << adj_count[i] << std::endl;
-    //     }
-    // }
-
 
 
     std::cerr << "Unwrapping mesh..." << std::endl;

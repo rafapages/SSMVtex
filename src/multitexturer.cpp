@@ -73,6 +73,8 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
 
             case 't':	m_mode_ = TEXTURE;  opts.push_back(c); break;
             case 'p':   m_mode_ = POINT;    opts.push_back(c); break;
+            case 'f':   m_mode_ = FLAT;     opts.push_back(c); break;
+
 
             case 'm':   in_mode_ = MESH;    opts.push_back(c); break;
             case 's':   in_mode_ = SPLAT;   opts.push_back(c); break;
@@ -361,7 +363,8 @@ void Multitexturer::printHelp() const {
         "-{1-9}\t\tIf B option has been chosen, this argument indicates the",
         "\t\tmaximum amount of images per triangle used in order to create",
         "\t\tthe customized texture. Default: 1.",
-        "-{p|t}\t\tShow (p) a mesh colored per vertex or (t) a mesh with textures. Default: t.",
+        "-{p|t|f}\tShow (p) a mesh colored per vertex, (t) a mesh with textures or",
+        "\t\t(f) a mesh colored with a flat color per chart. Default: t.",
         "--faceCam=<imageFileName>   in case there a frontal image showing the subject's face.",
         "--alpha=<alpha> alpha is the cutoff value of the normal weighting",
         "                function, in the interval (0, 1). Default: 0.5. ",
@@ -1044,8 +1047,17 @@ void Multitexturer::chartColoring() {
     // pix_frontier and pix_triangle arrays are filled
     rasterizeTriangles(pix_frontier, pix_triangle);
 
-    // Image imout = colorFlatCharts(pix_triangle);
-    Image imout = colorTextureAtlas(pix_frontier, pix_triangle);
+    Image imout;
+
+    if (m_mode_ == FLAT){
+        imout = colorFlatCharts(pix_triangle);
+    } else if (m_mode_ == TEXTURE){
+        imout = colorTextureAtlas(pix_frontier, pix_triangle);
+    } else {
+        std::cerr << "Mode: " << m_mode_ << " is unknown!" << std::endl;
+        return;
+    }
+
     dilateAtlas(pix_triangle, imout);
     imout.save(fileNameTexOut_);
 
@@ -1532,15 +1544,7 @@ Image Multitexturer::colorFlatCharts(const ArrayXXi& _pix_triangle){
     colorPool.push_back(Color(255,255,0));
     colorPool.push_back(Color(255,255,255));
     colorPool.push_back(Color(0,255,0));
-    // colorPool.push_back(Color(0,255,255));
     colorPool.push_back(Color(0,0,255));
-    // colorPool.push_back(Color(255,0,255));
-    // colorPool.push_back(Color(127,0,0));
-    // colorPool.push_back(Color(127,127,0));
-    // colorPool.push_back(Color(0,127,0));
-    // colorPool.push_back(Color(0,127,127));
-    // colorPool.push_back(Color(0,0,127));
-    // colorPool.push_back(Color(127,0,127));
 
 
     Image imout =  Image (imHeight_, imWidth_);
@@ -1699,6 +1703,11 @@ void Multitexturer::exportTexturedModel(){
     }
 
 }
+
+MappingMode Multitexturer::getMappingMode() const {
+    return m_mode_;
+}
+
 
 void Multitexturer::exportOBJcharts(const std::string& _fileName){
 

@@ -31,7 +31,7 @@
 #include "unwrapper.h"
 #include "packer.h"
 
-typedef enum {TEXTURE, POINT} MappingMode;
+typedef enum {TEXTURE, POINT, FLAT} MappingMode;
 typedef enum {NORMAL_VERTEX, NORMAL_BARICENTER, AREA, AREA_OCCL} CamAssignMode;
 typedef enum {LIGHT, SHADOW, DARK} VtxMode;
 typedef enum {MESH, SPLAT} InputMode;
@@ -64,12 +64,16 @@ public:
     // Creates a texture atlas and colors it
     void chartColoring();
 
-    //
+    // Exports a textured 3D model using the selected format
     void exportTexturedModel();
+
+    // Returns the mapping mode
+    MappingMode getMappingMode() const;
 
     // TEST chart exporter: the packed charts are exported
     // as a flat 3D mesh in OBJ format
     void exportOBJcharts(const std::string& _fileName);
+
 
 
 

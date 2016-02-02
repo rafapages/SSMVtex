@@ -27,7 +27,11 @@ int main(int argc, char *argv[]){
 
     multitex.loadInputData();
 
-    multitex.evaluateCameraRatings();
+    // In case a FLAT coloring mode has been chosen,
+    // it is not necessary to evaluate the camera ratings
+    if (multitex.getMappingMode() != FLAT){
+        multitex.evaluateCameraRatings();
+    }
 
     multitex.meshUnwrap();
     multitex.chartPacking();
