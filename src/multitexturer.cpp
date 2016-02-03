@@ -284,8 +284,11 @@ void Multitexturer::evaluateCameraRatings(){
     }
 
     std::cerr << "\n";
-    improveFaceRatings();
-    evaluateWeightNormal();
+
+    if (fileFaceCam_.size() != 0){
+        improveFaceRatings();
+        evaluateWeightNormal();
+    }
 
     // At this point, triangle ratings are already known,
     // and their average is calculated to set the vertex ratings 
@@ -787,16 +790,19 @@ void Multitexturer::evaluateWeightNormal(){
         // Find camera most orthogonal to this triangle
         const Vector3f n = mesh_.getTriangleNormal(i);
         const Triangle& thistri = mesh_.getTriangle(i);
+
+        // We calculate the baricenter (centroid) of the triangle
+        Vector3f mf = mesh_.getVertex(thistri.getIndex(0));
+        mf += mesh_.getVertex(thistri.getIndex(1));
+        mf += mesh_.getVertex(thistri.getIndex(2));
+        mf /= 3;
+
+
         for (unsigned int j = 0; j < nCam_; j++) {
-            // We calculate the baricenter (centroid) of the triangle
-            Vector3f mf = mesh_.getVertex(thistri.getIndex(0));
-            mf += mesh_.getVertex(thistri.getIndex(1));
-            mf += mesh_.getVertex(thistri.getIndex(2));
-            mf /= 3;
 
             // We check the position of the camera with respect to the triangle
-            mf -= cameras_[j].getPosition();
-            Vector3f nf = mf.normalized();
+            const Vector3f mmf = mf - cameras_[j].getPosition();
+            Vector3f nf = mmf.normalized();
             float dp = n.dot(nf);
             dp *= -1;
 
@@ -841,7 +847,7 @@ void Multitexturer::improveFaceRatings(){
 
     // We search for vertices lying inside the face area in the image
     for (unsigned int i = 0; i < nVtx_; i++) {
-        Vector2f v = cameras_[faceCam].transform2uvCoord(mesh_.getVertex(i));
+        const Vector2f v = cameras_[faceCam].transform2uvCoord(mesh_.getVertex(i));
         const float face_x = v(0);
         const float face_y = v(1);
         if ( (face_min_x < face_x) && (face_x < face_max_x) && (face_min_y < face_y) && (face_y < face_max_y) ) {
