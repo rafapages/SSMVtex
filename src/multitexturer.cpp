@@ -36,6 +36,8 @@ Multitexturer::Multitexturer(){
     highlightOcclusions_ = false;
 
     nCam_ = 0;
+    nVtx_ = 0;
+    nTri_ = 0;
 
     realWidth_ = realHeight_ = 0.0;
     imWidth_ = imHeight_ = 0;
@@ -238,8 +240,8 @@ void Multitexturer::evaluateCameraRatings(){
     std::cerr << "Evaluating camera ratings..." << std::endl;
 
     for (unsigned int c = 0 ; c < nCam_ ; c++){
-        cameras_[c].tri_ratings_.resize(mesh_.getNTri());
-        cameras_[c].vtx_ratings_.resize(mesh_.getNVtx());
+        cameras_[c].tri_ratings_.resize(nTri_);
+        cameras_[c].vtx_ratings_.resize(nVtx_);
     }
 
     // This step will calculate every camera-triangle ratings
@@ -259,14 +261,14 @@ void Multitexturer::evaluateCameraRatings(){
 
     // Create vtx2tri and tri2tri
     // vtx2vtx is a vector containing every direct neighbor for each vertex
-    std::vector<int> *vtx2tri = new std::vector<int> [mesh_.getNVtx()];
-    for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
+    std::vector<int> *vtx2tri = new std::vector<int> [nVtx_];
+    for (unsigned int i = 0; i < nTri_; i++) {
         for (unsigned int j = 0; j < 3; j++)
             vtx2tri[mesh_.getTriangle(i).getIndex(j)].push_back(i);
     }
     // tri2tri is a list containing every neigbor of eac triangle
-    std::list<int> *tri2tri = new std::list<int> [mesh_.getNTri()];
-    for (unsigned int i = 0; i < mesh_.getNVtx(); i++) {
+    std::list<int> *tri2tri = new std::list<int> [nTri_];
+    for (unsigned int i = 0; i < nVtx_; i++) {
         for (std::vector<int>::iterator ita = vtx2tri[i].begin(); ita != vtx2tri[i].end(); ++ita) {
             for (std::vector<int>::iterator itb = vtx2tri[i].begin(); itb != vtx2tri[i].end(); ++itb) {
                 tri2tri[*ita].push_back(*itb);
@@ -275,7 +277,7 @@ void Multitexturer::evaluateCameraRatings(){
         }
     }
 
-    for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
+    for (unsigned int i = 0; i < nTri_; i++) {
         tri2tri[i].sort();
         tri2tri[i].unique();
     }
@@ -294,7 +296,7 @@ void Multitexturer::evaluateCameraRatings(){
     // and their average is calculated to set the vertex ratings 
     for(unsigned int c = 0; c < nCam_; c++){
 
-        for(unsigned int i = 0; i < mesh_.getNVtx() ; i++){
+        for(unsigned int i = 0; i < nVtx_ ; i++){
             std::vector<int>::iterator it;
             float totrating = 0.0;
             int numTri = 0;
@@ -448,6 +450,8 @@ void Multitexturer::readImageList(){
 void Multitexturer::readInputMesh(){
 
     mesh_ = Mesh3D(fileNameIn_);
+    nVtx_ = mesh_.getNVtx();
+    nTri_ = mesh_.getNTri();
 
 }
 
@@ -455,7 +459,7 @@ void Multitexturer::readInputMesh(){
 
 void Multitexturer::evaluateNormal(){
 
-    for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
+    for (unsigned int i = 0; i < nTri_; i++) {
 
         const Triangle thistri = mesh_.getTriangle(i);
         // Find camera most orthogonal to this triangle
@@ -478,7 +482,7 @@ void Multitexturer::evaluateNormal(){
             // test : true if all coordinates in [0,1]
             std::vector<Vector2f> uv_vtx;
             for (unsigned int k = 0; k < 3; k++) {
-                const Vector3f vc = mesh_.getVertex(thistri.getIndex(k));
+                const Vector3f& vc = mesh_.getVertex(thistri.getIndex(k));
                 Vector2f uv = cameras_[j].transform2uvCoord(vc);
                 uv_vtx.push_back(uv);
             }
@@ -498,7 +502,7 @@ void Multitexturer::evaluateNormal(){
             }
         }
 
-        std::cerr << "\r" << (float)i/mesh_.getNTri()*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
+        std::cerr << "\r" << (float)i/nTri_*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
 
     }
 } 
@@ -507,9 +511,9 @@ void Multitexturer::evaluateNormal(){
 void Multitexturer::evaluateArea(){
 
 
-    for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
+    for (unsigned int i = 0; i < nTri_; i++) {
         
-        const Triangle thistri = mesh_.getTriangle(i);
+        const Triangle& thistri = mesh_.getTriangle(i);
         Vector3f n = mesh_.getTriangleNormal(i);
 
         for (unsigned int j = 0; j < nCam_; j++) {
@@ -525,7 +529,7 @@ void Multitexturer::evaluateArea(){
                 // Vertex projections to the image plane
                 std::vector<Vector2f> uv_vtx;
                 for (unsigned int k=0; k<3; k++) {
-                    const Vector3f vc = mesh_.getVertex(thistri.getIndex(k));
+                    const Vector3f& vc = mesh_.getVertex(thistri.getIndex(k));
                     Vector2f uv = cameras_[j].transform2uvCoord(vc);
                     uv_vtx.push_back(uv);
                 }
@@ -550,7 +554,7 @@ void Multitexturer::evaluateArea(){
 
             } // else -> tri_ratings_ stays 0
         }
-        std::cerr << "\r" << (float)i/mesh_.getNTri()*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
+        std::cerr << "\r" << (float)i/nTri_*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
 
     }
 
@@ -564,11 +568,11 @@ void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
     // These arrays are calculated only once (here), because they are the
     // same for all cameras... that is why it is calculated before the
     // "for each camera" loop
-    std::vector<float> tri_areamax (mesh_.getNTri(), 0.0);
+    std::vector<float> tri_areamax (nTri_, 0.0);
     // which triangles contain each vertex
-    std::vector<int> *vtx2tri = new std::vector<int> [mesh_.getNVtx()];
+    std::vector<int> *vtx2tri = new std::vector<int> [nVtx_];
 
-    for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
+    for (unsigned int i = 0; i < nTri_; i++) {
         for (unsigned int j = 0; j < 3; j++){
             vtx2tri[mesh_.getTriangle(i).getIndex(j)].push_back(i);
         }
@@ -589,15 +593,15 @@ void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
     //    tri_alive : true (after processing each camera) if it can be seen
     //    grid_tri : triangles whose projection is included in each cell of the grid
 
-    std::vector<float> vtx_s (mesh_.getNVtx());
-    std::vector<float> vtx_t (mesh_.getNVtx());
-    std::vector<unsigned int> vtx_pos_grid_s (mesh_.getNVtx());
-    std::vector<unsigned int> vtx_pos_grid_t (mesh_.getNVtx());
+    std::vector<float> vtx_s (nVtx_);
+    std::vector<float> vtx_t (nVtx_);
+    std::vector<unsigned int> vtx_pos_grid_s (nVtx_);
+    std::vector<unsigned int> vtx_pos_grid_t (nVtx_);
     std::vector<int> *grid_vtx = new std::vector<int> [grid_s_resol * grid_t_resol];
-    std::vector<VtxMode> vtx_seen (mesh_.getNVtx());
-    std::vector<float> tri_area(mesh_.getNTri());
-    std::vector<bool> tri_frontfacing (mesh_.getNTri());
-    std::vector<bool> tri_alive (mesh_.getNTri());
+    std::vector<VtxMode> vtx_seen (nVtx_);
+    std::vector<float> tri_area(nTri_);
+    std::vector<bool> tri_frontfacing (nTri_);
+    std::vector<bool> tri_alive (nTri_);
     std::vector<int> *grid_tri = new std::vector<int> [grid_s_resol * grid_t_resol];
 
 
@@ -608,16 +612,16 @@ void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
         // STEP 1 : Kill backfacing triangles
 
         // Vertex projections
-        for (unsigned int i = 0; i < mesh_.getNVtx(); i++) {
-            Vector2f v = cameras_[c].transform2uvCoord(mesh_.getVertex(i));
+        for (unsigned int i = 0; i < nVtx_; i++) {
+            const Vector2f& v = cameras_[c].transform2uvCoord(mesh_.getVertex(i));
             vtx_s[i] = v(0);
             vtx_t[i] = v(1);
         }
 
         // Calculate the area of each triangle and kill triangles
         // with a negative area
-        for (unsigned int j = 0; j < mesh_.getNTri(); j++) {
-            const Triangle vl = mesh_.getTriangle(j);
+        for (unsigned int j = 0; j < nTri_; j++) {
+            const Triangle& vl = mesh_.getTriangle(j);
             tri_area[j] = (vtx_t[vl.getIndex(0)]-vtx_t[vl.getIndex(2)]) * (vtx_s[vl.getIndex(1)]-vtx_s[vl.getIndex(2)]) - (vtx_s[vl.getIndex(0)]-vtx_s[vl.getIndex(2)]) * (vtx_t[vl.getIndex(1)]-vtx_t[vl.getIndex(2)]);
             tri_alive[j] = tri_frontfacing[j] = tri_area[j] > 0;
         }
@@ -626,7 +630,7 @@ void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
         // STEP 2: All vertices surrounded only by dead triangles -> DARK
         // Rest of them -> LIGHT
 
-        for (unsigned int i = 0; i < mesh_.getNVtx(); i++) {
+        for (unsigned int i = 0; i < nVtx_; i++) {
             bool tobekilled = true;
             for (std::vector<int>::iterator it = vtx2tri[i].begin(); it!=vtx2tri[i].end(); ++it) {
                 if (tri_frontfacing[*it]) {
@@ -658,7 +662,7 @@ void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
         min_s = max_s = vtx_s[0];
         min_t = max_t = vtx_t[0];
 
-        for (unsigned int i = 1; i < mesh_.getNVtx(); i++) {
+        for (unsigned int i = 1; i < nVtx_; i++) {
             if (vtx_s[i] < min_s) {
                 min_s = vtx_s[i];
             } else if (vtx_s[i] > max_s){
@@ -670,7 +674,7 @@ void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
             }
         }
 
-        for (unsigned int i = 0; i < mesh_.getNVtx(); i++) {
+        for (unsigned int i = 0; i < nVtx_; i++) {
             if (vtx_seen[i] == LIGHT) {
                 vtx_pos_grid_s[i] = findPosGrid(vtx_s[i], min_s, max_s, grid_s_resol);
                 vtx_pos_grid_t[i] = findPosGrid(vtx_t[i], min_t, max_t, grid_t_resol);
@@ -679,10 +683,10 @@ void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
         }
 
         // Clasify living triangles in triangle grid
-        for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
+        for (unsigned int i = 0; i < nTri_; i++) {
             if (tri_alive[i]) {
                 // unsigned int * vl = tri[i].i;
-                const Triangle vl = mesh_.getTriangle(i);
+                const Triangle& vl = mesh_.getTriangle(i);
                 unsigned int min_pos_grid_s = findPosGrid(vtx_s[vl.getIndex(0)], min_s, max_s, grid_s_resol);
                 unsigned int min_pos_grid_t = findPosGrid(vtx_t[vl.getIndex(0)], min_t, max_t, grid_t_resol);
                 unsigned int max_pos_grid_s = min_pos_grid_s;
@@ -703,13 +707,13 @@ void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
         }
 
         // STEP 3 : LIGHT vertices covered by living triangles or outside texture turn into SHADOW vertices
-        for (unsigned int i = 0; i < mesh_.getNVtx(); i++) {
+        for (unsigned int i = 0; i < nVtx_; i++) {
             if (vtx_seen[i] == LIGHT) {
                 // candidates: triangles in same grid part, except for the ones incident to i
                 std::vector<int> candidates = grid_tri[vtx_pos_grid_s[i]*grid_s_resol + vtx_pos_grid_t[i]];
                 for (std::vector<int>::iterator it = candidates.begin(); it != candidates.end(); it++) {
                     // unsigned int * vl = tri[*it].i;
-                    const Triangle vl = mesh_.getTriangle(*it);
+                    const Triangle& vl = mesh_.getTriangle(*it);
                     if (isPinsideTri(Vector2f(vtx_s[i], vtx_t[i]), Vector2f(vtx_s[vl.getIndex(0)], vtx_t[vl.getIndex(0)]), Vector2f(vtx_s[vl.getIndex(1)], vtx_t[vl.getIndex(1)]), Vector2f(vtx_s[vl.getIndex(2)], vtx_t[vl.getIndex(2)]))) {
                         // Check if triangle vertex is eclipsed
                         if (isVertexEclipsed(i, *it, c)){
@@ -727,7 +731,7 @@ void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
 
         // STEP 4 : Kill triangles that touch SHADOW vertices
 
-        for (unsigned int i = 0; i < mesh_.getNVtx(); i++) {
+        for (unsigned int i = 0; i < nVtx_; i++) {
             if (vtx_seen[i] == SHADOW) {
                 for (std::vector<int>::iterator it = vtx2tri[i].begin(); it != vtx2tri[i].end(); it++) {
                     tri_alive[*it] = false;
@@ -738,7 +742,7 @@ void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
         // STEP 5 : Process each living triangle
 
         // For each triangle, if it is still alive and its area is greater than areamax, update
-        for (unsigned int i = 0; i < mesh_.getNTri(); i++){
+        for (unsigned int i = 0; i < nTri_; i++){
             cameras_[c].tri_ratings_[i] = tri_alive[i] ? tri_area[i] : 0;
         }
 
@@ -755,10 +759,10 @@ void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
 
 void Multitexturer::smoothRatings(std::list<int> *_tri2tri){
 
-    std::vector<float> tri_rat_filter(mesh_.getNTri());
+    std::vector<float> tri_rat_filter(nTri_);
 
     for (unsigned int c = 0; c < nCam_; c++) {
-        for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
+        for (unsigned int i = 0; i < nTri_; i++) {
             
             if (cameras_[c].tri_ratings_[i] != 0) {
 
@@ -783,11 +787,11 @@ void Multitexturer::evaluateWeightNormal(){
     const float invalpha = 1/alpha_;
     const float invoneminusalpha = 1 / (1-alpha_);
 
-    for (unsigned int i = 0; i < mesh_.getNTri(); i++) {
+    for (unsigned int i = 0; i < nTri_; i++) {
 
         // Find camera most orthogonal to this triangle
         const Vector3f n = mesh_.getTriangleNormal(i);
-        const Triangle thistri = mesh_.getTriangle(i);
+        const Triangle& thistri = mesh_.getTriangle(i);
         for (unsigned int j = 0; j < nCam_; j++) {
             // We calculate the baricenter (centroid) of the triangle
             Vector3f mf = mesh_.getVertex(thistri.getIndex(0));
@@ -838,10 +842,10 @@ void Multitexturer::improveFaceRatings(){
     std::cerr << "\tface_min_y = " << face_min_y << std::endl;
     std::cerr << "\tface_max_y = " << face_max_y << std::endl;
 
-    std::vector<bool> vtx_face (mesh_.getNVtx());
+    std::vector<bool> vtx_face (nVtx_);
 
     // We search for vertices lying inside the face area in the image
-    for (unsigned int i = 0; i < mesh_.getNVtx(); i++) {
+    for (unsigned int i = 0; i < nVtx_; i++) {
         Vector2f v = cameras_[faceCam].transform2uvCoord(mesh_.getVertex(i));
         const float face_x = v(0);
         const float face_y = v(1);
@@ -854,8 +858,8 @@ void Multitexturer::improveFaceRatings(){
 
     // If any of the vertices of a triangle is considered "face vertex"
     // the rating of the triangle is multipied by 4
-    for (unsigned int t = 0; t < mesh_.getNTri(); t++) {
-        const Triangle thistri = mesh_.getTriangle(t);
+    for (unsigned int t = 0; t < nTri_; t++) {
+        const Triangle& thistri = mesh_.getTriangle(t);
         if ( (vtx_face[thistri.getIndex(0)]) || (vtx_face[thistri.getIndex(1)]) || (vtx_face[thistri.getIndex(2)]) ){
             cameras_[faceCam].tri_ratings_[t] *= 4;
         }
@@ -874,7 +878,7 @@ unsigned int Multitexturer::findPosGrid (float _x, float _min, float _max, unsig
 
 bool Multitexturer::isVertexEclipsed (int _v, int _t, int _c) const {
 
-    Vector3f va = mesh_.getVertex(mesh_.getTriangle(_t).getIndex(0));
+    const Vector3f& va = mesh_.getVertex(mesh_.getTriangle(_t).getIndex(0));
     Vector3f vb = mesh_.getVertex(mesh_.getTriangle(_t).getIndex(1));
     Vector3f vc = mesh_.getVertex(mesh_.getTriangle(_t).getIndex(2));
 
@@ -1080,7 +1084,7 @@ void Multitexturer::rasterizeTriangles(ArrayXXi& _pix_frontier, ArrayXXi& _pix_t
 
         // for each triangle we find a bounding box determined by its maximum and minimum values of x and y pixels
         for (unsigned int i = 0; i < (*unwit).m_.getNTri(); i++){
-            const Triangle tpres = (*unwit).m_.getTriangle(i);
+            const Triangle& tpres = (*unwit).m_.getTriangle(i);
             trcnt++;
 
             // Vector2f vt0,vt1,vt2;
@@ -1182,7 +1186,7 @@ void Multitexturer::rasterizeTriangles(ArrayXXi& _pix_frontier, ArrayXXi& _pix_t
                 }
             }
          
-            std::cerr << "\r" << (float)trcnt/mesh_.getNTri()*100 << std::setw(4) << std::setprecision(4) << "% of triangles rasterized.      ";
+            std::cerr << "\r" << (float)trcnt/nTri_*100 << std::setw(4) << std::setprecision(4) << "% of triangles rasterized.      ";
 
         }
     }
@@ -1326,7 +1330,7 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
 
         for (unsigned int i = 0; i < (*unwit).m_.getNTri(); i++){
             
-            const Triangle tpres = (*unwit).m_.getTriangle(i);
+            const Triangle& tpres = (*unwit).m_.getTriangle(i);
             const int tpres_orig3D = (*unwit).m_.getOrigTri(i);
 
             trcnt++;
@@ -1532,7 +1536,7 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
                 }
             }
 
-            std::cerr << "\r" << (float)trcnt/mesh_.getNTri()*100 << std::setw(4) << std::setprecision(4) << "% of triangles colored. ";
+            std::cerr << "\r" << (float)trcnt/nTri_*100 << std::setw(4) << std::setprecision(4) << "% of triangles colored. ";
             std::cerr << (float)imageCache_.size()/imageCacheSize_ * 100 << std::setw(4) << std::setprecision(4) << "% of cache usage (";
             std::cerr << imageCache_.size() << "/" << imageCacheSize_ << ").      " << std::flush;
         }
@@ -1568,15 +1572,15 @@ Image Multitexturer::colorFlatCharts(const ArrayXXi& _pix_triangle){
 
         for (unsigned int i = 0; i < (*unwit).m_.getNTri(); i++){
             
-            const Triangle tpres = (*unwit).m_.getTriangle(i);
+            const Triangle& tpres = (*unwit).m_.getTriangle(i);
 
             trcnt++;
 
             // Vector2f vt0,vt1,vt2;
             // vertices of the triangle
-            const Vector2f vt0 = (*unwit).m_.getVertex(tpres.getIndex(0));
-            const Vector2f vt1 = (*unwit).m_.getVertex(tpres.getIndex(1));
-            const Vector2f vt2 = (*unwit).m_.getVertex(tpres.getIndex(2));
+            const Vector2f& vt0 = (*unwit).m_.getVertex(tpres.getIndex(0));
+            const Vector2f& vt1 = (*unwit).m_.getVertex(tpres.getIndex(1));
+            const Vector2f& vt2 = (*unwit).m_.getVertex(tpres.getIndex(2));
 
             float xmax, xmin, ymax, ymin;
 
@@ -1607,7 +1611,7 @@ Image Multitexturer::colorFlatCharts(const ArrayXXi& _pix_triangle){
                 }
             }
 
-            std::cerr << "\r" << (float)trcnt/mesh_.getNTri()*100 << std::setw(4) << std::setprecision(4) << "% of triangles colored. ";
+            std::cerr << "\r" << (float)trcnt/nTri_*100 << std::setw(4) << std::setprecision(4) << "% of triangles colored. ";
         }
     }
 
@@ -1728,7 +1732,7 @@ void Multitexturer::exportOBJcharts(const std::string& _fileName){
         const Chart thischart = charts_[c];
 
         for (unsigned int i = 0; i < thischart.m_.getNVtx(); i++){
-            const Vector2f current = thischart.m_.getVertex(i);
+            const Vector2f& current = thischart.m_.getVertex(i);
             outMesh << "v " << current(0) << " " << current(1) << " 0\n";
         }
         for (unsigned int i = 0; i < thischart.m_.getNTri(); i++){

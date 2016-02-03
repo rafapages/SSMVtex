@@ -40,8 +40,10 @@ class Mesh3D {
     void writeVRML(const std::string& _fileName, const std::string& _textureFile);
 
     // Data access
-    Vector3f getVertex(unsigned int _index) const;
-    Triangle getTriangle(unsigned int _index) const;
+    // Vector3f getVertex(unsigned int _index) const;
+    const Vector3f& getVertex(unsigned int _index) const;
+    //Triangle getTriangle(unsigned int _index) const;
+    const Triangle& getTriangle(unsigned int _index) const;
     void addVector(const Vector3f& _vector);
     void addTriangle(const Triangle& _triangle);
     unsigned int getNVtx() const;

@@ -64,15 +64,15 @@ void Camera::loadCameraParameters(const std::string &_textline){
 
 }
 
-Matrix3f Camera::getIntrinsicParam() const {
+const Matrix3f& Camera::getIntrinsicParam() const {
     return K_;
 }
 
-Matrix3f Camera::getExtrinsicParam() const {
+const Matrix3f& Camera::getExtrinsicParam() const {
     return R_;
 }
 
-Vector3f Camera::getPosition() const {
+const Vector3f& Camera::getPosition() const {
     return position_;
 }
 

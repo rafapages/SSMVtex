@@ -82,11 +82,11 @@ float Mesh2D::getTriArea() const {
 	return triarea_;
 }
 
-Vector2f Mesh2D::getVertex(unsigned int _index) const {
+const Vector2f& Mesh2D::getVertex(unsigned int _index) const {
     return vtx_[_index];
 }
 
-Triangle Mesh2D::getTriangle(unsigned int _index) const {
+const Triangle& Mesh2D::getTriangle(unsigned int _index) const {
     return tri_[_index];
 }
 

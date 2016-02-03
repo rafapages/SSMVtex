@@ -158,6 +158,7 @@ private:
 
     // Input 3D mesh
     Mesh3D  mesh_;
+    unsigned int nVtx_, nTri_;
 
     // Input files
     std::vector<Camera> cameras_;

@@ -311,11 +311,11 @@ unsigned int Mesh3D::getNTri() const{
     return nTri_;
 }
 
-Vector3f Mesh3D::getVertex(unsigned int _index) const {
+const Vector3f& Mesh3D::getVertex(unsigned int _index) const {
     return vtx_[_index];
 }
 
-Triangle Mesh3D::getTriangle(unsigned int _index) const {
+const Triangle& Mesh3D::getTriangle(unsigned int _index) const {
     return tri_[_index];
 }
 

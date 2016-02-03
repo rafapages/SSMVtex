@@ -30,8 +30,8 @@ public:
     virtual ~Mesh2D();
 
     // Data access
-    Vector2f getVertex(unsigned int _index) const;
-    Triangle getTriangle(unsigned int _index) const;
+    const Vector2f& getVertex(unsigned int _index) const;
+    const Triangle& getTriangle(unsigned int _index) const;
     void addVector (const Vector2f& _vector);
     void addVector (const Vector2f& _vector, unsigned int _3dindex);
     void addTriangle(const Triangle& _triangle);
