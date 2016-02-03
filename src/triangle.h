@@ -33,7 +33,7 @@ class Triangle{
     virtual ~Triangle();
 
     // Data access
-    Vector3i getIndices() const;
+    const Vector3i& getIndices() const;
     int getIndex(unsigned int _index) const; // 0, 1 or 2
     void setIndices(const Vector3i& _i);
     void setIndices(int _a, int _b, int _c);

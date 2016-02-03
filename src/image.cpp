@@ -17,6 +17,7 @@
  */
 
 #include <cstring>
+#include <cassert>
 
 #include "image.h"
 
@@ -54,11 +55,13 @@ Image::Image(unsigned int _height, unsigned int _width, Color _background){
 Color Image::getColor (unsigned int _row, unsigned int _column) const{
 
     if ( _row > height_){
-        std::cerr << _row << "/" << height_ << " row is wrong!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+        assert(_row < height_);
+        //std::cerr << _row << "/" << height_ << " row is wrong!!!!!!!!!!!!!!!!!!!!!" << std::endl;
     }
 
     if ( _column > width_){
-        std::cerr << _column << "/" << width_ << " column is wrong!!!!!!!!!!!!!!!!!" << std::endl;
+        assert(_column < width_);
+        //std::cerr << _column << "/" << width_ << " column is wrong!!!!!!!!!!!!!!!!!" << std::endl;
     }
 
     RGBQUAD col;

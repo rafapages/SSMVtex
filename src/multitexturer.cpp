@@ -35,9 +35,7 @@ Multitexturer::Multitexturer(){
     imageCacheSize_ = 75;
     highlightOcclusions_ = false;
 
-    nCam_ = 0;
-    nVtx_ = 0;
-    nTri_ = 0;
+    nCam_ = nVtx_ = nTri_ = 0;
 
     realWidth_ = realHeight_ = 0.0;
     imWidth_ = imHeight_ = 0;
@@ -204,13 +202,10 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
         std::string extension = fileNameOut_.substr(fileNameOut_.size()-3, fileNameOut_.size());
         if (extension.compare("obj") == 0 || extension.compare("OBJ") == 0){
             out_extension_ = OBJ;
-            std::cerr << "OBJ ola k ase" << std::endl;
         } else if (extension.compare("wrl") == 0 || extension.compare("WRL") == 0){
             out_extension_ = VRML;
-            std::cerr << "VRML ola k ase" << std::endl;
         } else if (extension.compare("ply") == 0 || extension.compare("PLY") == 0){
             out_extension_ = PLY;
-            std::cerr << "PLY ola k ase" << std::endl;
         } else {
             std::cerr << extension << " extension is Unknown!" << std::endl;
             printHelp();
@@ -461,7 +456,7 @@ void Multitexturer::evaluateNormal(){
 
     for (unsigned int i = 0; i < nTri_; i++) {
 
-        const Triangle thistri = mesh_.getTriangle(i);
+        const Triangle& thistri = mesh_.getTriangle(i);
         // Find camera most orthogonal to this triangle
         Vector3f n = mesh_.getTriangleNormal(i);
         for (unsigned int j = 0; j < nCam_; j++) {
@@ -768,7 +763,7 @@ void Multitexturer::smoothRatings(std::list<int> *_tri2tri){
 
                 // Current vertex included in neighbors
                 float sumneighbors = 0; 
-                for (std::list<int>::iterator it = _tri2tri[i].begin(); it != _tri2tri[i].end(); it++){
+                for (std::list<int>::iterator it = _tri2tri[i].begin(); it != _tri2tri[i].end(); ++it){
                     sumneighbors += cameras_[c].tri_ratings_[*it];
                 }
                 tri_rat_filter[i] = sumneighbors/_tri2tri[i].size();
@@ -1736,7 +1731,7 @@ void Multitexturer::exportOBJcharts(const std::string& _fileName){
             outMesh << "v " << current(0) << " " << current(1) << " 0\n";
         }
         for (unsigned int i = 0; i < thischart.m_.getNTri(); i++){
-            const Vector3i current = thischart.m_.getTriangle(i).getIndices();
+            const Vector3i& current = thischart.m_.getTriangle(i).getIndices();
             outMesh << "f";
             for (unsigned int j = 0; j < 3; j++){
                 outMesh << " " << current(j)+1+vtxindex; // OBJ indices start at 1

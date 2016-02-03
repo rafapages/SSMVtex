@@ -34,7 +34,7 @@ Triangle::~Triangle(){
 
 }
 
-Vector3i Triangle::getIndices() const {
+const Vector3i& Triangle::getIndices() const {
     return i_;
 }
 
