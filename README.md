@@ -37,7 +37,8 @@ Navigate to the directory and hit *make*.
 * —faceCam=_imageFileName-   in case there a frontal image showing the subject's face.
 * —alpha=_alpha_ is the cutoff value of the normal weighting function, in the interval (0, 1). Default: 0.5.
 * —beta=_beta_ is the curvature of the normal weighting function, in the interval [0, inf). Default: 1.
-* —dimension=_dimension_ is the resolution of the output image measured in Mpixels.
+* —dimension=_dimension_ is the resolution of the output image measured in Mpixels. Default: 1.
+* —width=_width_ is width of the output image measured in pixels. If this value is greater than zero, then _dimension_ is ignored.
 * —cache=_cachesize_ size of the image cache. Default: 75.
 * -h		Prints help message.
 

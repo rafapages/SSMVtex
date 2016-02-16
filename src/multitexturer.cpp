@@ -34,6 +34,7 @@ Multitexturer::Multitexturer(){
     dimension_ = 10000000;
     imageCacheSize_ = 75;
     highlightOcclusions_ = false;
+    powerOfTwoImSize_ = false;
 
     nCam_ = nVtx_ = nTri_ = 0;
 
@@ -73,13 +74,15 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
             case '9':	num_cam_mix_ = 9;   opts.push_back(c); break;
 
             case 't':	m_mode_ = TEXTURE;  opts.push_back(c); break;
-            case 'p':   m_mode_ = POINT;    opts.push_back(c); break;
+            case 'v':   m_mode_ = VERTEX;    opts.push_back(c); break;
             case 'f':   m_mode_ = FLAT;     opts.push_back(c); break;
 
             case 'm':   in_mode_ = MESH;    opts.push_back(c); break;
             case 's':   in_mode_ = SPLAT;   opts.push_back(c); break;
 
             case 'o':   highlightOcclusions_ = true; break;
+
+            //case 'p':   powerOfTwoImSize_ = true; opts.push_back(c); break;
 
             case 'h':
                 printHelp();
@@ -109,11 +112,24 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
                         }
                         stringValue += opt[i];
                     }
-                    float fValue;
+                    unsigned int uiValue;
                     std::stringstream ss;
                     ss << stringValue;
-                    ss >> fValue;
-                    dimension_ = (unsigned int) fValue * 1000000;
+                    ss >> uiValue;
+                    dimension_ = uiValue * 1000000;
+                } else if (optionValue.compare("width") == 0){
+                    for (unsigned int i = 2 + optionValue.length() + 1; opt[i] != '\0'; i++){
+                        if (!isdigit(opt[i])){
+                            std::cerr << "Wrong image width value!" << std::endl;
+                            printHelp();
+                        }
+                        stringValue += opt[i];
+                    }
+                    unsigned int uiValue;
+                    std::stringstream ss;
+                    ss << stringValue;
+                    ss >> uiValue;
+                    imWidth_ = uiValue;
                 } else if (optionValue.compare("alpha") == 0){
                     for (unsigned int i = 2 + optionValue.length() + 1; opt[i] != '\0'; i++){
                         stringValue += opt[i];
@@ -222,8 +238,8 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
         ca_mode_ = AREA;
     }
 
-    // TO BE REMOVED WHEN POINT MODE IS IMPLEMENTED!!
-    if (m_mode_ == POINT){
+    // TO BE REMOVED WHEN VERTEX MODE IS IMPLEMENTED!!
+    if (m_mode_ == VERTEX){
         std::cerr << "Color per vertex coloring mode still not supported, sorry..." << std::endl;
         printHelp();
     }
@@ -364,7 +380,7 @@ void Multitexturer::printHelp() const {
         "-{m|s}\t\tInput value is (m) common 3D mesh or (s) a splat based 3D mesh. Default: m",
         "-{1-9}\t\tthis argument indicates the maximum amount of images per triangle",
         "\t\tused in order to create the customized texture. Default: 1.",
-        "-{p|t|f}\tShow (p) a mesh colored per vertex, (t) a mesh with textures or",
+        "-{v|t|f}\tShow (p) a mesh colored per vertex, (t) a mesh with textures or",
         "\t\t(f) a mesh colored with a flat color per chart. Default: t.",
         "-o\t\thighlights occlusions in yellow.",
         "--faceCam=<imageFileName>   in case there a frontal image showing the subject's face.",
@@ -372,7 +388,9 @@ void Multitexturer::printHelp() const {
         "                function, in the interval (0, 1). Default: 0.5. ",
         "--beta=<beta>   beta is the curvature of the normal weighting",
         "                function, in the interval [0, inf). Default: 1.",
-        "--dimension=<dimension> resolution of the output image measured in Mpixels.",
+        "--dimension=<dimension> resolution of the output image measured in Mpixels. Default: 1.",
+        "--width=<width> width of the output image measured in pixels. If this value is",
+        "\t\tgreater than zero, then <dimension> is ignored.",
         "--cache=<cachesize> size of the image cache. Default: 75.",
         "-h\t\tPrint this help message."};
 
@@ -1024,10 +1042,18 @@ void Multitexturer::calculateImageSize() {
         return;
     }
 
-    const float k_hw = realHeight_ / realWidth_;
-    const float area = (float) dimension_;
-    imWidth_ = (unsigned int) floor(sqrt(area/k_hw));
-    imHeight_ = (unsigned int) floor(k_hw * imWidth_);
+    // In case we didn't set a fixed width value:
+    if (imWidth_ == 0){
+        const float k_hw = realHeight_ / realWidth_;
+        const float area = (float) dimension_;
+        imWidth_ = (unsigned int) floor(sqrt(area/k_hw));
+        imHeight_ = (unsigned int) floor(k_hw * imWidth_);
+
+    // In case a width value has been set
+    } else {
+        const float k_hw = realHeight_ / realWidth_;
+        imHeight_ = (unsigned int) floor(k_hw * (float)imWidth_);
+    }
 
 }
 

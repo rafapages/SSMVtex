@@ -31,7 +31,7 @@
 #include "unwrapper.h"
 #include "packer.h"
 
-typedef enum {TEXTURE, POINT, FLAT} MappingMode;
+typedef enum {TEXTURE, VERTEX, FLAT} MappingMode;
 typedef enum {NORMAL_VERTEX, NORMAL_BARICENTER, AREA, AREA_OCCL} CamAssignMode;
 typedef enum {LIGHT, SHADOW, DARK} VtxMode;
 typedef enum {MESH, SPLAT} InputMode;
@@ -189,6 +189,7 @@ private:
     unsigned int dimension_; // 10,000,000
     unsigned int imageCacheSize_; // 75
     bool highlightOcclusions_; // false
+    bool powerOfTwoImSize_; // false
 
     // File names
     std::string fileNameIn_;
