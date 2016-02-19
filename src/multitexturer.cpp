@@ -527,6 +527,9 @@ void Multitexturer::evaluateNormal(){
 void Multitexturer::evaluateArea(){
 
 
+    std::vector<Vector2f> uv_vtx(3, Vector2f(0.0,0.0));
+
+
     for (unsigned int i = 0; i < nTri_; i++) {
         
         const Triangle& thistri = mesh_.getTriangle(i);
@@ -543,11 +546,10 @@ void Multitexturer::evaluateArea(){
             
             if (dp < 0) {
                 // Vertex projections to the image plane
-                std::vector<Vector2f> uv_vtx;
                 for (unsigned int k=0; k<3; k++) {
                     const Vector3f& vc = mesh_.getVertex(thistri.getIndex(k));
-                    Vector2f uv = cameras_[j].transform2uvCoord(vc);
-                    uv_vtx.push_back(uv);
+                    const Vector2f uv = cameras_[j].transform2uvCoord(vc);
+                    uv_vtx[k] = uv;
                 }
 
                 // test : true if all coordinates in [0,1]
