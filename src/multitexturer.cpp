@@ -380,7 +380,7 @@ void Multitexturer::printHelp() const {
         "-{m|s}\t\tInput value is (m) common 3D mesh or (s) a splat based 3D mesh. Default: m",
         "-{1-9}\t\tthis argument indicates the maximum amount of images per triangle",
         "\t\tused in order to create the customized texture. Default: 1.",
-        "-{v|t|f}\tShow (p) a mesh colored per vertex, (t) a mesh with textures or",
+        "-{v|t|f}\tShow (v) a mesh colored per vertex, (t) a mesh with textures or",
         "\t\t(f) a mesh colored with a flat color per chart. Default: t.",
         "-o\t\thighlights occlusions in yellow.",
         "--faceCam=<imageFileName>   in case there a frontal image showing the subject's face.",
