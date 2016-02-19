@@ -561,9 +561,9 @@ void Multitexturer::evaluateArea(){
                 }
 
                 if (test) {
-                    const Vector2f v0 = uv_vtx[0];
-                    const Vector2f v1 = uv_vtx[1];
-                    const Vector2f v2 = uv_vtx[2];
+                    const Vector2f& v0 = uv_vtx[0];
+                    const Vector2f& v1 = uv_vtx[1];
+                    const Vector2f& v2 = uv_vtx[2];
                     float area = (v0(1)-v2(1)) * (v1(0)-v2(0)) - (v0(0)-v2(0)) * (v1(1)-v2(1)); // should be divided by 2, but it really does not matter
                     cameras_[j].tri_ratings_[i] = area;
                 }
@@ -1733,10 +1733,11 @@ void Multitexturer::exportTexturedModel(){
     } else if (out_extension_ == VRML){
         mesh_.writeVRML(fileNameOut_, fileNameTexOut_);
     } else if (out_extension_ == PLY){
-        std::cerr << ":,( PLY exporter not supported yet, sorry!\n";
-        std::cerr << "OBJ will be chosen instead..." << std::endl;
-        std::string newname = fileNameOut_.substr(0, fileNameOut_.size()-3);
-        mesh_.writeOBJ(newname + "obj", fileNameTexOut_);
+        // std::cerr << ":,( PLY exporter not supported yet, sorry!\n";
+        // std::cerr << "OBJ will be chosen instead..." << std::endl;
+        // std::string newname = fileNameOut_.substr(0, fileNameOut_.size()-3);
+        // mesh_.writeOBJ(newname + "obj", fileNameTexOut_);
+        mesh_.writePLY(fileNameOut_, fileNameTexOut_);
     } else {
         std::cerr << "Unknown extension!" << std::endl;
     }

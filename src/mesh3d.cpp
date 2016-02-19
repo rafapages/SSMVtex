@@ -291,6 +291,60 @@ void Mesh3D::writeVRML(const std::string& _fileName, const std::string& _texture
     fOut.close();
 }
 
+void Mesh3D::writePLY(const std::string& _fileName, const std::string& _textureFile){
+
+    std::ofstream outMesh(_fileName.c_str());
+
+    // Intro stuff
+    outMesh << "ply\n";
+    outMesh << "format ascii 1.0\n";
+    outMesh << "comment Model created using Multitex\n";
+    outMesh << "comment TextureFile " << _textureFile << std::endl;
+
+    // Vertex header stuff
+    outMesh << "element vertex " << nVtx_ << std::endl;
+    outMesh << "property float x\n";
+    outMesh << "property float y\n";
+    outMesh << "property float z\n";
+
+    // Face header stuff
+    outMesh << "element face " << nTri_ << std::endl;
+    outMesh << "property list uchar int vertex_indices\n";
+    outMesh << "property list uchar float texcoord\n";
+    outMesh << "end_header\n";
+
+    // Vertices
+    for (unsigned int i = 0; i < nVtx_; i++){
+        const Vector3f& current = getVertex(i);
+        for (unsigned int j = 0; j < 3; j++){
+            outMesh << current[j] << " ";
+        }
+        outMesh << "\n";
+    }
+
+    // Triangles & texture coordinates
+    for (unsigned int i = 0; i < nTri_; i++){
+        const Triangle& currentTri = getTriangle(i);
+        const Vector3i& current = currentTri.getIndices();
+        const Vector3d u = currentTri.getU();
+        const Vector3d v = currentTri.getV();
+
+        outMesh << "3 ";
+        for (unsigned int j = 0; j < 3; j++){
+            outMesh << current[j] << " ";
+        }
+
+        outMesh << "6 ";
+        for (unsigned int j = 0; j < 3; j++){
+            outMesh << u(j) << " " << v(j) << " ";
+        }
+        outMesh << "\n";
+    }
+
+    outMesh.close();
+
+}
+
 
 
 void Mesh3D::addVector(const Vector3f& _vector){
