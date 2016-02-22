@@ -1093,7 +1093,8 @@ void Multitexturer::chartColoring() {
         return;
     }
 
-    dilateAtlas(pix_triangle, imout);
+    // dilateAtlas(pix_triangle, imout);
+    dilateAtlas(pix_frontier, imout, 10);
     imout.save(fileNameTexOut_);
 
 }
@@ -1651,7 +1652,7 @@ Image Multitexturer::colorFlatCharts(const ArrayXXi& _pix_triangle){
 
 }
 
-void Multitexturer::dilateAtlas(const ArrayXXi& _pix_triangle, Image& _image) const{
+void Multitexturer::dilateAtlasCV(const ArrayXXi& _pix_triangle, Image& _image) const{
 
     cv::Mat mask (imHeight_, imWidth_, CV_8UC1, cv::Scalar(255)); 
     cv::Mat inImage (imHeight_, imWidth_, CV_8UC3, cv::Scalar(0,0,0));
@@ -1686,7 +1687,7 @@ void Multitexturer::dilateAtlas(const ArrayXXi& _pix_triangle, Image& _image) co
     std::cerr << "done!" << std::endl;
 }
 
-void Multitexturer::dilateAtlasV2(const ArrayXXi& _pix_triangle, Image& _image) const{
+void Multitexturer::dilateAtlasCV2(const ArrayXXi& _pix_triangle, Image& _image) const{
 
     cv::Mat mask (imHeight_, imWidth_, CV_8UC1, cv::Scalar(255)); 
     cv::Mat inImage (imHeight_, imWidth_, CV_8UC3, cv::Scalar(0,0,0));
@@ -1723,6 +1724,63 @@ void Multitexturer::dilateAtlasV2(const ArrayXXi& _pix_triangle, Image& _image) 
                 _image.setColor(fcolor, row, col);
             }
         }
+    }
+
+    std::cerr << "done!" << std::endl;
+}
+
+void Multitexturer::dilateAtlas(ArrayXXi& _pix_frontier, Image& _image, unsigned int _nIter) const {
+
+    std::cerr << "Dilation process started... ";
+    Color current;
+
+    for (unsigned int cnt = 0; cnt < _nIter; cnt++){
+        // First vertically
+        for (unsigned int col = 0; col < imWidth_; col++){
+            int prev = -1;
+
+            for (unsigned int row = 1; row < imHeight_ - 1; row++){
+                // current = _image.getColor(row,col);
+                // std::cerr << current.getRed() << " " << current.getGreen() << " " << current.getBlue() << std::endl;
+
+                // if the pixel explored already has a color -> continue
+                if (_pix_frontier(row,col) < 0){ // -1 (frontier), or -2 (internal)
+                    continue;
+                // if the pixel explred doesn't have a color but the following does
+                } else if (_pix_frontier(row+1, col) != 0){
+                    current = _image.getColor(row+1, col);
+                    _pix_frontier(row, col) = -4;
+                    _image.setColor(current, row, col);
+                    // std::cerr << current.getRed() << " " << current.getGreen() << " " << current.getBlue() << std::endl;
+                } else if ((_pix_frontier(row-1, col) != 0) && (row-1 != prev)){
+                    current = _image.getColor(row-1,col);
+                    _pix_frontier(row, col) = -4;
+                    _image.setColor(current, row, col);
+                    prev = row;
+                } 
+            }
+        }
+
+        // Then horizontally
+        for (unsigned int row = 0; row < imHeight_; row++){
+            int prev = -1;
+            for (unsigned int col = 1; col < imWidth_ - 1; col++){
+                if (_pix_frontier(row, col) < 0){
+                    continue;
+                // if the pixel explred doesn't have a color but the following does
+                } else if (_pix_frontier(row, col+1) != 0){
+                    current = _image.getColor(row, col+1);
+                    _pix_frontier(row, col+1) = -3;
+                    _image.setColor(current, row, col);
+                } else if ((_pix_frontier(row, col-1) != 0) && (col-1 != prev)){
+                    current = _image.getColor(row, col-1);
+                    _pix_frontier(row, col-1) = -3;
+                    _image.setColor(current, row, col);
+                    prev = col;
+                } 
+            }
+        }
+
     }
 
     std::cerr << "done!" << std::endl;

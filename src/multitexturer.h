@@ -149,10 +149,12 @@ private:
     // This method colors each path on a different flat color... just for illustration purposes...
     Image colorFlatCharts(const ArrayXXi& _pix_triangle);
 
-    // Dilates the atlases by inpainting the background
-    void dilateAtlas(const ArrayXXi& _pix_triangle, Image& _image) const;
-    void dilateAtlasV2(const ArrayXXi& _pix_triangle, Image& _image) const;
-
+    // Dilates the charts by inpainting the background using OpenCV
+    void dilateAtlasCV(const ArrayXXi& _pix_triangle, Image& _image) const;
+    void dilateAtlasCV2(const ArrayXXi& _pix_triangle, Image& _image) const;
+    
+    // Dilate the charts by extending their border color
+    void dilateAtlas(ArrayXXi& _pix_frontier, Image& _image, unsigned int _nIter) const;
 
 
 
