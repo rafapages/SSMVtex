@@ -1093,7 +1093,6 @@ void Multitexturer::chartColoring() {
         return;
     }
 
-    // dilateAtlas(pix_triangle, imout);
     dilateAtlas(pix_frontier, imout, 10);
     imout.save(fileNameTexOut_);
 
@@ -1731,7 +1730,7 @@ void Multitexturer::dilateAtlasCV2(const ArrayXXi& _pix_triangle, Image& _image)
 
 void Multitexturer::dilateAtlas(ArrayXXi& _pix_frontier, Image& _image, unsigned int _nIter) const {
 
-    std::cerr << "Dilation process started... ";
+    std::cerr << "Dilation process started...\n";
     Color current;
 
     for (unsigned int cnt = 0; cnt < _nIter; cnt++){
@@ -1781,9 +1780,11 @@ void Multitexturer::dilateAtlas(ArrayXXi& _pix_frontier, Image& _image, unsigned
             }
         }
 
+        std::cerr << "\r" << (float)(cnt+1)/_nIter*100 << std::setw(4) << std::setprecision(4) << "%      ";
+
     }
 
-    std::cerr << "done!" << std::endl;
+    std::cerr << "\ndone!" << std::endl;
 }
 
 void Multitexturer::exportTexturedModel(){
