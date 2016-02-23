@@ -70,34 +70,6 @@ void Mesh2D::addTriangle(const Triangle& _triangle, unsigned int _3dindex){
     triarea_ += area;
 }
 
-unsigned int Mesh2D::getNVtx() const{
-    return nVtx_;
-}
-
-unsigned int Mesh2D::getNTri() const{
-    return nTri_;
-}
-
-float Mesh2D::getTriArea() const {
-	return triarea_;
-}
-
-const Vector2f& Mesh2D::getVertex(unsigned int _index) const {
-    return vtx_[_index];
-}
-
-const Triangle& Mesh2D::getTriangle(unsigned int _index) const {
-    return tri_[_index];
-}
-
-Vector2f Mesh2D::getBBoxMin() const{
-	return bBoxMin_;
-}
-
-Vector2f Mesh2D::getBBoxMax() const {
-	return bBoxMax_;
-}
-
 float Mesh2D::getHypotheticalBBoxArea (const Vector2f& _nv) const {
     const float minx = bBoxMin_(0) < _nv(0) ? bBoxMin_(0) : _nv(0);
     const float maxx = bBoxMax_(0) > _nv(0) ? bBoxMax_(0) : _nv(0);

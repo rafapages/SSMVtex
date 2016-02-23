@@ -43,8 +43,12 @@ public:
     // by interpolating its value through bicubic interpolation
     Color interpolate (float _row, float _column, InterpolateMode _mode = BICUBIC) const;
 
-    unsigned int getWidth () const; // {return width;}
-    unsigned int getHeight () const;//  {return height;}
+    inline unsigned int getWidth () const {
+        return width_;
+    }
+    inline unsigned int getHeight () const {
+        return height_;
+    }
 
     // I/0
     void save(const std::string& _fileName);
@@ -53,6 +57,7 @@ private:
 
     fipImage imageFile_;
     unsigned int width_, height_;
+    std::string name_;
 
 };
 

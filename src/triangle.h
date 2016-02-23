@@ -33,14 +33,31 @@ class Triangle{
     virtual ~Triangle();
 
     // Data access
-    const Vector3i& getIndices() const;
-    int getIndex(unsigned int _index) const; // 0, 1 or 2
-    void setIndices(const Vector3i& _i);
-    void setIndices(int _a, int _b, int _c);
+    inline const Vector3i& getIndices() const {
+        return i_;
+    }
+    inline int getIndex(unsigned int _index) const{ // 0, 1 or 2
+        if (_index > 2){
+            std::cerr << "Wrong index!" << std::endl;
+            exit(-1);
+        }
+        return i_(_index);
+    }
+    inline void setIndices(const Vector3i& _i){
+        i_ = _i;
+    }
+    inline void setIndices(int _a, int _b, int _c){
+        i_ = Vector3i(_a,_b,_c);
+    }
+
+    inline const Vector3d& getU() const{
+        return u_;
+    }
+    inline const Vector3d& getV() const{
+        return v_;
+    }
+
     void setUV(const Vector3d& _u, const Vector3d& _v);
-    // void setCam(int _cam);
-    const Vector3d& getU() const;
-    const Vector3d& getV() const;
 
 private:
     Vector3i i_;

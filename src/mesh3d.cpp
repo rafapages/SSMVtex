@@ -357,21 +357,21 @@ void Mesh3D::addTriangle(const Triangle& _triangle){
     nTri_++;
 }
 
-unsigned int Mesh3D::getNVtx() const{
-    return nVtx_;
-}
+// unsigned int Mesh3D::getNVtx() const{
+//     return nVtx_;
+// }
 
-unsigned int Mesh3D::getNTri() const{
-    return nTri_;
-}
+// unsigned int Mesh3D::getNTri() const{
+//     return nTri_;
+// }
 
-const Vector3f& Mesh3D::getVertex(unsigned int _index) const {
-    return vtx_[_index];
-}
+// const Vector3f& Mesh3D::getVertex(unsigned int _index) const {
+//     return vtx_[_index];
+// }
 
-const Triangle& Mesh3D::getTriangle(unsigned int _index) const {
-    return tri_[_index];
-}
+// const Triangle& Mesh3D::getTriangle(unsigned int _index) const {
+//     return tri_[_index];
+// }
 
 Vector3f Mesh3D::getTriangleNormal(const Vector3f &_a, const Vector3f &_b, const Vector3f &_c) const{
 

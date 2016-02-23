@@ -30,17 +30,34 @@ public:
     virtual ~Mesh2D();
 
     // Data access
-    const Vector2f& getVertex(unsigned int _index) const;
-    const Triangle& getTriangle(unsigned int _index) const;
+    inline const Vector2f& getVertex(unsigned int _index) const{
+        return vtx_[_index];
+    }
+    inline const Triangle& getTriangle(unsigned int _index) const{
+        return tri_[_index];
+    }
+    inline unsigned int getNVtx() const{
+        return nVtx_;
+    }
+    inline unsigned int getNTri() const{
+        return nTri_;
+    }
+    inline float getTriArea() const{
+        return triarea_;
+    }
+    inline Vector2f getBBoxMin() const{
+        return bBoxMin_;
+    }
+    inline Vector2f getBBoxMax() const{
+        return bBoxMax_;
+    }
+
     void addVector (const Vector2f& _vector);
     void addVector (const Vector2f& _vector, unsigned int _3dindex);
     void addTriangle(const Triangle& _triangle);
     void addTriangle(const Triangle& _triangle, unsigned int _3dindex);
-    unsigned int getNVtx() const;
-    unsigned int getNTri() const;
-    float getTriArea() const;
-    Vector2f getBBoxMin() const;
-    Vector2f getBBoxMax() const;
+
+
 
     // Returns the area of the bounding box if vector _nv was added
     float getHypotheticalBBoxArea (const Vector2f& _nv) const;

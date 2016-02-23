@@ -27,34 +27,6 @@ Chart::~Chart(){
 
 }
 
-void Chart::setNEdgePos(int _value){
-	nEdgePos_ = _value;
-}
-
-void Chart::increaseNEdgePos(){
-	nEdgePos_++;
-}
-
-void Chart::decreaseNEdgePos(){
-	nEdgePos_--;
-}
-
-void Chart::setOrder(int _value){
-	order_ = _value;
-}
-
-void Chart::increaseOrder(){
-	order_++;
-}
-
-int Chart::getNEdgePos() const {
-	return nEdgePos_;
-}
-
-int Chart::getOrder() const {
-	return order_;
-}
-
 float Chart::getWidth() const {
 	const Vector2f bboxmin = m_.getBBoxMin();
 	const Vector2f bboxmax = m_.getBBoxMax();

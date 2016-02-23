@@ -44,13 +44,27 @@ public:
 	virtual ~Chart();
 
 	// Data access
-	void setNEdgePos(int _value);
-	void increaseNEdgePos();
-	void decreaseNEdgePos();
-	void setOrder(int _value);
-	void increaseOrder();
-	int getNEdgePos() const;
-	int getOrder() const;
+	inline void setNEdgePos(int _value){
+		nEdgePos_ = _value;	
+	}
+	inline void increaseNEdgePos(){
+		nEdgePos_++;
+	}
+	inline void decreaseNEdgePos(){
+		nEdgePos_--;
+	}
+	inline void setOrder(int _value){
+		order_ = _value;
+	}
+	inline void increaseOrder(){
+		order_++;
+	}
+	inline int getNEdgePos() const {
+		return nEdgePos_;
+	}
+	inline int getOrder() const {
+		return order_;
+	}
 
 	// Displace chart
 	void displace(const Vector2f& _v);

@@ -64,34 +64,6 @@ void Camera::loadCameraParameters(const std::string &_textline){
 
 }
 
-const Matrix3f& Camera::getIntrinsicParam() const {
-    return K_;
-}
-
-const Matrix3f& Camera::getExtrinsicParam() const {
-    return R_;
-}
-
-const Vector3f& Camera::getPosition() const {
-    return position_;
-}
-
-Vector2i Camera::getImageDim() const {
-    const Vector2i dim(imWidth_, imHeight_);
-    return dim;
-}
-
-unsigned int Camera::getImageWidth() const{
-    return imWidth_;
-}
-unsigned int Camera::getImageHeight() const{
-    return imHeight_;
-}
-
-Vector3f Camera::getTranslationVector() const{
-    return -R_ * position_;
-}
-
 MatrixXf Camera::getXMatrix() const{
 
     MatrixXf X(4,4);

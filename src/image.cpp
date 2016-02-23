@@ -33,6 +33,7 @@ Image::Image(const std::string& _fileName){
 
 	width_ = imageFile_.getWidth();
 	height_ = imageFile_.getHeight();
+    name_ = _fileName;
 }
 
 Image::Image(unsigned int _height, unsigned int _width, Color _background){
@@ -54,18 +55,15 @@ Image::Image(unsigned int _height, unsigned int _width, Color _background){
 
 Color Image::getColor (unsigned int _row, unsigned int _column) const{
 
-    if ( _row > height_){
-        assert(_row < height_);
-        //std::cerr << _row << "/" << height_ << " row is wrong!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-    }
+    assert(_row < height_);
+    assert(_column < width_);
 
-    if ( _column > width_){
-        assert(_column < width_);
-        //std::cerr << _column << "/" << width_ << " column is wrong!!!!!!!!!!!!!!!!!" << std::endl;
-    }
 
     RGBQUAD col;
-    imageFile_.getPixelColor(_column,_row, &col);
+    if(!imageFile_.getPixelColor(_column,_row, &col)){
+        std::cerr << _column << " " << _row << std::endl;
+        std::cerr << name_ << std::endl;
+    }
     Color color ((float)col.rgbRed, (float)col.rgbGreen, (float)col.rgbBlue);
     return color;
 
@@ -90,7 +88,7 @@ Color Image::interpolate (float _row, float _column, InterpolateMode _mode) cons
     // Bilinear
     if (_mode == BILINEAR){
 
-        if (r_base + 1 > (int) height_ || c_base + 1 > (int) width_){
+        if (r_base + 1 >= (int) height_ || c_base + 1 >= (int) width_){
             // We are in the edge of an image, then we cannot interpolate
             final = getColor(r_base, c_base);
         } else {
@@ -163,12 +161,4 @@ void Image::save(const std::string& _fileName){
     this->imageFile_.convertTo24Bits();
     this->imageFile_.save(name);
 
-}
-
-unsigned int Image::getWidth() const{
-	return width_;
-}
-
-unsigned int Image::getHeight() const{
-	return height_;
 }

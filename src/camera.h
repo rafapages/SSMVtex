@@ -32,13 +32,31 @@ class Camera {
     void loadCameraParameters(const std::string& _textline);
 
     // Data access
-    const Matrix3f& getIntrinsicParam() const;
-    const Matrix3f& getExtrinsicParam() const;
-    const Vector3f& getPosition() const;
-    Vector2i getImageDim() const;
-    unsigned int getImageWidth() const;
-    unsigned int getImageHeight() const;
-    Vector3f getTranslationVector () const; // T = -RC
+    inline const Matrix3f& getIntrinsicParam() const {
+        return K_;
+    }
+    inline const Matrix3f& getExtrinsicParam() const {
+        return R_;
+    }
+    inline const Vector3f& getPosition() const {
+        return position_;
+    }
+    inline Vector2i getImageDim() const {
+        const Vector2i dim(imWidth_, imHeight_);
+        return dim;
+    }
+    inline unsigned int getImageWidth() const{
+        return imWidth_;
+    }
+    inline unsigned int getImageHeight() const{
+        return imHeight_;
+    }
+    inline Vector3f getTranslationVector() const{ // T = -RC
+        return -R_ * position_;
+    } 
+
+
+
     // X = [R T] in homogeneous coordinates:
     // last row is [0 0 0 1]
     MatrixXf getXMatrix () const;

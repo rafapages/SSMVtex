@@ -34,38 +34,10 @@ Triangle::~Triangle(){
 
 }
 
-const Vector3i& Triangle::getIndices() const {
-    return i_;
-}
-
-int Triangle::getIndex(unsigned int _index) const {
-    if (_index > 2){
-        std::cerr << "Wrong index!" << std::endl;
-        exit(-1);
-    }
-
-    return i_(_index);
-}
-
-void Triangle::setIndices(const Vector3i& _i){
-    i_ = _i;
-}
-
-void Triangle::setIndices(int _a, int _b, int _c){
-    i_ = Vector3i(_a,_b,_c);
-}
 
 void Triangle::setUV(const Vector3d& _u, const Vector3d& _v){
     u_ = _u;
     v_ = _v;
-}
-
-const Vector3d& Triangle::getU() const {
-    return u_;
-}
-
-const Vector3d& Triangle::getV() const {
-    return v_;
 }
 
 
