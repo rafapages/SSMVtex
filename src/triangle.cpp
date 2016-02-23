@@ -60,11 +60,11 @@ void Triangle::setUV(const Vector3d& _u, const Vector3d& _v){
     v_ = _v;
 }
 
-Vector3d Triangle::getU() const {
+const Vector3d& Triangle::getU() const {
     return u_;
 }
 
-Vector3d Triangle::getV() const {
+const Vector3d& Triangle::getV() const {
     return v_;
 }
 

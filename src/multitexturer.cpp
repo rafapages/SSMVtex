@@ -555,7 +555,7 @@ void Multitexturer::evaluateArea(){
                 // test : true if all coordinates in [0,1]
                 bool test = true;
                 for (unsigned int k = 0; k < uv_vtx.size(); k++){
-                    const Vector2f thisUV = uv_vtx[k];
+                    const Vector2f& thisUV = uv_vtx[k];
                     if ( thisUV(0) < 0 || cameras_[j].getImageWidth()  < thisUV(0) ||
                          thisUV(1) < 0 || cameras_[j].getImageHeight() < thisUV(1) ){
                         test = false;
@@ -805,6 +805,10 @@ void Multitexturer::evaluateWeightNormal(){
     const float invalpha = 1/alpha_;
     const float invoneminusalpha = 1 / (1-alpha_);
 
+    // triangle normal
+    Vector3f n(0.0,0.0,0.0);
+    Vector3f mf, mmf, nf;
+
     for (unsigned int i = 0; i < nTri_; i++) {
 
         // Find camera most orthogonal to this triangle
@@ -812,7 +816,8 @@ void Multitexturer::evaluateWeightNormal(){
         const Triangle& thistri = mesh_.getTriangle(i);
 
         // We calculate the baricenter (centroid) of the triangle
-        Vector3f mf = mesh_.getVertex(thistri.getIndex(0));
+        // Vector3f mf = mesh_.getVertex(thistri.getIndex(0));
+        mf = mesh_.getVertex(thistri.getIndex(0));
         mf += mesh_.getVertex(thistri.getIndex(1));
         mf += mesh_.getVertex(thistri.getIndex(2));
         mf /= 3;
@@ -821,11 +826,12 @@ void Multitexturer::evaluateWeightNormal(){
         for (unsigned int j = 0; j < nCam_; j++) {
 
             // We check the position of the camera with respect to the triangle
-            const Vector3f mmf = mf - cameras_[j].getPosition();
+            // const Vector3f mmf = mf - cameras_[j].getPosition();
+            mmf = mf - cameras_[j].getPosition();
+            // Vector3f nf = mmf.normalized();
             Vector3f nf = mmf.normalized();
             float dp = n.dot(nf);
             dp *= -1;
-
 
             if (dp <= 0){
                 cameras_[j].tri_ratings_[i] = 0;
@@ -1739,9 +1745,6 @@ void Multitexturer::dilateAtlas(ArrayXXi& _pix_frontier, Image& _image, unsigned
             int prev = -1;
 
             for (unsigned int row = 1; row < imHeight_ - 1; row++){
-                // current = _image.getColor(row,col);
-                // std::cerr << current.getRed() << " " << current.getGreen() << " " << current.getBlue() << std::endl;
-
                 // if the pixel explored already has a color -> continue
                 if (_pix_frontier(row,col) < 0){ // -1 (frontier), or -2 (internal)
                     continue;
@@ -1750,7 +1753,6 @@ void Multitexturer::dilateAtlas(ArrayXXi& _pix_frontier, Image& _image, unsigned
                     current = _image.getColor(row+1, col);
                     _pix_frontier(row, col) = -4;
                     _image.setColor(current, row, col);
-                    // std::cerr << current.getRed() << " " << current.getGreen() << " " << current.getBlue() << std::endl;
                 } else if ((_pix_frontier(row-1, col) != 0) && (row-1 != prev)){
                     current = _image.getColor(row-1,col);
                     _pix_frontier(row, col) = -4;
@@ -1766,7 +1768,6 @@ void Multitexturer::dilateAtlas(ArrayXXi& _pix_frontier, Image& _image, unsigned
             for (unsigned int col = 1; col < imWidth_ - 1; col++){
                 if (_pix_frontier(row, col) < 0){
                     continue;
-                // if the pixel explred doesn't have a color but the following does
                 } else if (_pix_frontier(row, col+1) != 0){
                     current = _image.getColor(row, col+1);
                     _pix_frontier(row, col+1) = -3;
@@ -1794,10 +1795,6 @@ void Multitexturer::exportTexturedModel(){
     } else if (out_extension_ == VRML){
         mesh_.writeVRML(fileNameOut_, fileNameTexOut_);
     } else if (out_extension_ == PLY){
-        // std::cerr << ":,( PLY exporter not supported yet, sorry!\n";
-        // std::cerr << "OBJ will be chosen instead..." << std::endl;
-        // std::string newname = fileNameOut_.substr(0, fileNameOut_.size()-3);
-        // mesh_.writeOBJ(newname + "obj", fileNameTexOut_);
         mesh_.writePLY(fileNameOut_, fileNameTexOut_);
     } else {
         std::cerr << "Unknown extension!" << std::endl;
