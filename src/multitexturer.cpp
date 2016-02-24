@@ -1093,7 +1093,7 @@ void Multitexturer::chartColoring() {
     if (m_mode_ == FLAT){
         imout = colorFlatCharts(pix_triangle);
     } else if (m_mode_ == TEXTURE){
-        imout = colorTextureAtlas(pix_frontier, pix_triangle);
+        imout = colorTextureAtlas(pix_triangle);
     } else {
         std::cerr << "Mode: " << m_mode_ << " is unknown!" << std::endl;
         return;
@@ -1344,7 +1344,7 @@ void Multitexturer::findChartBorders(Chart& _chart, ArrayXXi& _pix_frontier, Arr
 }
 
 
-Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const ArrayXXi& _pix_triangle) {
+Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_triangle) {
 
     // Output image is initialized
     Image imout =  Image (imHeight_, imWidth_);
@@ -1403,10 +1403,12 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_frontier, const Arra
 
             for (unsigned int colp = xminp; colp <= xmaxp; colp++){
                 for (unsigned int rowp = yminp; rowp <= ymaxp; rowp++){
+                    if (colp == imWidth_ || rowp == imHeight_) continue;
                     // pixel center is calculated
                     Vector2f pixcenter;
                     pixcenter(0) = (float)(colp + 0.5) * maxwbyimwidth;
                     pixcenter(1) = (float)(rowp + 0.5) * maxwbyimwidth;
+
                     // if the pixel is inside the triangle or we are in the frontier
                     if (_pix_triangle(rowp, colp) != -1){
  

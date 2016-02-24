@@ -144,7 +144,7 @@ private:
     void findChartBorders(Chart& _chart, ArrayXXi& _pix_frontier, ArrayXXi& _pix_triangle);
 
     // Performs the multi-texturing and returns a texture image
-    Image colorTextureAtlas(const ArrayXXi& _pix_frontier, const ArrayXXi& _pix_triangle);
+    Image colorTextureAtlas(const ArrayXXi& _pix_triangle);
 
     // This method colors each path on a different flat color... just for illustration purposes...
     Image colorFlatCharts(const ArrayXXi& _pix_triangle);

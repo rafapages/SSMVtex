@@ -84,6 +84,9 @@ void Mesh3D::writeOBJ(const std::string& _fileName){
 
     std::ofstream outMesh(_fileName.c_str());
 
+    std::cerr << "Writing to output OBJ file " << nTri_ << " triangles and " << nVtx_ << " vertices... " << std::endl;
+
+
     writeOBJheader(outMesh);
 
     // Vertices
@@ -192,7 +195,7 @@ void Mesh3D::writeVRML(const std::string& _fileName, const std::string& _texture
         return;
     }
 
-    std::cerr << "Writing to output file " << nTri_ << " triangles and " << nVtx_ << " vertices... " << std::endl;
+    std::cerr << "Writing to output VRML file " << nTri_ << " triangles and " << nVtx_ << " vertices... " << std::endl;
 
     std::string header[] = {
         "#VRML V2.0 utf8",
@@ -294,6 +297,9 @@ void Mesh3D::writeVRML(const std::string& _fileName, const std::string& _texture
 void Mesh3D::writePLY(const std::string& _fileName, const std::string& _textureFile){
 
     std::ofstream outMesh(_fileName.c_str());
+
+    std::cerr << "Writing to output PLY file " << nTri_ << " triangles and " << nVtx_ << " vertices... " << std::endl;
+
 
     // Intro stuff
     outMesh << "ply\n";
