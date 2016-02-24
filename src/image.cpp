@@ -114,26 +114,32 @@ Color Image::interpolate (float _row, float _column, InterpolateMode _mode) cons
 
     	Color row_temp [4];
 
-    	for (int i = -1; i < 3; i++) {
+        if (r_base + 3 >= (int) height_ || r_base - 1 < 0|| c_base + 2 >= (int) width_ || c_base - 1 < 0){
 
+            final = getColor(r_base, c_base);
 
-    		const Color M = getColor(r_base + i, c_base - 1);
-    		const Color N = getColor(r_base + i, c_base);
-    		const Color O = getColor(r_base + i, c_base + 1);
-    		const Color P = getColor(r_base + i, c_base + 2);
+        } else {
 
-    		A = P - O;
-    		B = N - M;
-    		C = O - M;
+            for (int i = -1; i < 3; i++) {
 
-    		row_temp[i+1] = N + ( ( (A+B) * y - A - B - B) * y + C) * y;
-    	}
+                const Color M = getColor(r_base + i, c_base - 1);
+                const Color N = getColor(r_base + i, c_base);
+                const Color O = getColor(r_base + i, c_base + 1);
+                const Color P = getColor(r_base + i, c_base + 2);
 
-    	A = row_temp[3] - row_temp[2];
-    	B = row_temp[1] - row_temp[0];
-    	C = row_temp[2] - row_temp[0];
+                A = P - O;
+                B = N - M;
+                C = O - M;
 
-    	final = row_temp[1] + ( ( (A+B) * x - A - B - B) * x + C) * x;
+                row_temp[i+1] = N + ( ( (A+B) * y - A - B - B) * y + C) * y;
+            }
+
+            A = row_temp[3] - row_temp[2];
+            B = row_temp[1] - row_temp[0];
+            C = row_temp[2] - row_temp[0];
+
+            final = row_temp[1] + ( ( (A+B) * x - A - B - B) * x + C) * x;
+        }
 
     } else {
     	std::cerr << "Mode " << _mode << " is unknown" << std::endl;

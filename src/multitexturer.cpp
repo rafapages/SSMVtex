@@ -277,7 +277,7 @@ void Multitexturer::evaluateCameraRatings(){
         for (unsigned int j = 0; j < 3; j++)
             vtx2tri[mesh_.getTriangle(i).getIndex(j)].push_back(i);
     }
-    // tri2tri is a list containing every neigbor of eac triangle
+    // tri2tri is a list containing every neigbor of each triangle
     std::list<int> *tri2tri = new std::list<int> [nTri_];
     for (unsigned int i = 0; i < nVtx_; i++) {
         for (std::vector<int>::iterator ita = vtx2tri[i].begin(); ita != vtx2tri[i].end(); ++ita) {
@@ -764,7 +764,7 @@ void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
             cameras_[c].tri_ratings_[i] = tri_alive[i] ? tri_area[i] : 0;
         }
 
-        std::cerr << "\r" << (float)c/nCam_*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
+        std::cerr << "\r" << (float)(c+1)/nCam_*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
 
 
     }
@@ -1099,7 +1099,7 @@ void Multitexturer::chartColoring() {
         return;
     }
 
-    dilateAtlas(pix_frontier, imout, 10);
+    dilateAtlas(pix_frontier, imout, 20);
     imout.save(fileNameTexOut_);
 
 }
@@ -1560,10 +1560,11 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_triangle) {
                             image_col = std::max (image_col, 0.0f);
 
                             if (p == 0) { // Difference : = vs. +=
-                                col = imageCache_[imageName].interpolate(image_row, image_col, BILINEAR) * weight;
-
+                                // col = imageCache_[imageName].interpolate(image_row, image_col, BILINEAR) * weight;
+                                col = imageCache_[imageName].interpolate(image_row, image_col) * weight;
                             } else {
-                                col += imageCache_[imageName].interpolate(image_row, image_col, BILINEAR) * weight;   
+                                // col += imageCache_[imageName].interpolate(image_row, image_col, BILINEAR) * weight;   
+                                col += imageCache_[imageName].interpolate(image_row, image_col) * weight;   
                             }
                         }
 
