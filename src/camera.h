@@ -42,8 +42,7 @@ class Camera {
         return position_;
     }
     inline Vector2i getImageDim() const {
-        const Vector2i dim(imWidth_, imHeight_);
-        return dim;
+        return Vector2i(imWidth_, imHeight_);
     }
     inline unsigned int getImageWidth() const{
         return imWidth_;

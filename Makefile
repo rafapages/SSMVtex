@@ -9,7 +9,7 @@
 TARGET   = multitex
 
 CXX      = g++
-CFLAGS   = -std=c++11 -Wall -I.
+CFLAGS   = -std=c++11 -Wall -I. -O2
 
 LINKER   = g++ -o
 LFLAGS   = -Wall -I. -lm
