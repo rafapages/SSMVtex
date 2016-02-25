@@ -59,6 +59,7 @@ class Triangle{
 
     void setUV(const Vector3d& _u, const Vector3d& _v);
 
+
 private:
     Vector3i i_;
 

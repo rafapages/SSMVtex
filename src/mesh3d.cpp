@@ -396,6 +396,24 @@ Vector3f Mesh3D::getTriangleNormal(unsigned int _index) const{
     return getTriangleNormal(vertices[0], vertices[1], vertices[2]);
 }
 
+float Mesh3D::triangleArea(unsigned int _v0, unsigned int _v1, unsigned int _v2) const{
+
+    Vector3f v1v0 = vtx_[_v1] - vtx_[_v0];
+    Vector3f v2v0 = vtx_[_v2] - vtx_[_v0];
+
+    //vtx_t[vl.getIndex(0)]-vtx_t[vl.getIndex(2)]) * (vtx_s[vl.getIndex(1)]-vtx_s[vl.getIndex(2)]) - (vtx_s[vl.getIndex(0)]-vtx_s[vl.getIndex(2)]) * (vtx_t[vl.getIndex(1)]-vtx_t[vl.getIndex(2)]
+    const Vector3f n = v1v0.cross(v2v0);
+
+    return 0.5 * n.norm();
+
+}
+
+float Mesh3D::triangleArea(unsigned int _index) const {
+
+    return triangleArea(tri_[_index].getIndex(0), tri_[_index].getIndex(1), tri_[_index].getIndex(2));
+
+}
+
 void Mesh3D::setTriangleUV(unsigned int _index, const Vector3d& _u, const Vector3d& _v){
     tri_[_index].setUV(_u, _v);
 }

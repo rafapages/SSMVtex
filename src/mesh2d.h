@@ -72,6 +72,8 @@ public:
     float triangleArea(unsigned int _index) const;
     // Calculates the area of the triangle given its vertices indices
     float triangleArea(unsigned int _v0, unsigned int _v1, unsigned int _v2) const;
+    // Calculates the area of the triangle given its vertices
+    static float triangleArea(const Vector2f& _v0, const Vector2f& _v1, const Vector2f& _v2);
 
     // Displaces the whole mesh given a vector
     void displaceMesh(const Vector2f& _v);

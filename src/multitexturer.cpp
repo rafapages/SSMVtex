@@ -577,6 +577,7 @@ void Multitexturer::evaluateArea(){
     }
 
 }
+
 void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
 
     // Define grid search resolution in both dimensions

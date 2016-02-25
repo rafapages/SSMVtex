@@ -66,6 +66,11 @@ class Mesh3D {
     Vector3f getTriangleNormal(unsigned int _index) const;
     Vector3f getTriangleNormal(const Vector3f& _a, const Vector3f& _b, const Vector3f& _c) const;
 
+    // Calculates the area of the triangle given its index
+    float triangleArea(unsigned int _index) const;
+    // Calculates the area of the triangle given its vertices indices
+    float triangleArea(unsigned int _v0, unsigned int _v1, unsigned int _v2) const;
+    
  private:
 
     void writeOBJheader(std::ofstream& _outFile);

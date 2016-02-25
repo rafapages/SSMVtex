@@ -106,10 +106,7 @@ Color Image::interpolate (float _row, float _column, InterpolateMode _mode) cons
         }
     
     } else if (_mode == BICUBIC){
-    // p(x,y) = a00*x^0^y^0 + a01*x^0^y^1 + a02*x^0^y^2 + a03*x^0^y^3 +
-    // a10*x^1^y^0 + a11*x^1^y^1 + a12*x^1^y^2 + a13*x^1^y^3 +
-    // a20*x^2^y^0 + a21*x^2^y^1 + a22*x^3^y^2 + a23*x^2^y^3 +
-    // a30*x^3^y^0 + a31*x^3^y^1 + a32*x^3^y^2 + a33*x^3^y^3
+
     // Bi-Cubic
 
     	Color row_temp [4];

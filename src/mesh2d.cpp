@@ -97,8 +97,8 @@ int Mesh2D::getOrigTri(unsigned int _index) const {
 
 float Mesh2D::triangleArea(unsigned int _v0, unsigned int _v1, unsigned int _v2) const{
 
-	Vector2f v1v0 = vtx_[_v1] - vtx_[_v0];
-	Vector2f v2v0 = vtx_[_v2] - vtx_[_v0];
+	const Vector2f v1v0 = vtx_[_v1] - vtx_[_v0];
+	const Vector2f v2v0 = vtx_[_v2] - vtx_[_v0];
 
 	return (v1v0(0) * v2v0(1) - v1v0(1) * v2v0(0)) * 0.5;
 
@@ -109,6 +109,15 @@ float Mesh2D::triangleArea(unsigned int _index) const {
 	return triangleArea(tri_[_index].getIndex(0), tri_[_index].getIndex(1), tri_[_index].getIndex(2));
 
 }
+
+float Mesh2D::triangleArea(const Vector2f &_v0, const Vector2f &_v1, const Vector2f &_v2){
+	
+	const Vector2f v1v0 = _v1 - _v0;
+	const Vector2f v2v0 = _v2 - _v0;
+
+	return (v1v0(0) * v2v0(1) - v1v0(1) * v2v0(0)) * 0.5;
+}
+
 
 void Mesh2D::displaceMesh(const Vector2f& _v){
 
