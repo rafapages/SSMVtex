@@ -266,8 +266,8 @@ void Multitexturer::evaluateCameraRatings(){
         evaluateArea();
         break;
     case AREA_OCCL:
-        evaluateAreaWithOcclusions(4000);
-        // evaluateAreaWithOcclusionsV2();
+        // evaluateAreaWithOcclusions(1280);
+        evaluateAreaWithOcclusionsV2();
         break;
     }
 
@@ -788,7 +788,7 @@ void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
 }
 
 void Multitexturer::evaluateAreaWithOcclusionsV2(){
-    
+
     // which triangles contain each vertex
     std::vector<int> *vtx2tri = new std::vector<int> [nVtx_];
 
@@ -803,21 +803,34 @@ void Multitexturer::evaluateAreaWithOcclusionsV2(){
     // Vector containing the area of the triangle projected to the image plane
     std::vector<float> triArea(nVtx_);
     // Vector containing a flag determining if the triangle has been discarded or not
-    std::vector<bool> discardedTri (nTri_);
-    // Vector containing each vertex mode
+    std::vector<bool> validTri (nTri_);
+    // Vector containing each vertex mode:
+    //       DARK : Not seen
+    //       SHADOW : Not seen, covered by others
+    //       LIGHT : Seen
     std::vector<VtxMode> vtxSeen (nVtx_);
 
+    // Occlusions are evaluated in a kind of z-buffer whose size is determined
+    // by the average size of the input images. However, this buffer is goes beyond image-pixel
+    // resolution, as the optimal case would be to calculate occlusions in float WC. The buffer
+    // is placed only in the region that the mesh covers when projected to each image.
+    float fres = 0.0;
+    for (unsigned int c = 0; c < nCam_; c++){
+        fres += std::max(cameras_[c].getImageWidth(), cameras_[c].getImageHeight());
+    }
+    const unsigned int resolution = (unsigned int) floor(fres/(float)nCam_);
+    // Triangle buffer: how many triangles are in each position of the grid
+    std::vector<unsigned int> * triBuffer = new std::vector<unsigned int> [resolution * resolution];
+    // Vector containing the position of each vertex inside the triangle buffer
+    std::vector<Vector2i> vtxInBuffer(nVtx_);
 
+    // For each camera
     for (unsigned int c = 0; c < nCam_; c++){
 
         const unsigned int width = cameras_[c].getImageWidth();
         const unsigned int height = cameras_[c].getImageHeight();
 
-        // Triangle buffer: how many triangles are in each pixel
-        std::vector<unsigned int> * triBuffer = new std::vector<unsigned int> [ width * height ];
-        // // Vertex buffer: how many vertices are in each pixel
-        // std::vector<unsigned int> * vtxBuffer = new std::vector<unsigned int> [ width * height ];
-
+ 
         // Every vertex is projected onto the image plane and stored
         for (unsigned int i = 0; i < nVtx_; i++){
             const Vector2f proj_st = cameras_[c].transform2uvCoord(mesh_.getVertex(i));
@@ -828,8 +841,13 @@ void Multitexturer::evaluateAreaWithOcclusionsV2(){
         // The projected area is calculated and back-facing triangles are stored
         for (unsigned int j = 0; j < nTri_; j++){
             const Vector3i& triInx = mesh_.getTriangle(j).getIndices();
-            triArea[j] = 2* Mesh2D::triangleArea(vtx_st[triInx(0)], vtx_st[triInx(2)], vtx_st[triInx(1)]); // 0-2-1 order to avoid negative values 
-            discardedTri[j] = triArea[j] < 0; // It's back-facing
+            //tri_area[j] = (vtx_t[vl.getIndex(0)]-vtx_t[vl.getIndex(2)]) * (vtx_s[vl.getIndex(1)]-vtx_s[vl.getIndex(2)]) - (vtx_s[vl.getIndex(0)]-vtx_s[vl.getIndex(2)]) * (vtx_t[vl.getIndex(1)]-vtx_t[vl.getIndex(2)]);
+            const Vector2f& v0 = vtx_st[triInx(0)];
+            const Vector2f& v1 = vtx_st[triInx(1)];
+            const Vector2f& v2 = vtx_st[triInx(2)];
+            triArea[j] = (v0(1) - v2(1)) * (v1(0) - v2(0)) - (v0(0) - v2(0)) * (v1(1) - v2(1));
+            //triArea[j] = 2 * Mesh2D::triangleArea(vtx_st[triInx(0)], vtx_st[triInx(2)], vtx_st[triInx(1)]); // 0-2-1 order to avoid negative values 
+            validTri[j] = triArea[j] > 0; // It's back-facing
         }
 
 
@@ -837,7 +855,7 @@ void Multitexturer::evaluateAreaWithOcclusionsV2(){
         for (unsigned int i = 0; i < nVtx_; i++){
             bool occluded = true;
             for (std::vector<int>::iterator it = vtx2tri[i].begin(); it!=vtx2tri[i].end(); ++it) {
-                if (!discardedTri[*it]){
+                if (validTri[*it]){
                     occluded = false;
                     break;
                 }
@@ -849,59 +867,78 @@ void Multitexturer::evaluateAreaWithOcclusionsV2(){
             }
         }
 
-        // // First, we fill the vertex buffer
-        // for (unsigned int i = 0; i < nVtx_; i++){
-        //     if (vtxSeen[i] == LIGHT){
-        //         const Vector2f& current_st = vtx_st[i];
-        //         const unsigned int col = (unsigned int) floor(current_st(0));
-        //         const unsigned int row = (unsigned int) floor(current_st(1));
+        // Triangle buffer is cleared
+        for (unsigned int i = 0; i < resolution; i++){
+            for (unsigned int j = 0; j < resolution; j++){
+                triBuffer[i * resolution + j].clear();
+            }
+        }
 
-        //         if (col >= width || row >= height){
-        //             vtxSeen[i] = DARK;
-        //             continue;
-        //         } else {
-        //             vtxBuffer[row * width + col].push_back(i);    
-        //         }
-        //     }
-        // }
+        // Triangle buffer positions are now set
+
+        // Minimum and maximum back-projected values
+        float min_s, max_s, min_t, max_t;
+
+        min_s = min_t = FLT_MAX;
+        max_s = max_t = -FLT_MAX;
+
+        for (unsigned int i = 1; i < nVtx_; i++) {
+            const Vector2f& st = vtx_st[i];
+            if (st(0) < min_s) {
+                min_s = st(0);
+            } else if (st(0) > max_s){
+                max_s = st(0);
+            } if (st(1) < min_t) {
+                min_t = st(1);
+            } else if (st(1) > max_t) {
+                max_t = st(1);
+            }
+        }
+
+        // Vertices positions inside the triangle buffer
+        for (unsigned int i = 0; i < nVtx_; i++) {
+            if (vtxSeen[i] == LIGHT) {
+                const Vector2f& nst = vtx_st[i];
+                const unsigned int v_s = findPosGrid(nst(0), min_s, max_s, resolution);
+                const unsigned int v_t = findPosGrid(nst(1), min_t, max_t, resolution);
+                vtxInBuffer[i] = Vector2i(v_s,v_t);
+            }
+        }
 
         // Now, we fill the triangle buffer
         for (unsigned int i = 0; i < nTri_; i++){
-            if (!discardedTri[i]) {
-
-                // std::cerr << i << std::endl;
-
+            if (validTri[i]){
                 const Vector3i& triIdx = mesh_.getTriangle(i).getIndices();
-
-                if (vtxSeen[triIdx(0)] == DARK || vtxSeen[triIdx(1)] == DARK || vtxSeen[triIdx(2)] == DARK) continue;
-
-                const Vector2f vt0 = vtx_st[triIdx(0)];
-                const Vector2f vt1 = vtx_st[triIdx(1)];
-                const Vector2f vt2 = vtx_st[triIdx(2)];
                 
-                float xmax, xmin, ymax, ymin;
-                // maximum x value
-                xmax = vt0(0) > vt1(0) ? vt0(0) : vt1(0);
-                xmax = xmax > vt2(0) ? xmax : vt2(0);
-                // minimum x value
-                xmin = vt0(0) < vt1(0) ? vt0(0) : vt1(0);
-                xmin = xmin < vt2(0) ? xmin : vt2(0);
-                // maximum y value
-                ymax = vt0(1) > vt1(1) ? vt0(1) : vt1(1);
-                ymax = ymax > vt2(1) ? ymax : vt2(1);
-                // minimum y value
-                ymin = vt0(1) < vt1(1) ? vt0(1) : vt1(1);
-                ymin = ymin < vt2(1) ? ymin : vt2(1);
+                unsigned int min_si, min_ti, max_si, max_ti;
+                min_si = min_ti = INT_MAX;
+                max_si = max_ti = 0;
 
-                unsigned int xmaxp = (unsigned int) floor(xmax);
-                unsigned int xminp = (unsigned int) floor(xmin);
-                unsigned int ymaxp = (unsigned int) floor(ymax);
-                unsigned int yminp = (unsigned int) floor(ymin);
+                for (unsigned int j = 0; j < 3; j++){
+                    const Vector2i& vst = vtxInBuffer[triIdx(j)];
+                    const unsigned int v_s = vst(0);
+                    const unsigned int v_t = vst(1);
+                    if (v_s < min_si){
+                        min_si = v_s;
+                    } else if (v_s > max_si){
+                        max_si = v_s;
+                    }
+                    if (v_t < min_ti){
+                        min_ti = v_t;
+                    } else if (v_t > max_ti){
+                        max_ti = v_t;
+                    }
+                }
 
-                for (unsigned int colp = xminp; colp < xmaxp; colp++){ 
-                    for (unsigned int rowp = yminp; rowp < ymaxp; rowp++){ 
-                        if (isPinsideTri(Vector2f((float)colp, (float)rowp), vt0, vt1, vt2)){
-                            triBuffer[ rowp * width + colp].push_back(i);
+                const Vector2f vt0 = vtxInBuffer[triIdx(0)].cast<float>();
+                const Vector2f vt1 = vtxInBuffer[triIdx(1)].cast<float>();
+                const Vector2f vt2 = vtxInBuffer[triIdx(2)].cast<float>();
+
+
+                for (unsigned int s = min_si; s <= max_si; s++) {
+                    for (unsigned int t = min_ti; t <= max_ti; t++){
+                        if (isPinsideTri (Vector2f((float)s,(float)t), vt0, vt1, vt2)){
+                            triBuffer[s * resolution + t].push_back(i);
                         }
                     }
                 }
@@ -909,48 +946,49 @@ void Multitexturer::evaluateAreaWithOcclusionsV2(){
             }
         }
 
-        // 
-        for (unsigned int i = 0; i < nVtx_; i++){
-            if (vtxSeen[i] == LIGHT){
+        for (unsigned int i = 0; i < nVtx_; i++) {
+            if (vtxSeen[i] == LIGHT) {
+                const Vector2i& v_grid = vtxInBuffer[i];
                 const Vector2f& st = vtx_st[i];
-                const unsigned int vtx_s = (unsigned int) floor (st(0));
-                const unsigned int vtx_t = (unsigned int) floor (st(1));
-                std::vector<unsigned int> candidates = triBuffer[vtx_t * width + vtx_s];
-                for (std::vector<unsigned int>::iterator it = candidates.begin(); it != candidates.end(); ++it){
-                    const Vector3i& triIdx = mesh_.getTriangle(i).getIndices();
+                // candidates: triangles in same grid part, except for the ones incident to i
+                std::vector<unsigned int> candidates = triBuffer[v_grid(0) * resolution + v_grid(1)];
+                for (std::vector<unsigned int>::iterator it = candidates.begin(); it != candidates.end(); ++it) {
+                    const Vector3i& triIdx = mesh_.getTriangle(*it).getIndices();
                     if (isPinsideTri(st, vtx_st[triIdx(0)], vtx_st[triIdx(1)], vtx_st[triIdx(2)])){
                         // Check if triangle vertex is eclipsed
                         if (isVertexEclipsed(i, *it, c)){
                             vtxSeen[i] = SHADOW;
                         } else {
-                            discardedTri[*it] = true;
+                            validTri[*it] = false;
                         }
 
                     }
                 }
+                if (st(0) < 0 || st(0) > width || st(1) < 0 || st(1) > height){
+                    vtxSeen[i] = SHADOW;
+                }
             }
         }
+
 
         // If a triangles has a vertex with SHADOW mode, its discarded
         for (unsigned int i = 0; i < nVtx_; i++){
             if (vtxSeen[i] == SHADOW){
                 for(std::vector<int>::iterator it = vtx2tri[i].begin(); it != vtx2tri[i].end(); ++it){
-                    discardedTri[*it] = true;
+                    validTri[*it] = false;
                 }
             }
         }
 
         for (unsigned int i = 0; i < nTri_; i++){
-            cameras_[c].tri_ratings_[i] = !discardedTri[i] ? triArea[i] : 0;
+            cameras_[c].tri_ratings_[i] = validTri[i] ? triArea[i] : 0;
         }
 
         std::cerr << "\r" << (float)(c+1)/nCam_*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
 
-        delete [] triBuffer;
-        // delete [] vtxBuffer;
-
     }
-
+    
+    delete [] triBuffer;
     delete [] vtx2tri;
 }
 
