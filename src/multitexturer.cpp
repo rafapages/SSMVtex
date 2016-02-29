@@ -334,6 +334,8 @@ void Multitexturer::evaluateCameraRatings(){
 
     std::cerr << "\rdone!         " << std::endl;
 
+    delete [] vtx2tri;
+    delete [] tri2tri;
 }
 
 void Multitexturer::meshUnwrap(){
@@ -1217,6 +1219,8 @@ void Multitexturer::loadImageToCache(const std::string& _fileName){
 
 bool Multitexturer::findFaceInImage(float& _face_min_x, float& _face_max_x, float& _face_min_y, float& _face_max_y) const {
 
+
+    // You migh have to change this address to wherever your classifier is located
     std::string cascadeName = "/usr/local/share/OpenCV/haarcascades/haarcascade_frontalface_default.xml";
 
     cv::Mat image;
