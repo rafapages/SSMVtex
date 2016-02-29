@@ -266,7 +266,7 @@ void Multitexturer::evaluateCameraRatings(){
         evaluateArea();
         break;
     case AREA_OCCL:
-        // evaluateAreaWithOcclusions(1280);
+        //evaluateAreaWithOcclusions(1280);
         evaluateAreaWithOcclusionsV2();
         break;
     }
@@ -647,7 +647,6 @@ void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
 
         // STEP 2: All vertices surrounded only by dead triangles -> DARK
         // Rest of them -> LIGHT
-
         for (unsigned int i = 0; i < nVtx_; i++) {
             bool tobekilled = true;
             for (std::vector<int>::iterator it = vtx2tri[i].begin(); it!=vtx2tri[i].end(); ++it) {
@@ -780,8 +779,10 @@ void Multitexturer::evaluateAreaWithOcclusions(unsigned int _resolution){
 
         std::cerr << "\r" << (float)(c+1)/nCam_*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
 
-
     }
+
+
+
 
     delete [] vtx2tri;
     delete [] grid_tri;
@@ -801,7 +802,7 @@ void Multitexturer::evaluateAreaWithOcclusionsV2(){
     // Vector containing the projection to the image plane for each vertex
     std::vector<Vector2f> vtx_st (nVtx_);
     // Vector containing the area of the triangle projected to the image plane
-    std::vector<float> triArea(nVtx_);
+    std::vector<float> triArea(nTri_);
     // Vector containing a flag determining if the triangle has been discarded or not
     std::vector<bool> validTri (nTri_);
     // Vector containing each vertex mode:
@@ -882,15 +883,18 @@ void Multitexturer::evaluateAreaWithOcclusionsV2(){
         min_s = min_t = FLT_MAX;
         max_s = max_t = -FLT_MAX;
 
-        for (unsigned int i = 1; i < nVtx_; i++) {
+        for (unsigned int i = 0; i < nVtx_; i++) {
             const Vector2f& st = vtx_st[i];
             if (st(0) < min_s) {
                 min_s = st(0);
-            } else if (st(0) > max_s){
+            } 
+            if (st(0) > max_s){
                 max_s = st(0);
-            } if (st(1) < min_t) {
+            } 
+            if (st(1) < min_t) {
                 min_t = st(1);
-            } else if (st(1) > max_t) {
+            } 
+            if (st(1) > max_t) {
                 max_t = st(1);
             }
         }
@@ -920,12 +924,14 @@ void Multitexturer::evaluateAreaWithOcclusionsV2(){
                     const unsigned int v_t = vst(1);
                     if (v_s < min_si){
                         min_si = v_s;
-                    } else if (v_s > max_si){
+                    } 
+                    if (v_s > max_si){
                         max_si = v_s;
                     }
                     if (v_t < min_ti){
                         min_ti = v_t;
-                    } else if (v_t > max_ti){
+                    } 
+                    if (v_t > max_ti){
                         max_ti = v_t;
                     }
                 }
@@ -946,10 +952,13 @@ void Multitexturer::evaluateAreaWithOcclusionsV2(){
             }
         }
 
+        // Occlusions are computed in the grid of the triangle buffer
         for (unsigned int i = 0; i < nVtx_; i++) {
             if (vtxSeen[i] == LIGHT) {
+
                 const Vector2i& v_grid = vtxInBuffer[i];
                 const Vector2f& st = vtx_st[i];
+                
                 // candidates: triangles in same grid part, except for the ones incident to i
                 std::vector<unsigned int> candidates = triBuffer[v_grid(0) * resolution + v_grid(1)];
                 for (std::vector<unsigned int>::iterator it = candidates.begin(); it != candidates.end(); ++it) {
@@ -985,8 +994,10 @@ void Multitexturer::evaluateAreaWithOcclusionsV2(){
         }
 
         std::cerr << "\r" << (float)(c+1)/nCam_*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
-
+        
     }
+
+
     
     delete [] triBuffer;
     delete [] vtx2tri;
