@@ -128,7 +128,7 @@ Color Image::interpolate (float _row, float _column, InterpolateMode _mode) cons
                 B = N - M;
                 C = O - M;
 
-                row_temp[i+1] = N + ( ( (A+B) * y - A - B - B) * y + C) * y;
+                row_temp[i + 1] = N + ( ( (A+B) * y - A - B - B) * y + C) * y;
             }
 
             A = row_temp[3] - row_temp[2];

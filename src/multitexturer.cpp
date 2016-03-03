@@ -1768,7 +1768,7 @@ void Multitexturer::dilateAtlas(ArrayXXi& _pix_frontier, Image& _image, unsigned
     for (unsigned int cnt = 0; cnt < _nIter; cnt++){
         // First vertically
         for (unsigned int col = 0; col < imWidth_; col++){
-            int prev = -1;
+            unsigned int prev = INT_MAX;
 
             for (unsigned int row = 1; row < imHeight_ - 1; row++){
                 // if the pixel explored already has a color -> continue
@@ -1790,7 +1790,8 @@ void Multitexturer::dilateAtlas(ArrayXXi& _pix_frontier, Image& _image, unsigned
 
         // Then horizontally
         for (unsigned int row = 0; row < imHeight_; row++){
-            int prev = -1;
+            unsigned int prev = INT_MAX;
+            
             for (unsigned int col = 1; col < imWidth_ - 1; col++){
                 if (_pix_frontier(row, col) < 0){
                     continue;
