@@ -110,8 +110,7 @@ private:
     // Uses the projected area of the triangle
     void evaluateArea();
     // Uses the projected area taking into account occlusions
-    void evaluateAreaWithOcclusions(unsigned int _resolution);
-    void evaluateAreaWithOcclusionsV2();
+    void evaluateAreaWithOcclusions();
     // Smooths the values estimated so transitions are seamless
     void smoothRatings(std::list<int> *_tri2tri);
     // Weights the normals with respect to a function with
