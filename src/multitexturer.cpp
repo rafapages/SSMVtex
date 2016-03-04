@@ -999,11 +999,20 @@ int Multitexturer::findCameraInList(const std::string& _fileName) const{
 
 void Multitexturer::loadImageToCache(const std::string& _fileName){
 
+
     if (imageCache_.size() == imageCacheSize_){
-        imageCache_.clear();
+        // We clear as many images from the cache as num_cam_mix_
+        // but at a random location of the cache
+        const unsigned int index = rand() % (imageCacheSize_ - num_cam_mix_);
+        std::map<std::string, Image>::iterator it = imageCache_.begin();
+        std::map<std::string, Image>::iterator it_end = imageCache_.begin();
+        std::advance(it, index);
+        std::advance(it_end, index + num_cam_mix_);
+        imageCache_.erase(it,it_end);
     }
 
     imageCache_[_fileName] = Image(_fileName);
+
 
 }
 
