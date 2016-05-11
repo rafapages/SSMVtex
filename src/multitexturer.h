@@ -87,7 +87,8 @@ private:
     void readImageList();
 
 
-    // Geometry stuff ***
+    // Geometry stuff
+    //
     // According to camera c, is vertex v eclipsed by triangle t ?
     bool isVertexEclipsed(int _v, int _t, int _c) const;
     // Samples x with respect to the given resolution

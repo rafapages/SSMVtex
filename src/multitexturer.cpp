@@ -1132,6 +1132,7 @@ void Multitexturer::chartColoring() {
     }
 
     dilateAtlas(pix_frontier, imout, 20);
+    // dilateAtlasCV(pix_triangle, imout);
     imout.save(fileNameTexOut_);
 
 }
@@ -1592,11 +1593,11 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_triangle) {
                             image_col = std::max (image_col, 0.0f);
 
                             if (p == 0) { // Difference : = vs. +=
-                                // col = imageCache_[imageName].interpolate(image_row, image_col, BILINEAR) * weight;
-                                col = imageCache_[imageName].interpolate(image_row, image_col) * weight;
+                                col = imageCache_[imageName].interpolate(image_row, image_col, BILINEAR) * weight;
+                                //col = imageCache_[imageName].interpolate(image_row, image_col) * weight;
                             } else {
-                                // col += imageCache_[imageName].interpolate(image_row, image_col, BILINEAR) * weight;   
-                                col += imageCache_[imageName].interpolate(image_row, image_col) * weight;   
+                                col += imageCache_[imageName].interpolate(image_row, image_col, BILINEAR) * weight;   
+                                //col += imageCache_[imageName].interpolate(image_row, image_col) * weight;   
                             }
                         }
 
