@@ -47,7 +47,7 @@ Multitexturer::~Multitexturer(){
 
 void Multitexturer::parseCommandLine(int argc, char *argv[]){
 
-    std::vector<char> opts;
+    std::vector<std::string> opts;
     int index = 1;
 
     // We first read options
@@ -56,114 +56,122 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
         char* opt = argv[index];
         char c;
         if (opt[0] == '-'){ // options starting with '-' or '--'
+            if (!isdigit(opt[1])){
 
-            switch (c = opt[1]) {
-            case 'n':	ca_mode_ = NORMAL_VERTEX;		opts.push_back(c); break;
-            case 'b':	ca_mode_ = NORMAL_BARICENTER;	opts.push_back(c); break;
-            case 'a':	ca_mode_ = AREA;				opts.push_back(c); break;
-            case 'l':	ca_mode_ = AREA_OCCL;			opts.push_back(c); break;
+                switch (c = opt[1]) {
+                    case 'n':	ca_mode_ = NORMAL_VERTEX;		opts.push_back(std::string(1,c)); break;
+                    case 'b':	ca_mode_ = NORMAL_BARICENTER;	opts.push_back(std::string(1,c)); break;
+                    case 'a':	ca_mode_ = AREA;				opts.push_back(std::string(1,c)); break;
+                    case 'l':	ca_mode_ = AREA_OCCL;			opts.push_back(std::string(1,c)); break;
 
-            case '1':	num_cam_mix_ = 1;	opts.push_back(c); break;
-            case '2':	num_cam_mix_ = 2;	opts.push_back(c); break;
-            case '3':	num_cam_mix_ = 3;	opts.push_back(c); break;
-            case '4':	num_cam_mix_ = 4;	opts.push_back(c); break;
-            case '5':	num_cam_mix_ = 5;	opts.push_back(c); break;
-            case '6':	num_cam_mix_ = 6;	opts.push_back(c); break;
-            case '7':	num_cam_mix_ = 7;	opts.push_back(c); break;
-            case '8':	num_cam_mix_ = 8;	opts.push_back(c); break;
-            case '9':	num_cam_mix_ = 9;   opts.push_back(c); break;
+                    case 't':	m_mode_ = TEXTURE;  opts.push_back(std::string(1,c)); break;
+                    case 'v':   m_mode_ = VERTEX;   opts.push_back(std::string(1,c)); break;
+                    case 'f':   m_mode_ = FLAT;     opts.push_back(std::string(1,c)); break;
 
-            case 't':	m_mode_ = TEXTURE;  opts.push_back(c); break;
-            case 'v':   m_mode_ = VERTEX;    opts.push_back(c); break;
-            case 'f':   m_mode_ = FLAT;     opts.push_back(c); break;
+                    case 'm':   in_mode_ = MESH;    opts.push_back(std::string(1,c)); break;
+                    case 's':   in_mode_ = SPLAT;   opts.push_back(std::string(1,c)); break;
 
-            case 'm':   in_mode_ = MESH;    opts.push_back(c); break;
-            case 's':   in_mode_ = SPLAT;   opts.push_back(c); break;
-
-            case 'o':   highlightOcclusions_ = true; break;
+                    case 'o':   highlightOcclusions_ = true; break;
 
             //case 'p':   powerOfTwoImSize_ = true; opts.push_back(c); break;
 
-            case 'h':
-                printHelp();
-                break;
+                    case 'h':
+                    printHelp();
+                    break;
 
-            case '-': {
-                std::string optionValue;
-                for (unsigned int i = 2; (opt[i] != '=') && (opt[i] != '\0'); i++){
-                    optionValue += opt[i];
-                }
+                    case '-': {
+                        std::string optionValue;
+                        for (unsigned int i = 2; (opt[i] != '=') && (opt[i] != '\0'); i++){
+                            optionValue += opt[i];
+                        }
 
-                int intValue;
-                float floatValue;
-                std::string stringValue;
+                        int intValue;
+                        float floatValue;
+                        std::string stringValue;
 
-                if (optionValue.compare("faceCam") == 0){
-                    for (unsigned int i = 2 + optionValue.length() + 1; opt[i] != '\0'; i++){
-                        fileFaceCam_ += opt[i];
-                    }
+                        if (optionValue.compare("faceCam") == 0){
+                            for (unsigned int i = 2 + optionValue.length() + 1; opt[i] != '\0'; i++){
+                                fileFaceCam_ += opt[i];
+                            }
 
-                } else if (optionValue.compare("dimension") == 0){
-                    for (unsigned int i = 2 + optionValue.length() + 1; opt[i] != '\0'; i++){
+                        } else if (optionValue.compare("dimension") == 0){
+                            for (unsigned int i = 2 + optionValue.length() + 1; opt[i] != '\0'; i++){
                         // In case any of these characters is not a number:
-                        if (!isdigit(opt[i])){
-                            std::cerr << "Wrong dimension value!" << std::endl;
+                                if (!isdigit(opt[i])){
+                                    std::cerr << "Wrong dimension value!" << std::endl;
+                                    printHelp();
+                                }
+                                stringValue += opt[i];
+                            }
+                            unsigned int uiValue;
+                            std::stringstream ss;
+                            ss << stringValue;
+                            ss >> uiValue;
+                            dimension_ = uiValue * 1000000;
+                        } else if (optionValue.compare("width") == 0){
+                            for (unsigned int i = 2 + optionValue.length() + 1; opt[i] != '\0'; i++){
+                                if (!isdigit(opt[i])){
+                                    std::cerr << "Wrong image width value!" << std::endl;
+                                    printHelp();
+                                }
+                                stringValue += opt[i];
+                            }
+                            unsigned int uiValue;
+                            std::stringstream ss;
+                            ss << stringValue;
+                            ss >> uiValue;
+                            imWidth_ = uiValue;
+                        } else if (optionValue.compare("alpha") == 0){
+                            for (unsigned int i = 2 + optionValue.length() + 1; opt[i] != '\0'; i++){
+                                stringValue += opt[i];
+                            }
+                            std::stringstream ss;
+                            ss << stringValue;
+                            ss >> floatValue;
+                            alpha_ = floatValue;
+                        } else if (optionValue.compare("beta") == 0){
+                            for (unsigned int i = 2 + optionValue.length() + 1; opt[i] != '\0'; i++){
+                                stringValue += opt[i];
+                            }
+                            std::stringstream ss;
+                            ss << stringValue;
+                            ss >> floatValue;
+                            beta_ = floatValue;
+                        } else if (optionValue.compare("cache") == 0){
+                            for (unsigned int i = 2 + optionValue.length() +1; opt[i] != '\0'; i++){
+                                stringValue += opt[i];
+                            }
+                            std::stringstream ss;
+                            ss << stringValue;
+                            ss >> intValue;
+                            imageCacheSize_ = intValue;
+                        } else {
+                            std::cerr << "Unknown option: "  << optionValue << std::endl;
                             printHelp();
                         }
-                        stringValue += opt[i];
+                        break;
                     }
-                    unsigned int uiValue;
-                    std::stringstream ss;
-                    ss << stringValue;
-                    ss >> uiValue;
-                    dimension_ = uiValue * 1000000;
-                } else if (optionValue.compare("width") == 0){
-                    for (unsigned int i = 2 + optionValue.length() + 1; opt[i] != '\0'; i++){
-                        if (!isdigit(opt[i])){
-                            std::cerr << "Wrong image width value!" << std::endl;
-                            printHelp();
-                        }
-                        stringValue += opt[i];
-                    }
-                    unsigned int uiValue;
-                    std::stringstream ss;
-                    ss << stringValue;
-                    ss >> uiValue;
-                    imWidth_ = uiValue;
-                } else if (optionValue.compare("alpha") == 0){
-                    for (unsigned int i = 2 + optionValue.length() + 1; opt[i] != '\0'; i++){
-                        stringValue += opt[i];
-                    }
-                    std::stringstream ss;
-                    ss << stringValue;
-                    ss >> floatValue;
-                    alpha_ = floatValue;
-                } else if (optionValue.compare("beta") == 0){
-                    for (unsigned int i = 2 + optionValue.length() + 1; opt[i] != '\0'; i++){
-                        stringValue += opt[i];
-                    }
-                    std::stringstream ss;
-                    ss << stringValue;
-                    ss >> floatValue;
-                    beta_ = floatValue;
-                } else if (optionValue.compare("cache") == 0){
-                    for (unsigned int i = 2 + optionValue.length() +1; opt[i] != '\0'; i++){
-                        stringValue += opt[i];
-                    }
-                    std::stringstream ss;
-                    ss << stringValue;
-                    ss >> intValue;
-                    imageCacheSize_ = intValue;
-                } else {
-                    std::cerr << "Unknown option: "  << optionValue << std::endl;
+
+                    default:
+                    std::cerr << "Unknown option: "  << argv[index] << std::endl;
                     printHelp();
                 }
-                break;
-            }
+            } else { // if after '-' we have a number
+                std::string stringValue;
+                for (unsigned int i = 1; opt[i] != '\0'; i++){
+                    if (!isdigit(opt[i])){
+                        std::cerr << "Wrong number of cameras to mix!" << std::endl;
+                        printHelp();
+                    }
+                    stringValue += opt[i];
+                }
+                opts.push_back(stringValue);
+                unsigned int cam2mix;
+                std::stringstream ss;
+                ss << stringValue;
+                ss >> cam2mix;
+                num_cam_mix_ = cam2mix;
 
-            default:
-                std::cerr << "Unknown option: "  << argv[index] << std::endl;
-                printHelp();
             }
 
         } else { // We are done with options
@@ -199,7 +207,7 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
         fileNameTexOut_.clear();
 
         std::string optionlist;
-        for (std::vector<char>::iterator it = opts.begin(); it != opts.end(); it++){
+        for (std::vector<std::string>::iterator it = opts.begin(); it != opts.end(); it++){
             optionlist += '-';
             optionlist += *it;
         }
