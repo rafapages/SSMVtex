@@ -31,7 +31,7 @@ Navigate to the directory and hit *make*.
 ##### Options:
 * -{n|b|a|l}	Assing cameras to triangles using (n) their normals, (b) their normals using the baricenter technique, (a) their area,(l)	or their area taking occlusions into account. Default: l.
 * -{m|s}	Input value is (m) common 3D mesh or (s) a splat based 3D mesh. Default: m
-* -{1-9} this argument indicates the maximum amount of images per triangle used in order to create	the customized texture. Default: 2.
+* -{#}		Number of maximum images mixed per triangle. Default: 2 (not very smooth mixing).
 * -{p|t|f} Show (p) a mesh colored per vertex, (t) a mesh with textures or (f) a mesh colored with a flat color per chart. Default: t.
 * -o highlights occlusions in yellow.
 * —faceCam=_imageFileName-   in case there a frontal image showing the subject's face.
