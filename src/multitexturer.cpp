@@ -412,8 +412,26 @@ void Multitexturer::printHelp() const {
 
 void Multitexturer::loadInputData(){
     readInputMesh();
-    readCameraFile();
+    loadCameraInfo();
     readImageList();
+}
+
+void Multitexturer::loadCameraInfo(){
+
+    std::string ext = fileNameCam_.substr(fileNameCam_.length()-3, 3);
+    bool bundler = false;
+
+    if (std::strcmp(ext.c_str(),"out") == 0 || std::strcmp(ext.c_str(), "OUT") == 0){
+        bundler = true;
+    } else {
+        bundler = false;
+    }
+
+    if (bundler){
+        readBundlerFile();
+    } else {
+        readCameraFile();
+    }
 }
 
 
@@ -438,7 +456,6 @@ void Multitexturer::readCameraFile(){
             cameras_.push_back(c);
         }
 
-        std::cerr << "done!\n";
 
     } else {
         std::cerr << "Unable to open " << fileNameCam_ << " file!" << std::endl;
@@ -446,6 +463,39 @@ void Multitexturer::readCameraFile(){
     }
 
     camFile.close();
+}
+
+void Multitexturer::readBundlerFile(){
+
+    std::ifstream bundlerFile(fileNameCam_.c_str());
+
+    if (bundlerFile.is_open()){
+
+        // Comments are skipped
+        std::string line;
+        do {
+            std::getline(bundlerFile, line);
+        } while (line.at(0) == '#');
+
+        std::stringstream ss (line);
+        ss >> nCam_;
+        std::cerr << "Reading " << nCam_ << " camera parameters... ";
+
+        for (unsigned int i = 0; i < nCam_; i++){
+            Camera c;
+            c.loadBundlerCameraParameters(bundlerFile);
+            cameras_.push_back(c);
+        }
+
+        std::cerr << "done!\n";
+
+    } else {
+        std::cerr << "Unable to open Bundler file " << fileNameCam_ << " file!" << std::endl;
+        exit(-1);
+    }
+
+    bundlerFile.close();
+
 }
 
 void Multitexturer::readImageList(){

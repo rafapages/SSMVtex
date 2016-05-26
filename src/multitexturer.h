@@ -83,8 +83,11 @@ private:
     
     // Access input data
     void readInputMesh();
+    void readImageList();   
+    // Access camera data
+    void loadCameraInfo();
     void readCameraFile();
-    void readImageList();
+    void readBundlerFile(); // Only for the camera information
 
 
     // Geometry stuff

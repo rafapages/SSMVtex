@@ -30,6 +30,7 @@ class Camera {
 
     // Read parameters from text line
     void loadCameraParameters(const std::string& _textline);
+    void loadBundlerCameraParameters(std::ifstream& _stream);
 
     // Data access
     inline const Matrix3f& getIntrinsicParam() const {
@@ -52,14 +53,19 @@ class Camera {
     }
     inline Vector3f getTranslationVector() const{ // T = -RC
         return -R_ * position_;
-    } 
+    }
     inline Vector2f getDistortionParams() const{
         return Vector2f(k1_,k2_);
     }
 
+    // set camera position using the translation vector
+    inline void setPosition(const Vector3f& _translation){
+        position_ = -R_.transpose() * _translation;
+    }
 
 
-    // X = [R T] in homogeneous coordinates:
+
+    // X = [R t] in homogeneous coordinates:
     // last row is [0 0 0 1]
     MatrixXf getXMatrix () const;
     // P = K [R T] in homogeneous coordinates:

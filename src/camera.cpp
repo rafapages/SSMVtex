@@ -61,6 +61,56 @@ void Camera::loadCameraParameters(const std::string &_textline){
 
 }
 
+void Camera::loadBundlerCameraParameters(std::ifstream& _stream){
+
+    std::string line;
+    float focal;
+    Vector3f t;
+    Vector3f row;
+
+    for (unsigned int cam_line = 0; cam_line < 5; cam_line++){
+        std::getline(_stream, line);
+        while (line.empty()) std::getline(_stream, line);
+
+        if (cam_line == 0){ // First line is focal lenght and distortion parameters
+            std::stringstream ss(line);
+            ss >> focal >> k1_ >> k2_;
+
+        } else if (cam_line == 4){ // Last line has the translation vector
+            float v0,v1,v2;
+            std::stringstream ss(line);
+            ss >> v0 >> v1 >> v2;
+            t = Vector3f(v0,-v1,-v2); // You can see an explanation of these '-' below
+
+        } else { // The rest is R matrix
+            float v0,v1,v2;
+            std::stringstream ss(line);
+            ss >> v0 >> v1 >> v2;
+            row = Vector3f(v0,v1,v2);
+
+            // Differently to Bundler, we use the notation where the camera "looks" to +z
+            // so it is necessary to perform a 180 degrees rotation around x axis:
+            //
+            // | 1      0         0    |   | 1   0   0|
+            // | 0  cos(180)  -sin(180)| = | 0  -1   0|
+            // | 0  sin(180)   cos(180)|   | 0   0  -1|
+            //
+            // Which means we have to multiply z and y axes by -1:
+            if (cam_line-1 == 0){
+                R_.row(cam_line-1) = row;
+            } else {
+                R_.row(cam_line-1) = -row;
+            }
+        }
+    }
+
+    position_ = -R_.transpose() * t;
+    std::cerr << "pos:\n" << position_ << std::endl;
+    setPosition(t);
+
+
+}
+
 MatrixXf Camera::getXMatrix() const{
 
     MatrixXf X(4,4);
