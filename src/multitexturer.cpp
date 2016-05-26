@@ -372,7 +372,7 @@ void Multitexturer::printHelp() const {
         "\t<fileNameIn> is the name of the input text file containing the 3D scene",
         "\t  described in OBJ format. Extension : obj.",
         "\t<fileNameCam> is the name of the input text file containing the camera",
-        "\t  calibration matrices. Extension: txt.",
+        "\t  calibration matrices. Extension: txt or out.",
         "\t<fileNameImageList> is the name of the input text file containing the",
         "\t  list of images that will be used for texturing the mesh. Extension: txt.",
         "\t<fileNameOut> is the name of the output text file that'll be created,",

@@ -112,6 +112,9 @@ void Camera::loadBundlerCameraParameters(std::ifstream& _stream, const std::stri
         exit(-1);
     }
 
+    K_ << focal, 0, imWidth_*0.5,
+          0, focal, imHeight_*0.5,
+          0, 0, 1;
 }
 
 bool Camera::loadImageDimensions(const std::string& _imageName){
