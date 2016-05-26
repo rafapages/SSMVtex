@@ -20,6 +20,7 @@
 
 Camera::Camera(){
     imWidth_ = imHeight_ = 0;
+    k1_ = k2_ = 0.0; // If not distortion is specified, then it's set to 0
 }
 
 Camera::~Camera(){

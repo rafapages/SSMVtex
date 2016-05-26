@@ -81,6 +81,7 @@ class Camera {
     Matrix3f R_; // Extrinsic parameters
     Vector3f position_; // C
     unsigned int imWidth_, imHeight_; //nPixX, nPixY
+    float k1_, k2_; // Radial distortion coefficients
 
 
 
