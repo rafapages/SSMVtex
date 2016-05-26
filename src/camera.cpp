@@ -61,7 +61,7 @@ void Camera::loadCameraParameters(const std::string &_textline){
 
 }
 
-void Camera::loadBundlerCameraParameters(std::ifstream& _stream){
+void Camera::loadBundlerCameraParameters(std::ifstream& _stream, const std::string& _imageName){
 
     std::string line;
     float focal;
@@ -95,7 +95,7 @@ void Camera::loadBundlerCameraParameters(std::ifstream& _stream){
             // | 0  cos(180)  -sin(180)| = | 0  -1   0|
             // | 0  sin(180)   cos(180)|   | 0   0  -1|
             //
-            // Which means we have to multiply z and y axes by -1:
+            // Which means we have to multiply y and z axes by -1:
             if (cam_line-1 == 0){
                 R_.row(cam_line-1) = row;
             } else {
@@ -105,10 +105,29 @@ void Camera::loadBundlerCameraParameters(std::ifstream& _stream){
     }
 
     position_ = -R_.transpose() * t;
-    std::cerr << "pos:\n" << position_ << std::endl;
     setPosition(t);
 
+    if (!loadImageDimensions(_imageName)){
+        std::cerr << "Unable get " << _imageName << " dimensions!" << std::endl;
+        exit(-1);
+    }
 
+}
+
+bool Camera::loadImageDimensions(const std::string& _imageName){
+
+    fipImage input;
+    char * name = new char[_imageName.length()];
+    strcpy(name, _imageName.c_str());
+
+    if (!input.load(name, FIF_LOAD_NOPIXELS)){
+        std::cerr << "Image couldn't be loaded!" << std::endl;
+        return false;
+    }
+
+    imHeight_ = input.getHeight();
+    imWidth_ = input.getWidth();
+    return true;
 }
 
 MatrixXf Camera::getXMatrix() const{

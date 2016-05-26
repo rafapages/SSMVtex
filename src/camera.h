@@ -20,6 +20,8 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#include <FreeImagePlus.h>
+
 #include "mesh3d.h"
 
 class Camera {
@@ -30,7 +32,8 @@ class Camera {
 
     // Read parameters from text line
     void loadCameraParameters(const std::string& _textline);
-    void loadBundlerCameraParameters(std::ifstream& _stream);
+    void loadBundlerCameraParameters(std::ifstream& _stream, const std::string& _imageName);
+    bool loadImageDimensions(const std::string& _imageName);
 
     // Data access
     inline const Matrix3f& getIntrinsicParam() const {

@@ -412,8 +412,8 @@ void Multitexturer::printHelp() const {
 
 void Multitexturer::loadInputData(){
     readInputMesh();
-    loadCameraInfo();
     readImageList();
+    loadCameraInfo();
 }
 
 void Multitexturer::loadCameraInfo(){
@@ -483,7 +483,7 @@ void Multitexturer::readBundlerFile(){
 
         for (unsigned int i = 0; i < nCam_; i++){
             Camera c;
-            c.loadBundlerCameraParameters(bundlerFile);
+            c.loadBundlerCameraParameters(bundlerFile, imageList_[i]);
             cameras_.push_back(c);
         }
 
