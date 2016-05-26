@@ -53,6 +53,9 @@ class Camera {
     inline Vector3f getTranslationVector() const{ // T = -RC
         return -R_ * position_;
     } 
+    inline Vector2f getDistortionParams() const{
+        return Vector2f(k1_,k2_);
+    }
 
 
 

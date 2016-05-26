@@ -34,34 +34,30 @@ void Camera::loadCameraParameters(const std::string &_textline){
     // Intrinsic parameters
     for (unsigned int i = 0; i < 3; i++){
         for (unsigned int j = 0; j < 3; j++){
-            float value;
-            line >> value;
-            this->K_(i,j) = value;
+            line >> K_(i,j);
         }
     }
 
     // Extrinsic parameters
     for (unsigned int i = 0; i < 3; i++){
         for (unsigned int j = 0; j < 3; j++){
-            float value;
-            line >> value;
-            this->R_(i,j) = value;
+            line >> R_(i,j);
         }
     }
 
     // Camera position
     for (unsigned int i = 0; i < 3; i++){
-        float value;
-        line >> value;
-        this->position_(i) = value;
+        line >> position_(i);
     }
 
     // Image dimensions
-    unsigned int uivalue;
-    line >> uivalue;
-    this->imWidth_ = uivalue;
-    line >> uivalue;
-    this->imHeight_ = uivalue;
+    line >> imWidth_ >> imHeight_;
+
+
+    // Distortion parameters (they are optional)
+    if (!line.eof()){
+        line >> k1_ >> k2_;
+    }
 
 }
 
