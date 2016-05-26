@@ -23,7 +23,7 @@ Navigate to the directory and hit *make*.
 	multitex [options] <fileNameIn> <fileNameCam> <fileNameImageList> [<fileNameOut> <fileNameTexOut>]
 
 * _fileNameIn_: The name of the input text file containing the 3D scene described in OBJ format. Extension : obj.
-* _fileNameCam_: The name of the input text file containing the camera calibration matrices. Extension: txt.
+* _fileNameCam_: The name of the input text file containing the camera calibration matrices. Extension: txt or out.
 * _fileNameImageList_: The name of the input text file containing the list of images that will be used for texturing the mesh. Extension: txt.
 * _fileNameOut_: The name of the output text file that'll be created containing the textured model -- if not specified, it'll be built by appending _options_ to _fileNameIn_. Extensions: wrk, obj or ply.
 * _fileNameTexOut_: The name of the output customized texture that'll be created, -- if not specified, it'll be built by appending _options_ to _fileNameIn_. Extension: jpg.
@@ -43,7 +43,13 @@ Navigate to the directory and hit *make*.
 * -h		Prints help message.
 
 
+## About the camera calibration file
 
+The camera calibration file that needs to be provided follows the scheme below:
+
+	[ Intrinsic parameters (row1 row2 row3) ] [ Rotation matrix (row1 row2 row3) ] [ Camera position ] [ Image dimensions ] [ (Optional) Radial distortion coefficients (k1 k2)]
+
+Radial distortion coefficients are optional by now, as we are not correcting this distortion yet. The model used consideres the camera to be looking towards +z axis. You can also provided a [Bundler-SfM] (https://github.com/snavely/bundler_sfm) file, but only the camera information will be read.
 
 ## Citation
 
@@ -63,3 +69,6 @@ If you use this software for scientific purposes, please don’t forget to cite 
 	ACM CCS: I.3.7 [Computer Graphics]: Three-Dimensional Graphics and Realism—Colour, shading, shadowing and texture},
 	year = {2015},
 	}
+
+
+
