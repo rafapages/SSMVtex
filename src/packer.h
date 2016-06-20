@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2015  Rafael Pagés (rps (at) gti.ssr.upm.es)
+ *  Copyright (c) 2015-2016  Rafael Pagés (rps (at) gti.ssr.upm.es)
  *    and Universidad Politécnica de Madrid
  *
  *  This file is part of Multitex
