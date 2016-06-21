@@ -219,8 +219,16 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
         fileNameOut_ += optionlist;
         fileNameTexOut_ = fileNameOut_;
         out_extension_ = VRML;
-        fileNameOut_ += ".wrl";
+
         fileNameTexOut_ += ".jpg";
+        
+        // By default, the output is a VRML file, but when we use a color-per-vertex approach, it is an OBJ
+        if (m_mode_ != VERTEX){
+            fileNameOut_ += ".wrl";
+        } else {
+            fileNameOut_ += ".obj";
+        }
+
     } else {
 
         std::string extension = fileNameOut_.substr(fileNameOut_.size()-3, fileNameOut_.size());
@@ -247,10 +255,10 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
     }
 
     // TO BE REMOVED WHEN VERTEX MODE IS IMPLEMENTED!!
-    if (m_mode_ == VERTEX){
-        std::cerr << "Color per vertex coloring mode still not supported, sorry..." << std::endl;
-        printHelp();
-    }
+    // if (m_mode_ == VERTEX){
+        // std::cerr << "Color per vertex coloring mode still not supported, sorry..." << std::endl;
+        // printHelp();
+    // }
 
 }
 
@@ -1433,6 +1441,102 @@ void Multitexturer::findChartBorders(Chart& _chart, ArrayXXi& _pix_frontier, Arr
     } 
 }
 
+void Multitexturer::colorVertices(std::vector<Color>& _meshcolors){
+
+    _meshcolors.clear();
+    Color black(0.0,0.0,0.0);
+    for (unsigned int i = 0; i < nVtx_; i++){
+        _meshcolors.push_back(black);
+    }
+
+    for (unsigned int i = 0; i < nVtx_; i++){
+
+        std::multimap<float, int> ratings_cam;
+        const Vector3f current = mesh_.getVertex(i);
+
+        // Best cameras are assigned
+        ratings_cam.clear();
+        for (unsigned int c = 0; c < nCam_; c++) {
+            if (cameras_[c].vtx_ratings_[i] != 0){
+                ratings_cam.insert(std::pair<float,int>(cameras_[c].vtx_ratings_[i],c));
+            }
+        }
+
+        // Number of cameras to mix is the minimun between:
+        // our input value and the number of cameras available for the current pixel
+        const unsigned int tomix = ratings_cam.size() < (unsigned int) num_cam_mix_ ? ratings_cam.size() : num_cam_mix_;
+
+        // Calculation of the weights
+        std::vector<int> cameras_order;
+        std::vector<float> weights_order;
+        if (tomix != 0) {
+            unsigned int p;
+            float sumratings = 0;
+            cameras_order.resize(tomix);
+            weights_order.resize(tomix);
+
+            // Naïve way of calculating weights... could be improved
+            std::multimap<float, int>::iterator it;
+            for (it = ratings_cam.end(), p = 0; p < tomix; ++p) {
+                it--;
+                sumratings += (*it).first;
+                cameras_order[p] = (*it).second;
+            }
+            for (it = ratings_cam.end(), p = 0; p < tomix; ++p) {
+                it--;
+                weights_order[p] = (*it).first/sumratings;
+            }
+        }
+
+        Color col;
+        for (unsigned int p = 0; p < tomix; p++) {
+            int camera = cameras_order[p];
+            float weight = weights_order[p];
+
+            // cache stuff
+            std::string imageName = imageList_[camera];
+            if (imageCache_.find(imageName) == imageCache_.end()){
+                loadImageToCache(imageName);
+            }
+
+            // Vector3f v = pixcenter3D.CoordTransform(&cam[camera]);
+            const Vector2f v_st = cameras_[camera].transform2uvCoord(current);
+            // Projection coordinates
+            const float proj_s = v_st(0);
+            const float proj_t = v_st(1);
+
+            if (proj_s < 0.0 || proj_t < 0.0){ // This may happen and it's very wrong
+                continue;
+        }
+
+        float image_row = (float)imageCache_[imageName].getHeight() - proj_t;
+        float image_col = proj_s;
+
+        // In case a rounding error gives us a pixel outside the image
+        image_row = std::min (image_row, (float)imageCache_[imageName].getHeight());
+        image_col = std::min (image_col, (float)imageCache_[imageName].getWidth());
+        image_row = std::max (image_row, 0.0f);
+        image_col = std::max (image_col, 0.0f);
+
+            if (p == 0) { // Difference : = vs. +=
+                col = imageCache_[imageName].interpolate(image_row, image_col, BILINEAR) * weight;
+            } else {
+                col += imageCache_[imageName].interpolate(image_row, image_col, BILINEAR) * weight;   
+            }
+        }
+
+        // color is assigned to the vertex
+        _meshcolors[i] = col;
+
+        std::cerr << "\r" << (float)(i+1)/nVtx_*100 << std::setw(4) << std::setprecision(4) << "% of vertices colored. ";
+        std::cerr << (float)imageCache_.size()/imageCacheSize_ * 100 << std::setw(4) << std::setprecision(4) << "% of cache usage (";
+        std::cerr << imageCache_.size() << "/" << imageCacheSize_ << ").      " << std::flush;
+    }
+
+    std::cerr << "\n";
+
+}
+
 
 Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_triangle) {
 
@@ -1608,7 +1712,7 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_triangle) {
                         // Colors
                         Color col;
 
-                        // If no camera sees the triangle, it's currently painted yellow
+                        // If no camera sees the triangle...
                         if (tomix == 0){
                             if (highlightOcclusions_){
                                 imout.setColor(Color(255,255,0),rowp,colp);
@@ -1894,6 +1998,10 @@ void Multitexturer::exportTexturedModel(){
         std::cerr << "Unknown extension!" << std::endl;
     }
 
+}
+
+void Multitexturer::exportColorPerVertexModel(const std::vector<Color>& _vertexcolors){
+    mesh_.writeColorPerVertexOBJ(fileNameOut_, _vertexcolors);
 }
 
 MappingMode Multitexturer::getMappingMode() const {

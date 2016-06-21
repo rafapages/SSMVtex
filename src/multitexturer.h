@@ -64,8 +64,14 @@ public:
     // Creates a texture atlas and colors it
     void chartColoring();
 
+    // Colors the mesh using a color-per-vertex approach
+    void colorVertices(std::vector<Color>& _meshcolors);
+
     // Exports a textured 3D model using the selected format
     void exportTexturedModel();
+
+    // Exports a model colored using a color per vertex approach
+    void exportColorPerVertexModel(const std::vector<Color>& _vertexcolors);
 
     // Returns the mapping mode
     MappingMode getMappingMode() const;

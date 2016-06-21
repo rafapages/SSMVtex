@@ -40,7 +40,7 @@ Mesh3D::~Mesh3D(){
 
 }
 
-void Mesh3D::readOBJ(const std::string& _fileName){
+void Mesh3D::readOBJ(const std::string& _fileName) {
 
     std::ifstream meshFile(_fileName.c_str());
 
@@ -80,7 +80,7 @@ void Mesh3D::readOBJ(const std::string& _fileName){
     meshFile.close();
 }   
 
-void Mesh3D::writeOBJ(const std::string& _fileName){
+void Mesh3D::writeOBJ(const std::string& _fileName) {
 
     std::ofstream outMesh(_fileName.c_str());
 
@@ -114,7 +114,7 @@ void Mesh3D::writeOBJ(const std::string& _fileName){
     outMesh.close();
 }
 
-void Mesh3D::writeOBJ(const std::string& _fileName, const std::string& _textureFile){
+void Mesh3D::writeOBJ(const std::string& _fileName, const std::string& _textureFile) {
 
     std::ofstream outMesh(_fileName.c_str());
 
@@ -154,6 +154,52 @@ void Mesh3D::writeOBJ(const std::string& _fileName, const std::string& _textureF
         texIndex += 3;
         outMesh << "\n";
     }
+}
+
+void Mesh3D::writeColorPerVertexOBJ(const std::string& _fileName, const std::vector<Color> _colours){
+
+    std::ofstream outMesh(_fileName.c_str());
+
+    writeOBJheader(outMesh);
+
+    std::cerr << "Writing to output OBJ file " << nTri_ << " triangles and " << nVtx_ << " vertices... " << std::endl;
+    
+    if (_colours.size() != nVtx_ ){
+        std::cerr << "Number of color elements does not match the number of vertices!!" << std::endl;
+        return;
+    }
+
+    // Vertices
+    for (unsigned int i = 0; i < nVtx_; i++){
+        const Vector3f current = vtx_[i];
+        outMesh << "v";
+        for (unsigned int j = 0; j < 3; j++){
+            outMesh << " " << current(j);
+        }
+
+        const Color c = _colours[i];
+        float r,g,b;
+        r = c.getRed() / 255.0;
+        g = c.getGreen() / 255.0;
+        b = c.getBlue() / 255.0;
+
+        outMesh << " " << r << " " << g << " " << b << "\n";
+ 
+    }
+
+    // Triangles
+    for (unsigned int i = 0; i < nTri_; i++){
+        const Vector3i current = tri_[i].getIndices();
+        outMesh << "f";
+        for (unsigned int j = 0; j < 3; j++){
+            outMesh << " " << current(j)+1; // OBJ indices start at 1
+        }
+        outMesh << "\n";
+    }
+
+    std::cerr << "3D mesh file " << _fileName << " exported with " << nVtx_ << " vertices and " << nTri_ << " triangles." << std::endl;
+
+    outMesh.close();
 }
 
 void Mesh3D::writeOBJheader(std::ofstream& _outFile){

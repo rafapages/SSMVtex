@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "triangle.h"
+#include "color.h"
 
 class Mesh3D {
 
@@ -37,6 +38,7 @@ class Mesh3D {
     void readOBJ(const std::string& _fileName);
     void writeOBJ(const std::string& _fileName);
     void writeOBJ(const std::string& _fileName, const std::string& _textureFile);
+    void writeColorPerVertexOBJ(const std::string& _fileName, const std::vector<Color> _colours);
     void writeVRML(const std::string& _fileName, const std::string& _textureFile);
     void writePLY(const std::string& _fileName, const std::string& _textureFile);
 

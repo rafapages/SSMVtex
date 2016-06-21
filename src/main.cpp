@@ -25,20 +25,36 @@ int main(int argc, char *argv[]){
     Multitexturer multitex;
     multitex.parseCommandLine(argc, argv);
 
+    MappingMode mode = multitex.getMappingMode(); // [TEXTURE, FLAT, VERTEX]
+
     multitex.loadInputData();
+
+    // In case a color per VERTEX approach has been chose,
+    // it is not necessary to unwrap and pack the 3D mesh
+    if (mode != VERTEX){
+        multitex.meshUnwrap();
+        multitex.chartPacking();
+    }
 
     // In case a FLAT coloring mode has been chosen,
     // it is not necessary to evaluate the camera ratings
-    if (multitex.getMappingMode() != FLAT){
+    if (mode != FLAT){
         multitex.evaluateCameraRatings();
     }
 
-    multitex.meshUnwrap();
-    multitex.chartPacking();
+    if (mode == VERTEX){
+        std::vector<Color> colors;
+        multitex.colorVertices(colors);
+        multitex.exportColorPerVertexModel(colors);
+    } else {
 
-    multitex.chartColoring();
+        multitex.chartColoring();
+        multitex.exportTexturedModel();
+    }
 
-    multitex.exportTexturedModel();
+
+
+
 
     return 0;
 }
