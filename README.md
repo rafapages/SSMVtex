@@ -1,6 +1,6 @@
 # Seamless, static, 3D mesh multi-texturer
 
-This project multi-textures a 3D plain (un-textured) mesh using a set of images of the model. The result is a texture atlas which blends the color information from the different images seamlessly.
+This project multi-textures a 3D plain (un-textured) mesh using a set of images of the model. The result is a texture atlas which blends the color information from the different images seamlessly. This system also supports a color-per-vertex coloring approach, which does not produce a texture atlas, but seamlessly colors a dense triangle mesh.
 
 Further details can be found in the following paper:
 
@@ -32,7 +32,7 @@ Navigate to the directory and hit *make*.
 * -{n|b|a|l}	Assing cameras to triangles using (n) their normals, (b) their normals using the baricenter technique, (a) their area,(l)	or their area taking occlusions into account. Default: l.
 * -{m|s}	Input value is (m) common 3D mesh or (s) a splat based 3D mesh. Default: m
 * -{#}		Number of maximum images mixed per triangle. Default: 2 (not very smooth mixing).
-* -{p|t|f} Show (p) a mesh colored per vertex, (t) a mesh with textures or (f) a mesh colored with a flat color per chart. Default: t.
+* -{v|t|f} Show (v) a mesh colored per vertex, (t) a mesh with textures or (f) a mesh colored with a flat color per chart. Default: t.
 * -o highlights occlusions in yellow.
 * —faceCam=_imageFileName-   in case there a frontal image showing the subject's face.
 * —alpha=_alpha_ is the cutoff value of the normal weighting function, in the interval (0, 1). Default: 0.5.
