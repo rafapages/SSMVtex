@@ -1441,6 +1441,61 @@ void Multitexturer::findChartBorders(Chart& _chart, ArrayXXi& _pix_frontier, Arr
     } 
 }
 
+void Multitexturer::checkPhotoconsistency(){
+
+    for (unsigned int i = 0; i < nVtx_; i++){
+        const Vector3f current = mesh_.getVertex(i);
+
+        // Cameras with a rating different than 0 are stored in this multimap
+        std::multimap<float, int> ratings;
+        for (unsigned int c = 0; c < nCam_; c++){
+            if (cameras_[c].vtx_ratings_[i] != 0){
+                ratings.insert(std::pair<float, int>(cameras_[c].vtx_ratings_[i], c));
+            }
+        }
+
+        std::multimap<float, int>::iterator it= ratings.begin();
+        Color c_ave(0.0,0.0,0.0);
+        for (; it != ratings.end(); ++it){
+            // std::cerr << "area/index: " << it->first << " " << it->second << std::endl;
+            int camera = it->second;
+
+            // cache stuff
+            std::string imageName = imageList_[camera];
+            if (imageCache_.find(imageName) == imageCache_.end()){
+                loadImageToCache(imageName);
+            }
+
+            const Vector2f v_st = cameras_[camera].transform2uvCoord(current);
+            // Projection coordinates
+            const float proj_s = v_st(0);
+            const float proj_t = v_st(1);
+
+            if (proj_s < 0.0 || proj_t < 0.0){ // This may happen and it's very wrong
+                continue;
+            }
+
+            float image_row = (float)imageCache_[imageName].getHeight() - proj_t;
+            float image_col = proj_s;
+
+            // In case a rounding error gives us a pixel outside the image
+            image_row = std::min (image_row, (float)imageCache_[imageName].getHeight());
+            image_col = std::min (image_col, (float)imageCache_[imageName].getWidth());
+            image_row = std::max (image_row, 0.0f);
+            image_col = std::max (image_col, 0.0f);
+
+            c_ave += imageCache_[imageName].interpolate(image_row, image_col, BILINEAR);
+        }
+
+        // POR AHORA SOLAMENTE TENEMOS LA MEDIA
+        c_ave = c_ave / ratings.size();
+
+
+    }
+
+}
+
+
 void Multitexturer::colorVertices(std::vector<Color>& _meshcolors){
 
     _meshcolors.clear();
@@ -1461,6 +1516,8 @@ void Multitexturer::colorVertices(std::vector<Color>& _meshcolors){
                 ratings_cam.insert(std::pair<float,int>(cameras_[c].vtx_ratings_[i],c));
             }
         }
+
+        checkPhotoconsistency();
 
         // Number of cameras to mix is the minimun between:
         // our input value and the number of cameras available for the current pixel
@@ -1499,7 +1556,6 @@ void Multitexturer::colorVertices(std::vector<Color>& _meshcolors){
                 loadImageToCache(imageName);
             }
 
-            // Vector3f v = pixcenter3D.CoordTransform(&cam[camera]);
             const Vector2f v_st = cameras_[camera].transform2uvCoord(current);
             // Projection coordinates
             const float proj_s = v_st(0);
@@ -1507,16 +1563,16 @@ void Multitexturer::colorVertices(std::vector<Color>& _meshcolors){
 
             if (proj_s < 0.0 || proj_t < 0.0){ // This may happen and it's very wrong
                 continue;
-        }
+            }
 
-        float image_row = (float)imageCache_[imageName].getHeight() - proj_t;
-        float image_col = proj_s;
+            float image_row = (float)imageCache_[imageName].getHeight() - proj_t;
+            float image_col = proj_s;
 
-        // In case a rounding error gives us a pixel outside the image
-        image_row = std::min (image_row, (float)imageCache_[imageName].getHeight());
-        image_col = std::min (image_col, (float)imageCache_[imageName].getWidth());
-        image_row = std::max (image_row, 0.0f);
-        image_col = std::max (image_col, 0.0f);
+            // In case a rounding error gives us a pixel outside the image
+            image_row = std::min (image_row, (float)imageCache_[imageName].getHeight());
+            image_col = std::min (image_col, (float)imageCache_[imageName].getWidth());
+            image_row = std::max (image_row, 0.0f);
+            image_col = std::max (image_col, 0.0f);
 
             if (p == 0) { // Difference : = vs. +=
                 col = imageCache_[imageName].interpolate(image_row, image_col, BILINEAR) * weight;

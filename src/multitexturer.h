@@ -61,6 +61,9 @@ public:
     // so they are efficently packed
     void chartPacking();
 
+    // 
+    void checkPhotoconsistency();
+
     // Creates a texture atlas and colors it
     void chartColoring();
 
