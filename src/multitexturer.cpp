@@ -1455,6 +1455,7 @@ void Multitexturer::checkPhotoconsistency(){
         }
 
         std::multimap<float, int>::iterator it= ratings.begin();
+        std::vector<Color> camColors;
         Color c_ave(0.0,0.0,0.0);
         for (; it != ratings.end(); ++it){
             // std::cerr << "area/index: " << it->first << " " << it->second << std::endl;
@@ -1484,12 +1485,48 @@ void Multitexturer::checkPhotoconsistency(){
             image_row = std::max (image_row, 0.0f);
             image_col = std::max (image_col, 0.0f);
 
-            c_ave += imageCache_[imageName].interpolate(image_row, image_col, BILINEAR);
+            Color col = imageCache_[imageName].interpolate(image_row, image_col, BILINEAR);
+            camColors.push_back(col);
+            c_ave += col;
         }
 
-        // POR AHORA SOLAMENTE TENEMOS LA MEDIA
-        c_ave = c_ave / ratings.size();
+        c_ave = c_ave / (float)ratings.size(); // Average color
 
+
+        std::vector<Color> colDif; // color diference with respect to the average
+        std::vector<Color>::iterator cit;
+        for (cit = camColors.begin(); cit != camColors.end(); ++cit){
+            const Color cc = *cit;
+            colDif.push_back(cc - c_ave);
+        }        
+
+        float var_r, var_g, var_b; // variance
+        var_r = var_g = var_b = 0.0;
+        for (cit = camColors.begin(); cit != camColors.end(); ++cit){
+            var_r = (cit->getRed() - c_ave.getRed())     * (cit->getRed() - c_ave.getRed());
+            var_g = (cit->getGreen() - c_ave.getGreen()) * (cit->getGreen() - c_ave.getGreen());
+            var_g = (cit->getBlue() - c_ave.getBlue())   * (cit->getBlue() - c_ave.getBlue());
+        }
+
+        var_r = var_r / (float) camColors.size();
+        var_g = var_g / (float) camColors.size();
+        var_b = var_b / (float) camColors.size();
+
+        float dev_r, dev_g, dev_b; // Standard deviation
+        dev_r = sqrt(var_r);
+        dev_g = sqrt(var_g);
+        dev_b = sqrt(var_b);
+
+        it = ratings.begin();
+        std::vector<Color>::iterator dit = colDif.begin();
+        for (; dit != colDif.end(); ++dit, ++it){
+            Color cc = *dit;
+            //std::cerr << "var / dev / diff " << var_r << " " << dev_r << " " << cc.getRed() << std::endl;
+            if (fabs(cc.getRed()) < 0.5*dev_r || fabs(cc.getGreen())< 0.5*dev_g || fabs(cc.getBlue()) < 0.5*dev_b){
+                const int camindex = it->second;
+                cameras_[camindex].vtx_ratings_[i] = 0;
+            }
+        }
 
     }
 
@@ -1504,10 +1541,14 @@ void Multitexturer::colorVertices(std::vector<Color>& _meshcolors){
         _meshcolors.push_back(black);
     }
 
+    checkPhotoconsistency();
+
+
     for (unsigned int i = 0; i < nVtx_; i++){
 
         std::multimap<float, int> ratings_cam;
         const Vector3f current = mesh_.getVertex(i);
+
 
         // Best cameras are assigned
         ratings_cam.clear();
@@ -1516,8 +1557,6 @@ void Multitexturer::colorVertices(std::vector<Color>& _meshcolors){
                 ratings_cam.insert(std::pair<float,int>(cameras_[c].vtx_ratings_[i],c));
             }
         }
-
-        checkPhotoconsistency();
 
         // Number of cameras to mix is the minimun between:
         // our input value and the number of cameras available for the current pixel

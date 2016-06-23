@@ -28,17 +28,21 @@ Color::Color (){
 }
 
 Color::Color (float _red, float _green, float _blue, float _alpha){
-	r_ = _red > 255 ? 255 : _red;
-	r_ = _red < 0 ? 0 : _red;
+	// r_ = _red > 255 ? 255 : _red;
+	// r_ = _red < 0 ? 0 : _red;
 
-	g_ = _green  > 255 ? 255 : _green;
-	g_ = _green < 0 ? 0 : _green;
+	// g_ = _green  > 255 ? 255 : _green;
+	// g_ = _green < 0 ? 0 : _green;
 
-	b_ = _blue  > 255 ? 255 : _blue;
-	b_ = _blue < 0 ? 0 : _blue;
+	// b_ = _blue  > 255 ? 255 : _blue;
+	// b_ = _blue < 0 ? 0 : _blue;
 
-	alpha_ = _alpha  > 1 ? 1 : _alpha;
-	alpha_ = _alpha < 0 ? 0 : _alpha;
+	// alpha_ = _alpha  > 1 ? 1 : _alpha;
+	// alpha_ = _alpha < 0 ? 0 : _alpha;
+	r_ = _red;
+	g_ = _green;
+	b_ = _blue;
+	alpha_ = _alpha;
 
 }
 
