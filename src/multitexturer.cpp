@@ -1528,7 +1528,12 @@ void Multitexturer::checkPhotoconsistency(){
             }
         }
 
+        std::cerr << "\r" << (float)(i+1)/nVtx_*100 << std::setw(4) << std::setprecision(4) << "% photoconsistency check. ";
+        std::cerr << (float)imageCache_.size()/imageCacheSize_ * 100 << std::setw(4) << std::setprecision(4) << "% of cache usage (";
+        std::cerr << imageCache_.size() << "/" << imageCacheSize_ << ").      " << std::flush;
+
     }
+    std::cerr << "\n";
 
 }
 
