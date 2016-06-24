@@ -1503,9 +1503,9 @@ void Multitexturer::checkPhotoconsistency(){
         float var_r, var_g, var_b; // variance
         var_r = var_g = var_b = 0.0;
         for (cit = camColors.begin(); cit != camColors.end(); ++cit){
-            var_r = (cit->getRed() - c_ave.getRed())     * (cit->getRed() - c_ave.getRed());
-            var_g = (cit->getGreen() - c_ave.getGreen()) * (cit->getGreen() - c_ave.getGreen());
-            var_g = (cit->getBlue() - c_ave.getBlue())   * (cit->getBlue() - c_ave.getBlue());
+            var_r += (cit->getRed() - c_ave.getRed())     * (cit->getRed() - c_ave.getRed());
+            var_g += (cit->getGreen() - c_ave.getGreen()) * (cit->getGreen() - c_ave.getGreen());
+            var_b += (cit->getBlue() - c_ave.getBlue())   * (cit->getBlue() - c_ave.getBlue());
         }
 
         var_r = var_r / (float) camColors.size();
@@ -1521,8 +1521,7 @@ void Multitexturer::checkPhotoconsistency(){
         std::vector<Color>::iterator dit = colDif.begin();
         for (; dit != colDif.end(); ++dit, ++it){
             Color cc = *dit;
-            //std::cerr << "var / dev / diff " << var_r << " " << dev_r << " " << cc.getRed() << std::endl;
-            if (fabs(cc.getRed()) < 0.5*dev_r || fabs(cc.getGreen())< 0.5*dev_g || fabs(cc.getBlue()) < 0.5*dev_b){
+            if (fabs(cc.getRed()) > dev_r || fabs(cc.getGreen())> dev_g || fabs(cc.getBlue()) > dev_b){
                 const int camindex = it->second;
                 cameras_[camindex].vtx_ratings_[i] = 0;
             }
