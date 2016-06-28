@@ -1441,6 +1441,12 @@ void Multitexturer::findChartBorders(Chart& _chart, ArrayXXi& _pix_frontier, Arr
     } 
 }
 
+void Multitexturer::subdivideCharts(unsigned int _iteartions){
+
+    // To be filled in
+
+}
+
 void Multitexturer::checkPhotoconsistency(){
 
     for (unsigned int i = 0; i < nVtx_; i++){

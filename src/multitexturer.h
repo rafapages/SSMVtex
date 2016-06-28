@@ -61,9 +61,6 @@ public:
     // so they are efficently packed
     void chartPacking();
 
-    // 
-    void checkPhotoconsistency();
-
     // Creates a texture atlas and colors it
     void chartColoring();
 
@@ -155,6 +152,14 @@ private:
 
     // Finds the borders of every chart and fills in the corresponding arrays
     void findChartBorders(Chart& _chart, ArrayXXi& _pix_frontier, ArrayXXi& _pix_triangle);
+
+    // Subdivides the triangles using a mid-point subdivission approach
+    // so the photoconsistency check is more accurate
+    void subdivideCharts(unsigned int _iterations);
+
+    // Checks if there is an occlusion not produced by the geometry
+    // and solves it.
+    void checkPhotoconsistency();
 
     // Performs the multi-texturing and returns a texture image
     Image colorTextureAtlas(const ArrayXXi& _pix_triangle);
