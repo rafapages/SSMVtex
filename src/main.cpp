@@ -29,32 +29,45 @@ int main(int argc, char *argv[]){
 
     multitex.loadInputData();
 
-    // In case a color per VERTEX approach has been chose,
-    // it is not necessary to unwrap and pack the 3D mesh
-    if (mode != VERTEX){
+    if (mode == TEXTURE){
+
         multitex.meshUnwrap();
         multitex.chartPacking();
-    }
 
-    // In case a FLAT coloring mode has been chosen,
-    // it is not necessary to evaluate the camera ratings
-    if (mode != FLAT){
         multitex.evaluateCameraRatings();
-    }
-
-    if (mode == VERTEX){
-        std::vector<Color> colors;
-        multitex.colorVertices(colors);
-        multitex.exportColorPerVertexModel(colors);
-    } else {
 
         multitex.chartColoring();
         multitex.exportTexturedModel();
+
+
+    } else if (mode == FLAT) {
+
+        // In case a FLAT coloring mode has been chosen,
+        // it is not necessary to evaluate the camera ratings
+
+        multitex.meshUnwrap();
+        multitex.chartPacking();
+
+        multitex.chartColoring();
+        multitex.exportTexturedModel();
+
+    } else if (mode == VERTEX) {
+        
+        // In case a color per VERTEX approach has been chose,
+        // it is not necessary to unwrap and pack the 3D mesh
+
+        multitex.evaluateCameraRatings();
+
+        std::vector<Color> colors;
+        multitex.colorVertices(colors);
+
+        multitex.exportColorPerVertexModel(colors);
+
+    } else {
+
+        std::cerr << "Unknown mapping mode: " << mode << std::endl;
+        return 0;
     }
-
-
-
-
 
     return 0;
 }
