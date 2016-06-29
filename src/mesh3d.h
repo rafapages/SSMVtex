@@ -62,6 +62,9 @@ class Mesh3D {
     void addVector(const Vector3f& _vector);
     void addTriangle(const Triangle& _triangle);
 
+    // set new list of Triangles
+    void replaceTriangles(const std::vector<Triangle>& _newTriangles);
+
     void setTriangleUV(unsigned int _index, const Vector3d& _u, const Vector3d& _v);
 
     // Triangle normal, normalized

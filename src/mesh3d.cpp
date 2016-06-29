@@ -464,4 +464,12 @@ void Mesh3D::setTriangleUV(unsigned int _index, const Vector3d& _u, const Vector
     tri_[_index].setUV(_u, _v);
 }
 
+void Mesh3D::replaceTriangles(const std::vector<Triangle>& _newTriangles){
+
+    tri_.clear();
+    tri_ = _newTriangles;
+    nTri_ = tri_.size();
+
+}
+
 

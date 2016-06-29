@@ -254,15 +254,11 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
         ca_mode_ = AREA;
     }
 
-    // TO BE REMOVED WHEN VERTEX MODE IS IMPLEMENTED!!
-    // if (m_mode_ == VERTEX){
-        // std::cerr << "Color per vertex coloring mode still not supported, sorry..." << std::endl;
-        // printHelp();
-    // }
-
 }
 
 void Multitexturer::evaluateCameraRatings(){
+
+    subdivideCharts(3);
 
     std::cerr << "Evaluating camera ratings..." << std::endl;
 
@@ -1441,9 +1437,100 @@ void Multitexturer::findChartBorders(Chart& _chart, ArrayXXi& _pix_frontier, Arr
     } 
 }
 
-void Multitexturer::subdivideCharts(unsigned int _iteartions){
+void Multitexturer::subdivideCharts(unsigned int _iterations){
 
-    // To be filled in
+    std::cerr << "Subdividing mesh..." << std::endl;
+
+    for (unsigned int iteration = 0; iteration < _iterations; iteration++){
+
+        std::vector<Triangle> new3dtris;
+
+        std::vector<Chart>::iterator chit;
+        for (chit = charts_.begin(); chit != charts_.end(); ++chit){
+            Chart& chart = *chit;
+            Mesh2D mesh2d = chart.m_;
+
+            std::vector<Triangle> new2dtris;
+            std::vector<int> neworigtri;
+
+            for (unsigned int i = 0; i < mesh2d.getNTri(); i++){
+
+                const Triangle t2d = mesh2d.getTriangle(i);
+                const Triangle t3d = mesh_.getTriangle(mesh2d.getOrigTri(i));
+
+                // We get the vertices of the triangle both in 2D and 3D
+                Vector2f v0,v1,v2;
+                v0 = mesh2d.getVertex(t2d.getIndex(0));
+                v1 = mesh2d.getVertex(t2d.getIndex(1));
+                v2 = mesh2d.getVertex(t2d.getIndex(2));
+
+                Vector3f V0,V1,V2;
+                V0 = mesh_.getVertex(t3d.getIndex(0));
+                V1 = mesh_.getVertex(t3d.getIndex(1));
+                V2 = mesh_.getVertex(t3d.getIndex(2));
+
+                // We create three new vertices both in 2D and 3D
+                Vector2f n0,n1,n2;
+                n0 = (v0 + v1) / 2;
+                n1 = (v1 + v2) / 2;
+                n2 = (v2 + v0) / 2;
+                unsigned int i0,i1,i2; // Indices of the new vertices
+                i0 = mesh2d.getNVtx();
+                mesh2d.addVector(n0);
+                i1 = mesh2d.getNVtx();
+                mesh2d.addVector(n1);
+                i2 = mesh2d.getNVtx();
+                mesh2d.addVector(n2);
+
+                Vector3f N0,N1,N2;
+                N0 = (V0 + V1) / 2;
+                N1 = (V1 + V2) / 2;
+                N2 = (V2 + V0) / 2;
+                unsigned int I0,I1,I2;
+                I0 = mesh_.getNVtx();
+                mesh_.addVector(N0);
+                I1 = mesh_.getNVtx();
+                mesh_.addVector(N1);
+                I2 = mesh_.getNVtx();
+                mesh_.addVector(N2);
+
+                // 
+                mesh2d.setOrigVtx(i0, I0);
+                mesh2d.setOrigVtx(i1, I1);
+                mesh2d.setOrigVtx(i2, I2);
+
+                // We add the four new triangles to the new lists
+                new2dtris.push_back(Triangle(t2d.getIndex(0), i0, i2)); // v0, n0, n2
+                new3dtris.push_back(Triangle(t3d.getIndex(0), I0, I2)); // v0, n0, n2
+                neworigtri.push_back(new3dtris.size()-1);
+
+                new2dtris.push_back(Triangle(i0, t2d.getIndex(1), i1)); // n0, v1, n1
+                new3dtris.push_back(Triangle(I0, t3d.getIndex(1), I1)); // n0, v1, n1
+                neworigtri.push_back(new3dtris.size()-1);
+
+                new2dtris.push_back(Triangle(i1, t2d.getIndex(2), i2)); // n1, v2, n2
+                new3dtris.push_back(Triangle(I1, t3d.getIndex(2), I2)); // n1, v2, n2
+                neworigtri.push_back(new3dtris.size()-1);
+
+                new2dtris.push_back(Triangle(i0, i1, i2)); // n0, n1, n2
+                new3dtris.push_back(Triangle(I0, I1, I2)); // n0, n1, n2
+                neworigtri.push_back(new3dtris.size()-1);
+
+            }
+
+            // We add the new 2D triangles to the chart 
+            mesh2d.replaceTriangles(new2dtris);
+            mesh2d.replaceOrigTri(neworigtri);
+            chit->setMesh(mesh2d);
+        }
+
+        // We add the new 3D triangles to the mesh
+        mesh_.replaceTriangles(new3dtris);
+
+        std::cerr << "\r" << (float)(iteration+1)/_iterations*100 << std::setw(4) << std::setprecision(4) << "%";
+
+    }
+    std::cerr << "/n";
 
 }
 

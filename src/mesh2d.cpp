@@ -70,6 +70,13 @@ void Mesh2D::addTriangle(const Triangle& _triangle, unsigned int _3dindex){
     triarea_ += area;
 }
 
+void Mesh2D::replaceTriangles(const std::vector<Triangle>& _newTriangles){
+
+	tri_.clear();
+	tri_ = _newTriangles;
+
+}
+
 float Mesh2D::getHypotheticalBBoxArea (const Vector2f& _nv) const {
     const float minx = bBoxMin_(0) < _nv(0) ? bBoxMin_(0) : _nv(0);
     const float maxx = bBoxMax_(0) > _nv(0) ? bBoxMax_(0) : _nv(0);
@@ -93,6 +100,13 @@ int Mesh2D::getOrigVtx(unsigned int _index) const {
 
 int Mesh2D::getOrigTri(unsigned int _index) const {
 	return origTri_[_index];
+}
+
+void Mesh2D::replaceOrigTri(const std::vector<int>& _newOrigTri){
+	origTri_.clear();
+	origTri_ = _newOrigTri;
+	nTri_ = tri_.size();
+
 }
 
 float Mesh2D::triangleArea(unsigned int _v0, unsigned int _v1, unsigned int _v2) const{

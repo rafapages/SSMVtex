@@ -155,7 +155,7 @@ private:
 
     // Subdivides the triangles using a mid-point subdivission approach
     // so the photoconsistency check is more accurate
-    void subdivideCharts(unsigned int _iterations);
+    void subdivideCharts(unsigned int _iterations = 1);
 
     // Checks if there is an occlusion not produced by the geometry
     // and solves it.

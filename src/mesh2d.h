@@ -57,6 +57,8 @@ public:
     void addTriangle(const Triangle& _triangle);
     void addTriangle(const Triangle& _triangle, unsigned int _3dindex);
 
+    // set new list of Triangles
+    void replaceTriangles(const std::vector<Triangle>& _newTriangles);
 
 
     // Returns the area of the bounding box if vector _nv was added
@@ -67,6 +69,7 @@ public:
     void setOrigTri(unsigned int _2dindex, unsigned int _3dindex);
     int getOrigVtx(unsigned int _index) const;
     int getOrigTri(unsigned int _index) const;
+    void replaceOrigTri(const std::vector<int>& _newOrigTri);
 
     // Calculates the area of the triangle given its index
     float triangleArea(unsigned int _index) const;

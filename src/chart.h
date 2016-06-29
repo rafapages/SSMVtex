@@ -66,6 +66,10 @@ public:
 		return order_;
 	}
 
+	inline void setMesh(const Mesh2D& _mesh){
+		m_ = _mesh;
+	}
+
 	// Displace chart
 	void displace(const Vector2f& _v);
 	// Rotate chart 90º anti-clockwise
