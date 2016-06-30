@@ -34,11 +34,10 @@ int main(int argc, char *argv[]){
         multitex.meshUnwrap();
         multitex.chartPacking();
 
-        multitex.evaluateCameraRatings();
+        // multitex.evaluateCameraRatings();
 
         multitex.chartColoring();
         multitex.exportTexturedModel();
-
 
     } else if (mode == FLAT) {
 

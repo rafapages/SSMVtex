@@ -157,6 +157,9 @@ private:
     // so the photoconsistency check is more accurate
     void subdivideCharts(unsigned int _iterations = 1);
 
+    // Updates the number of vtx and tri after a subdivision stage
+    void updateNumbers();
+
     // Checks if there is an occlusion not produced by the geometry
     // and solves it.
     void checkPhotoconsistency();
@@ -177,7 +180,9 @@ private:
 
 
     // Input 3D mesh
-    Mesh3D  mesh_;
+    Mesh3D mesh_;
+    Mesh3D origMesh_;
+    
     unsigned int nVtx_, nTri_;
 
     // Input files

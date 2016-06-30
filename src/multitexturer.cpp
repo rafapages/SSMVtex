@@ -258,8 +258,6 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
 
 void Multitexturer::evaluateCameraRatings(){
 
-    subdivideCharts(3);
-
     std::cerr << "Evaluating camera ratings..." << std::endl;
 
     for (unsigned int c = 0 ; c < nCam_ ; c++){
@@ -531,6 +529,8 @@ void Multitexturer::readInputMesh(){
     mesh_ = Mesh3D(fileNameIn_);
     nVtx_ = mesh_.getNVtx();
     nTri_ = mesh_.getNTri();
+
+    origMesh_ = mesh_;
 
 }
 
@@ -1181,6 +1181,15 @@ void Multitexturer::chartColoring() {
     // pix_frontier and pix_triangle arrays are filled
     rasterizeTriangles(pix_frontier, pix_triangle);
 
+    origMesh_ = mesh_;
+
+    subdivideCharts();
+
+    rasterizeTriangles(pix_frontier, pix_triangle);
+
+    evaluateCameraRatings();
+    checkPhotoconsistency();
+
     Image imout;
 
     if (m_mode_ == FLAT){
@@ -1319,6 +1328,7 @@ void Multitexturer::rasterizeTriangles(ArrayXXi& _pix_frontier, ArrayXXi& _pix_t
 
         }
     }
+
     std::cerr << "\n";
 }
 
@@ -1526,12 +1536,18 @@ void Multitexturer::subdivideCharts(unsigned int _iterations){
 
         // We add the new 3D triangles to the mesh
         mesh_.replaceTriangles(new3dtris);
+        updateNumbers();
 
         std::cerr << "\r" << (float)(iteration+1)/_iterations*100 << std::setw(4) << std::setprecision(4) << "%";
 
     }
-    std::cerr << "/n";
+    std::cerr << "\n";
 
+}
+
+void Multitexturer::updateNumbers(){
+    nTri_ = mesh_.getNTri();
+    nVtx_ = mesh_.getNVtx();
 }
 
 void Multitexturer::checkPhotoconsistency(){
@@ -1731,6 +1747,7 @@ void Multitexturer::colorVertices(std::vector<Color>& _meshcolors){
 
 
 Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_triangle) {
+
 
     // Output image is initialized
     Image imout =  Image (imHeight_, imWidth_);
@@ -2179,6 +2196,11 @@ void Multitexturer::dilateAtlas(ArrayXXi& _pix_frontier, Image& _image, unsigned
 }
 
 void Multitexturer::exportTexturedModel(){
+
+    std::cerr << "Antes: " << mesh_.getNTri() << " " << mesh_.getNVtx() << std::endl;
+    mesh_ = origMesh_; // we export the original mesh, and not the subdivided one
+    std::cerr << "Despu: " << mesh_.getNTri() << " " << mesh_.getNVtx() << std::endl;
+
 
     if (out_extension_ == OBJ){
         mesh_.writeOBJ(fileNameOut_, fileNameTexOut_);
