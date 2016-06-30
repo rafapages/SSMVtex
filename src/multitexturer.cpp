@@ -1188,7 +1188,7 @@ void Multitexturer::chartColoring() {
         pix_triangle_init += -1;
         rasterizeTriangles(pix_frontier_init, pix_triangle_init);
         origMesh_ = mesh_;
-        subdivideCharts();
+        subdivideCharts(2);
 
     } 
 
@@ -2215,9 +2215,9 @@ void Multitexturer::dilateAtlas(ArrayXXi& _pix_frontier, Image& _image, unsigned
 
 void Multitexturer::exportTexturedModel(){
 
-    std::cerr << "Antes: " << mesh_.getNTri() << " " << mesh_.getNVtx() << std::endl;
+    std::cerr << "Subdivided model: " << mesh_.getNTri() << " " << mesh_.getNVtx() << std::endl;
     mesh_ = origMesh_; // we export the original mesh, and not the subdivided one
-    std::cerr << "Despu: " << mesh_.getNTri() << " " << mesh_.getNVtx() << std::endl;
+    std::cerr << "Resulting  model: " << mesh_.getNTri() << " " << mesh_.getNVtx() << std::endl;
 
 
     if (out_extension_ == OBJ){
