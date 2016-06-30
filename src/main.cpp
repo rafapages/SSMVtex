@@ -34,8 +34,6 @@ int main(int argc, char *argv[]){
         multitex.meshUnwrap();
         multitex.chartPacking();
 
-        // multitex.evaluateCameraRatings();
-
         multitex.chartColoring();
         multitex.exportTexturedModel();
 
@@ -54,8 +52,6 @@ int main(int argc, char *argv[]){
         
         // In case a color per VERTEX approach has been chose,
         // it is not necessary to unwrap and pack the 3D mesh
-
-        multitex.evaluateCameraRatings();
 
         std::vector<Color> colors;
         multitex.colorVertices(colors);

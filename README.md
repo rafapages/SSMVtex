@@ -29,8 +29,8 @@ Navigate to the directory and hit *make*.
 * _fileNameTexOut_: The name of the output customized texture that'll be created, -- if not specified, it'll be built by appending _options_ to _fileNameIn_. Extension: jpg.
 
 ##### Options:
-* -{n|b|a|l}	Assing cameras to triangles using (n) their normals, (b) their normals using the baricenter technique, (a) their area,(l)	or their area taking occlusions into account. Default: l.
-* -{m|s}	Input value is (m) common 3D mesh or (s) a splat based 3D mesh. Default: m
+* -{n|b|a|l|p}	Assing cameras to triangles using (n) their normals, (b) their normals using the barycenter technique, (a) their area,(l)	or their area taking occlusions into account, (p) or both occlusions and checking photoconsistency. Default: p.
+* -{m|s}	 Input value is (m) common 3D mesh or (s) a splat based 3D mesh. Default: m
 * -{#}		Number of maximum images mixed per triangle. Default: 2 (not very smooth mixing).
 * -{v|t|f} Show (v) a mesh colored per vertex, (t) a mesh with textures or (f) a mesh colored with a flat color per chart. Default: t.
 * -o highlights occlusions in yellow.

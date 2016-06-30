@@ -182,7 +182,7 @@ private:
     // Input 3D mesh
     Mesh3D mesh_;
     Mesh3D origMesh_;
-    
+
     unsigned int nVtx_, nTri_;
 
     // Input files
@@ -215,6 +215,7 @@ private:
     unsigned int imageCacheSize_; // 75
     bool highlightOcclusions_; // false
     bool powerOfTwoImSize_; // false
+    bool photoconsistency_; // true
 
     // File names
     std::string fileNameIn_;

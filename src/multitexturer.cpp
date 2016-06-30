@@ -35,6 +35,7 @@ Multitexturer::Multitexturer(){
     imageCacheSize_ = 75;
     highlightOcclusions_ = false;
     powerOfTwoImSize_ = false;
+    photoconsistency_ = true;
 
     nCam_ = nVtx_ = nTri_ = 0;
 
@@ -62,11 +63,12 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
                     case 'n':	ca_mode_ = NORMAL_VERTEX;		opts.push_back(std::string(1,c)); break;
                     case 'b':	ca_mode_ = NORMAL_BARICENTER;	opts.push_back(std::string(1,c)); break;
                     case 'a':	ca_mode_ = AREA;				opts.push_back(std::string(1,c)); break;
-                    case 'l':	ca_mode_ = AREA_OCCL;			opts.push_back(std::string(1,c)); break;
+                    case 'l':	ca_mode_ = AREA_OCCL; photoconsistency_ = false;  opts.push_back(std::string(1,c)); break;
+                    case 'p':   ca_mode_ = AREA_OCCL; photoconsistency_ = true;   opts.push_back(std::string(1,c)); break;
 
                     case 't':	m_mode_ = TEXTURE;  opts.push_back(std::string(1,c)); break;
                     case 'v':   m_mode_ = VERTEX;   opts.push_back(std::string(1,c)); break;
-                    case 'f':   m_mode_ = FLAT;     opts.push_back(std::string(1,c)); break;
+                    case 'f':   m_mode_ = FLAT;  photoconsistency_ = false;  opts.push_back(std::string(1,c)); break;
 
                     case 'm':   in_mode_ = MESH;    opts.push_back(std::string(1,c)); break;
                     case 's':   in_mode_ = SPLAT;   opts.push_back(std::string(1,c)); break;
@@ -386,9 +388,10 @@ void Multitexturer::printHelp() const {
         "\t  \".jpg + options\" to <fileNameIn>. Extension: jpg.",
         "",
         "Options:",
-        "-{n|b|a|l}\tAssing cameras to triangles using (n) their normals, (b) their",
-        "\t\tnormals using the baricenter technique, (a) their area, (l)",
-        "\t\tor their area taking occlusions into account. Default: l.",
+        "-{n|b|a|l|p}\tAssing cameras to triangles using (n) their normals, (b) their",
+        "\t\tnormals using the barycenter technique, (a) their area, (l)",
+        "\t\ttheir area taking occlusions into account, (p) or both occlusions and",
+        "\t\tchecking photoconsistency. Default: p.",
         "-{m|s}\t\tInput value is (m) common 3D mesh or (s) a splat based 3D mesh. Default: m",
         "-{#}\t\tNumber of maximum images mixed per triangle. Default: 2 (not very smooth mixing).",
         "-{v|t|f}\tShow (v) a mesh colored per vertex, (t) a mesh with textures or",
@@ -1172,23 +1175,34 @@ void Multitexturer::chartColoring() {
     //               -1 if there is a border in the pixel, 0 elsewhere
     //               later on, -2 will be assigned to pixels inside borders
     ArrayXXi pix_frontier = ArrayXXi::Zero(imHeight_, imWidth_);
+
     // pix_triangle: this array contains the corresponding triangle in the 3D mesh of each pixel
     //               -1 if there is no triangle assigned to the pixel
     ArrayXXi pix_triangle = ArrayXXi::Zero(imHeight_, imWidth_);
     pix_triangle += -1;
 
+    if (photoconsistency_){
+        
+        ArrayXXi pix_frontier_init = ArrayXXi::Zero(imHeight_, imWidth_);
+        ArrayXXi pix_triangle_init = ArrayXXi::Zero(imHeight_, imWidth_);
+        pix_triangle_init += -1;
+        rasterizeTriangles(pix_frontier_init, pix_triangle_init);
+        origMesh_ = mesh_;
+        subdivideCharts();
+
+    } 
+
     // Triangles are firstly rasterized:
     // pix_frontier and pix_triangle arrays are filled
     rasterizeTriangles(pix_frontier, pix_triangle);
 
-    origMesh_ = mesh_;
-
-    subdivideCharts();
-
-    rasterizeTriangles(pix_frontier, pix_triangle);
-
     evaluateCameraRatings();
-    checkPhotoconsistency();
+
+    if (photoconsistency_) {
+        checkPhotoconsistency();
+    } else {
+        origMesh_ = mesh_;
+    }
 
     Image imout;
 
@@ -1475,9 +1489,9 @@ void Multitexturer::subdivideCharts(unsigned int _iterations){
                 v2 = mesh2d.getVertex(t2d.getIndex(2));
 
                 Vector3f V0,V1,V2;
-                V0 = mesh_.getVertex(t3d.getIndex(0));
-                V1 = mesh_.getVertex(t3d.getIndex(1));
-                V2 = mesh_.getVertex(t3d.getIndex(2));
+                V0 = mesh_.getVertex(mesh2d.getOrigVtx(t2d.getIndex(0)));
+                V1 = mesh_.getVertex(mesh2d.getOrigVtx(t2d.getIndex(1)));
+                V2 = mesh_.getVertex(mesh2d.getOrigVtx(t2d.getIndex(2)));
 
                 // We create three new vertices both in 2D and 3D
                 Vector2f n0,n1,n2;
@@ -1511,15 +1525,15 @@ void Multitexturer::subdivideCharts(unsigned int _iterations){
 
                 // We add the four new triangles to the new lists
                 new2dtris.push_back(Triangle(t2d.getIndex(0), i0, i2)); // v0, n0, n2
-                new3dtris.push_back(Triangle(t3d.getIndex(0), I0, I2)); // v0, n0, n2
+                new3dtris.push_back(Triangle(mesh2d.getOrigVtx(t2d.getIndex(0)), I0, I2)); // v0, n0, n2
                 neworigtri.push_back(new3dtris.size()-1);
 
                 new2dtris.push_back(Triangle(i0, t2d.getIndex(1), i1)); // n0, v1, n1
-                new3dtris.push_back(Triangle(I0, t3d.getIndex(1), I1)); // n0, v1, n1
+                new3dtris.push_back(Triangle(I0, mesh2d.getOrigVtx(t2d.getIndex(1)), I1)); // n0, v1, n1
                 neworigtri.push_back(new3dtris.size()-1);
 
                 new2dtris.push_back(Triangle(i1, t2d.getIndex(2), i2)); // n1, v2, n2
-                new3dtris.push_back(Triangle(I1, t3d.getIndex(2), I2)); // n1, v2, n2
+                new3dtris.push_back(Triangle(I1, mesh2d.getOrigVtx(t2d.getIndex(2)), I2)); // n1, v2, n2
                 neworigtri.push_back(new3dtris.size()-1);
 
                 new2dtris.push_back(Triangle(i0, i1, i2)); // n0, n1, n2
@@ -1541,6 +1555,7 @@ void Multitexturer::subdivideCharts(unsigned int _iterations){
         std::cerr << "\r" << (float)(iteration+1)/_iterations*100 << std::setw(4) << std::setprecision(4) << "%";
 
     }
+
     std::cerr << "\n";
 
 }
@@ -1653,6 +1668,9 @@ void Multitexturer::colorVertices(std::vector<Color>& _meshcolors){
     for (unsigned int i = 0; i < nVtx_; i++){
         _meshcolors.push_back(black);
     }
+
+
+    evaluateCameraRatings();
 
     checkPhotoconsistency();
 
