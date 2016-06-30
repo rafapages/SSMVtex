@@ -51,6 +51,10 @@ The camera calibration file that needs to be provided follows the scheme below:
 
 Radial distortion coefficients are optional by now, as we are not correcting this distortion yet. The model used consideres the camera to be looking towards +z axis. You can also provided a [Bundler-SfM] (https://github.com/snavely/bundler_sfm) file, but only the camera information will be read.
 
+## About the photoconsistency check
+
+As many 3D models have been acquired using a SfM approach, it is possible that people or objects occlude partially the reconstructed scene. If these occlusions are not handled correctly, there might be included in the texture: a person walking in front of the scene is the most typical case. We have added a photoconsistency check function which discards the color information from occluding subjects. To do so, we perform a statistical analysis of the color provided by different cameras.  However, when we deal with very controlled scenarios, such as models reconstructed using a Kinect fusion based approach, or Shape from Silhouette, there might not be enough images to perform this statistical analysis correctly. In this last case, we recommend using the flag ‘-l’, which turns the photoconsistency check off.
+
 ## Citation
 
 If you use this software for scientific purposes, please don’t forget to cite us! Thanks!
