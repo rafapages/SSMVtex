@@ -1065,13 +1065,13 @@ void Multitexturer::loadImageToCache(const std::string& _fileName){
 
 
     if (imageCache_.size() == imageCacheSize_){
-        // We clear as many images from the cache as num_cam_mix_
+        // We clear as many images from the cache as num_cam_mix_/2
         // but at a random location of the cache
-        const unsigned int index = rand() % (imageCacheSize_ - num_cam_mix_);
+        const unsigned int index = rand() % (imageCacheSize_ - (unsigned int) (num_cam_mix_*0.5));
         std::map<std::string, Image>::iterator it = imageCache_.begin();
         std::map<std::string, Image>::iterator it_end = imageCache_.begin();
         std::advance(it, index);
-        std::advance(it_end, index + num_cam_mix_);
+        std::advance(it_end, index + (unsigned int)(num_cam_mix_*0.5));
         imageCache_.erase(it,it_end);
     }
 
@@ -1188,7 +1188,7 @@ void Multitexturer::chartColoring() {
         pix_triangle_init += -1;
         rasterizeTriangles(pix_frontier_init, pix_triangle_init);
         origMesh_ = mesh_;
-        subdivideCharts(2);
+        subdivideCharts(3);
 
     } 
 
