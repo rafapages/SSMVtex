@@ -1465,9 +1465,15 @@ void Multitexturer::subdivideCharts(unsigned int _iterations){
 
     std::cerr << "Subdividing mesh..." << std::endl;
 
+    int prevNvtx = origMesh_.getNVtx();
+    std::vector<bool> repVtx (mesh_.getNVtx(), true);
+
     for (unsigned int iteration = 0; iteration < _iterations; iteration++){
 
         std::vector<Triangle> new3dtris;
+
+        // This map keeps track of the vertices already added
+        std::map<std::pair<int,int>, int> addedVtx;
 
         std::vector<Chart>::iterator chit;
         for (chit = charts_.begin(); chit != charts_.end(); ++chit){
@@ -1489,9 +1495,13 @@ void Multitexturer::subdivideCharts(unsigned int _iterations){
                 v2 = mesh2d.getVertex(t2d.getIndex(2));
 
                 Vector3f V0,V1,V2;
-                V0 = mesh_.getVertex(mesh2d.getOrigVtx(t2d.getIndex(0)));
-                V1 = mesh_.getVertex(mesh2d.getOrigVtx(t2d.getIndex(1)));
-                V2 = mesh_.getVertex(mesh2d.getOrigVtx(t2d.getIndex(2)));
+                int tri0,tri1,tri2;
+                tri0 = mesh2d.getOrigVtx(t2d.getIndex(0));
+                tri1 = mesh2d.getOrigVtx(t2d.getIndex(1));
+                tri2 = mesh2d.getOrigVtx(t2d.getIndex(2));
+                V0 = mesh_.getVertex(tri0);
+                V1 = mesh_.getVertex(tri1);
+                V2 = mesh_.getVertex(tri2);
 
                 // We create three new vertices both in 2D and 3D
                 Vector2f n0,n1,n2;
@@ -1499,6 +1509,7 @@ void Multitexturer::subdivideCharts(unsigned int _iterations){
                 n1 = (v1 + v2) / 2;
                 n2 = (v2 + v0) / 2;
                 unsigned int i0,i1,i2; // Indices of the new vertices
+
                 i0 = mesh2d.getNVtx();
                 mesh2d.addVector(n0);
                 i1 = mesh2d.getNVtx();
@@ -1511,12 +1522,34 @@ void Multitexturer::subdivideCharts(unsigned int _iterations){
                 N1 = (V1 + V2) / 2;
                 N2 = (V2 + V0) / 2;
                 unsigned int I0,I1,I2;
-                I0 = mesh_.getNVtx();
-                mesh_.addVector(N0);
-                I1 = mesh_.getNVtx();
-                mesh_.addVector(N1);
-                I2 = mesh_.getNVtx();
-                mesh_.addVector(N2);
+
+                // We check if the new vertices are already in the mesh
+                if ( addedVtx.find(std::make_pair(std::min(tri0, tri1), std::max(tri0, tri1))) != addedVtx.end() ) {
+                    I0 = addedVtx[std::make_pair(std::min(tri0, tri1), std::max(tri0, tri1))];
+                    //addedVtx.erase(std::make_pair(std::min(tri0, tri1), std::max(tri0, tri1)));
+                } else {
+                    I0 = mesh_.getNVtx();
+                    mesh_.addVector(N0);
+                    addedVtx[std::make_pair(std::min(tri0,tri1), std::max(tri0,tri1))] = I0;
+                }
+
+                if ( addedVtx.find(std::make_pair(std::min(tri1, tri2), std::max(tri1, tri2))) != addedVtx.end() ) {
+                    I1 = addedVtx[std::make_pair(std::min(tri1, tri2), std::max(tri1, tri2))];
+                    //addedVtx.erase(std::make_pair(std::min(tri1, tri2), std::max(tri1, tri2)));
+                } else {
+                    I1 = mesh_.getNVtx();
+                    mesh_.addVector(N1);
+                    addedVtx[std::make_pair(std::min(tri1, tri2), std::max(tri1, tri2))] = I1;
+                }
+
+                if ( addedVtx.find(std::make_pair(std::min(tri0, tri2), std::max(tri0, tri2))) != addedVtx.end() ) {
+                    I2 = addedVtx[std::make_pair(std::min(tri0, tri2), std::max(tri0, tri2))];
+                    //addedVtx.erase(std::make_pair(std::min(tri0, tri2), std::max(tri0, tri2)));
+                } else {
+                    I2 = mesh_.getNVtx();
+                    mesh_.addVector(N2);
+                    addedVtx[std::make_pair(std::min(tri0,tri2), std::max(tri0,tri2))] = I2;
+                }
 
                 // 
                 mesh2d.setOrigVtx(i0, I0);
@@ -1553,6 +1586,8 @@ void Multitexturer::subdivideCharts(unsigned int _iterations){
         updateNumbers();
 
         std::cerr << "\r" << (float)(iteration+1)/_iterations*100 << std::setw(4) << std::setprecision(4) << "%";
+
+        prevNvtx = mesh_.getNVtx();
 
     }
 
