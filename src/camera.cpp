@@ -196,5 +196,11 @@ Vector3f Camera::get3Dpoint(const Vector2f &_p) const {
     return p3D;
 }
 
+void Camera::clearTriRatings(){
+
+    std::vector<float> empty;
+    empty.swap(tri_ratings_);
+
+}
 
 

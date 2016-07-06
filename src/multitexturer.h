@@ -122,7 +122,8 @@ private:
     // Uses the projected area taking into account occlusions
     void evaluateAreaWithOcclusions();
     // Smooths the values estimated so transitions are seamless
-    void smoothRatings(std::list<int> *_tri2tri);
+//    void smoothRatings(std::list<int> *_tri2tri);
+    void smoothRatings(std::vector<std::list<int> > & _tri2tri);
     // Weights the normals with respect to a function with
     // curvature beta_ and cutoff value alpha_
     void evaluateWeightNormal();

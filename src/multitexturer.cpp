@@ -284,13 +284,13 @@ void Multitexturer::evaluateCameraRatings(){
 
     // Create vtx2tri and tri2tri
     // vtx2vtx is a vector containing every direct neighbor for each vertex
-    std::vector<int> *vtx2tri = new std::vector<int> [nVtx_];
+    std::vector<std::vector<int> > vtx2tri(nVtx_);
     for (unsigned int i = 0; i < nTri_; i++) {
         for (unsigned int j = 0; j < 3; j++)
             vtx2tri[mesh_.getTriangle(i).getIndex(j)].push_back(i);
     }
     // tri2tri is a list containing every neigbor of each triangle
-    std::list<int> *tri2tri = new std::list<int> [nTri_];
+    std::vector<std::list<int> > tri2tri (nTri_);
     for (unsigned int i = 0; i < nVtx_; i++) {
         for (std::vector<int>::iterator ita = vtx2tri[i].begin(); ita != vtx2tri[i].end(); ++ita) {
             for (std::vector<int>::iterator itb = vtx2tri[i].begin(); itb != vtx2tri[i].end(); ++itb) {
@@ -343,10 +343,13 @@ void Multitexturer::evaluateCameraRatings(){
         }
     }
 
+
+    for (unsigned int c = 0; c < nCam_; c++){
+        cameras_[c].clearTriRatings();
+    }
+
     std::cerr << "\rdone!         " << std::endl;
 
-    delete [] vtx2tri;
-    delete [] tri2tri;
 }
 
 void Multitexturer::meshUnwrap(){
@@ -460,6 +463,8 @@ void Multitexturer::readCameraFile(){
             c.loadCameraParameters(line);
             cameras_.push_back(c);
         }
+
+        std::cerr << "done!\n";
 
 
     } else {
@@ -647,7 +652,8 @@ void Multitexturer::evaluateArea(){
 void Multitexturer::evaluateAreaWithOcclusions(){
 
     // which triangles contain each vertex
-    std::vector<int> *vtx2tri = new std::vector<int> [nVtx_];
+//    std::vector<int> *vtx2tri = new std::vector<int> [nVtx_];
+    std::vector<std::vector<int> > vtx2tri (nVtx_);
 
     for (unsigned int i = 0; i < nTri_; i++) {
         for (unsigned int j = 0; j < 3; j++){
@@ -677,7 +683,8 @@ void Multitexturer::evaluateAreaWithOcclusions(){
     }
     const unsigned int resolution = (unsigned int) floor(fres/(float)nCam_);
     // Triangle buffer: how many triangles are in each position of the grid
-    std::vector<unsigned int> * triBuffer = new std::vector<unsigned int> [resolution * resolution];
+    //std::vector<unsigned int> * triBuffer = new std::vector<unsigned int> [resolution * resolution];
+    std::vector<std::vector<unsigned int> > triBuffer (resolution * resolution);
     // Vector containing the position of each vertex inside the triangle buffer
     std::vector<Vector2i> vtxInBuffer(nVtx_);
 
@@ -855,12 +862,12 @@ void Multitexturer::evaluateAreaWithOcclusions(){
 
 
     
-    delete [] triBuffer;
-    delete [] vtx2tri;
+//    delete [] triBuffer;
+//    delete [] vtx2tri;
 }
 
 
-void Multitexturer::smoothRatings(std::list<int> *_tri2tri){
+void Multitexturer::smoothRatings(std::vector<std::list<int> > &_tri2tri){
 
     std::vector<float> tri_rat_filter(nTri_);
 
@@ -1188,7 +1195,7 @@ void Multitexturer::chartColoring() {
         pix_triangle_init += -1;
         rasterizeTriangles(pix_frontier_init, pix_triangle_init);
         origMesh_ = mesh_;
-        subdivideCharts(3);
+        subdivideCharts(1);
 
     } 
 
@@ -1465,7 +1472,6 @@ void Multitexturer::subdivideCharts(unsigned int _iterations){
 
     std::cerr << "Subdividing mesh..." << std::endl;
 
-    int prevNvtx = origMesh_.getNVtx();
     std::vector<bool> repVtx (mesh_.getNVtx(), true);
 
     for (unsigned int iteration = 0; iteration < _iterations; iteration++){
@@ -1486,7 +1492,7 @@ void Multitexturer::subdivideCharts(unsigned int _iterations){
             for (unsigned int i = 0; i < mesh2d.getNTri(); i++){
 
                 const Triangle t2d = mesh2d.getTriangle(i);
-                const Triangle t3d = mesh_.getTriangle(mesh2d.getOrigTri(i));
+                //const Triangle t3d = mesh_.getTriangle(mesh2d.getOrigTri(i));
 
                 // We get the vertices of the triangle both in 2D and 3D
                 Vector2f v0,v1,v2;
@@ -1526,7 +1532,7 @@ void Multitexturer::subdivideCharts(unsigned int _iterations){
                 // We check if the new vertices are already in the mesh
                 if ( addedVtx.find(std::make_pair(std::min(tri0, tri1), std::max(tri0, tri1))) != addedVtx.end() ) {
                     I0 = addedVtx[std::make_pair(std::min(tri0, tri1), std::max(tri0, tri1))];
-                    //addedVtx.erase(std::make_pair(std::min(tri0, tri1), std::max(tri0, tri1)));
+                    //addedVtx.erase(std::make_pair(std::min(tri0, tri1), std::max(tri0, tri1))); // These lines are commented until I test this with non-manifold meshes...
                 } else {
                     I0 = mesh_.getNVtx();
                     mesh_.addVector(N0);
@@ -1586,8 +1592,6 @@ void Multitexturer::subdivideCharts(unsigned int _iterations){
         updateNumbers();
 
         std::cerr << "\r" << (float)(iteration+1)/_iterations*100 << std::setw(4) << std::setprecision(4) << "%";
-
-        prevNvtx = mesh_.getNVtx();
 
     }
 
@@ -1908,10 +1912,10 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_triangle) {
 
                         // we calculate the rate for the pixel for each camera
                         for (unsigned int c = 0; c < nCam_; c++){
-                            if (cameras_[c].tri_ratings_[tpres_orig3D] == 0){
-                                pix_ratings[c] = 0;
-                                continue;
-                            }
+//                            if (cameras_[c].tri_ratings_[tpres_orig3D] == 0){
+//                                pix_ratings[c] = 0;
+//                                continue;
+//                            }
 
                             const float vt0rat = cameras_[c].vtx_ratings_[vt0_orig3D];
                             const float vt1rat = cameras_[c].vtx_ratings_[vt1_orig3D];
