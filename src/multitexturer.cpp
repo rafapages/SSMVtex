@@ -261,11 +261,16 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
 void Multitexturer::evaluateCameraRatings(){
 
     std::cerr << "Evaluating camera ratings..." << std::endl;
+    std::cin.get();
+
 
     for (unsigned int c = 0 ; c < nCam_ ; c++){
         cameras_[c].tri_ratings_.resize(nTri_);
         cameras_[c].vtx_ratings_.resize(nVtx_);
     }
+
+    std::cerr << "tri y vtx ratings allocated..." << std::endl;
+    std::cin.get();
 
     // This step will calculate every camera-triangle ratings
     // using the chosen system.
@@ -1084,6 +1089,8 @@ void Multitexturer::loadImageToCache(const std::string& _fileName){
 
     imageCache_[_fileName] = Image(_fileName);
 
+//    std::cin.get();
+
 
 }
 
@@ -1195,7 +1202,7 @@ void Multitexturer::chartColoring() {
         pix_triangle_init += -1;
         rasterizeTriangles(pix_frontier_init, pix_triangle_init);
         origMesh_ = mesh_;
-        subdivideCharts(1);
+        subdivideCharts(3);
 
     } 
 
@@ -1204,6 +1211,8 @@ void Multitexturer::chartColoring() {
     rasterizeTriangles(pix_frontier, pix_triangle);
 
     evaluateCameraRatings();
+    std::cerr << "a empezar photoconsistency" << std::endl;
+    std::cin.get();
 
     if (photoconsistency_) {
         checkPhotoconsistency();
