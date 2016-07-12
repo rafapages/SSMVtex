@@ -83,10 +83,8 @@ class Camera {
     // Coordinates transformations from uv coordinates
     Vector3f get3Dpoint(const Vector2f& _p) const;
 
-    void clearTriRatings();
-
     // Ratings calculated for each triangle and vertex
-    std::vector<float> tri_ratings_;
+    //std::vector<float> tri_ratings_;
     std::vector<float> vtx_ratings_;
 
  private:

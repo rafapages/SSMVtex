@@ -35,7 +35,7 @@ Multitexturer::Multitexturer(){
     imageCacheSize_ = 75;
     highlightOcclusions_ = false;
     powerOfTwoImSize_ = false;
-    photoconsistency_ = true;
+    photoconsistency_ = false;
 
     nCam_ = nVtx_ = nTri_ = 0;
 
@@ -60,15 +60,15 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
             if (!isdigit(opt[1])){
 
                 switch (c = opt[1]) {
-                    case 'n':	ca_mode_ = NORMAL_VERTEX;		opts.push_back(std::string(1,c)); break;
+                    case 'n':	ca_mode_ = NORMAL_VERTEX; 		opts.push_back(std::string(1,c)); break;
                     case 'b':	ca_mode_ = NORMAL_BARICENTER;	opts.push_back(std::string(1,c)); break;
-                    case 'a':	ca_mode_ = AREA;				opts.push_back(std::string(1,c)); break;
-                    case 'l':	ca_mode_ = AREA_OCCL; photoconsistency_ = false;  opts.push_back(std::string(1,c)); break;
+                    case 'a':	ca_mode_ = AREA;                opts.push_back(std::string(1,c)); break;
+                    case 'l':	ca_mode_ = AREA_OCCL;           opts.push_back(std::string(1,c)); break;
                     case 'p':   ca_mode_ = AREA_OCCL; photoconsistency_ = true;   opts.push_back(std::string(1,c)); break;
 
                     case 't':	m_mode_ = TEXTURE;  opts.push_back(std::string(1,c)); break;
                     case 'v':   m_mode_ = VERTEX;   opts.push_back(std::string(1,c)); break;
-                    case 'f':   m_mode_ = FLAT;  photoconsistency_ = false;  opts.push_back(std::string(1,c)); break;
+                    case 'f':   m_mode_ = FLAT;     opts.push_back(std::string(1,c)); break;
 
                     case 'm':   in_mode_ = MESH;    opts.push_back(std::string(1,c)); break;
                     case 's':   in_mode_ = SPLAT;   opts.push_back(std::string(1,c)); break;
@@ -261,29 +261,28 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
 void Multitexturer::evaluateCameraRatings(){
 
     std::cerr << "Evaluating camera ratings..." << std::endl;
-    std::cin.get();
+
+    // Originally, tri_ratings was a field in Camera class. However, due to memory allocation
+    // issues, we have extracted it from there, and make a vector of vectors instead
+    std::vector<std::vector<float> > cam_tri_ratings (nCam_, std::vector<float>(nTri_, 0.0));
 
 
     for (unsigned int c = 0 ; c < nCam_ ; c++){
-        cameras_[c].tri_ratings_.resize(nTri_);
         cameras_[c].vtx_ratings_.resize(nVtx_);
     }
-
-    std::cerr << "tri y vtx ratings allocated..." << std::endl;
-    std::cin.get();
 
     // This step will calculate every camera-triangle ratings
     // using the chosen system.
     switch (ca_mode_) {
     case NORMAL_VERTEX:
     case NORMAL_BARICENTER:
-        evaluateNormal();
+        evaluateNormal(cam_tri_ratings);
         break;
     case AREA:
-        evaluateArea();
+        evaluateArea(cam_tri_ratings);
         break;
     case AREA_OCCL:
-        evaluateAreaWithOcclusions();
+        evaluateAreaWithOcclusions(cam_tri_ratings);
         break;
     }
 
@@ -310,17 +309,22 @@ void Multitexturer::evaluateCameraRatings(){
         tri2tri[i].unique();
     }
 
-    // Normal smoothing and weighting
-    for (unsigned int i = 0; i < 3; i++){
-        smoothRatings(tri2tri);
-        evaluateWeightNormal();
-    }
 
     std::cerr << "\n";
+    std::cerr << "Smoothing triangle ratings... ";
+
+    // Normal smoothing and weighting
+    for (unsigned int i = 0; i < 3; i++){
+        smoothRatings(tri2tri, cam_tri_ratings);
+        evaluateWeightNormal(cam_tri_ratings);
+    }
+
+    std::cerr << "done!\n";
+
 
     if (fileFaceCam_.size() != 0){
-        improveFaceRatings();
-        evaluateWeightNormal();
+        improveFaceRatings(cam_tri_ratings);
+        evaluateWeightNormal(cam_tri_ratings);
     }
 
     // At this point, triangle ratings are already known,
@@ -332,11 +336,14 @@ void Multitexturer::evaluateCameraRatings(){
             float totrating = 0.0;
             int numTri = 0;
             for (it = vtx2tri[i].begin(); it != vtx2tri[i].end(); ++it){
-                if (cameras_[c].tri_ratings_[*it] == 0.0){
+                const std::vector<float>& tri_ratings = cam_tri_ratings[c];
+//                if (cameras_[c].tri_ratings_[*it] == 0.0){
+                if (tri_ratings[*it] == 0.0){
                     totrating = 0.0;
                     break;
                 }
-                float rating = cameras_[c].tri_ratings_[*it];
+//                float rating = cameras_[c].tri_ratings_[*it];
+                const float rating = tri_ratings[*it];
                 totrating += rating;
                 numTri++;
             }
@@ -348,12 +355,14 @@ void Multitexturer::evaluateCameraRatings(){
         }
     }
 
-
+    // This is probably not necessary, but just in case...
     for (unsigned int c = 0; c < nCam_; c++){
-        cameras_[c].clearTriRatings();
+        std::vector<float>().swap(cam_tri_ratings[c]);
     }
+    std::vector<std::vector<float> >().swap(cam_tri_ratings);
 
     std::cerr << "\rdone!         " << std::endl;
+
 
 }
 
@@ -549,7 +558,7 @@ void Multitexturer::readInputMesh(){
 
 
 
-void Multitexturer::evaluateNormal(){
+void Multitexturer::evaluateNormal(std::vector<std::vector<float> >& _cam_tri_ratings){
 
     for (unsigned int i = 0; i < nTri_; i++) {
 
@@ -590,20 +599,22 @@ void Multitexturer::evaluateNormal(){
 
             if (test){
             // In case the camera is facing back, the rating assigned is 0
-            cameras_[j].tri_ratings_[i] = (dp < 0) ? ( -1 * dp) : 0;
+//            cameras_[j].tri_ratings_[i] = (dp < 0) ? ( -1 * dp) : 0;
+                _cam_tri_ratings[j][i] = (dp < 0) ? ( -1 * dp) : 0;
             }
-        }
 
+        }
         std::cerr << "\r" << (float)i/nTri_*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
 
     }
 } 
 
 
-void Multitexturer::evaluateArea(){
+void Multitexturer::evaluateArea(std::vector<std::vector<float> >& _cam_tri_ratings){
 
 
     std::vector<Vector2f> uv_vtx(3, Vector2f(0.0,0.0));
+    std::vector<float> tri_ratings (nTri_);
 
 
     for (unsigned int i = 0; i < nTri_; i++) {
@@ -613,7 +624,8 @@ void Multitexturer::evaluateArea(){
 
         for (unsigned int j = 0; j < nCam_; j++) {
             
-            cameras_[j].tri_ratings_[i] = 0;
+//            cameras_[j].tri_ratings_[i] = 0;
+            _cam_tri_ratings[j][i] = 0;
             // Calculate dot product (dp), in order to discard backfacing
             // It only matters whether it is positive or negative
             Vector3f mf = mesh_.getVertex(thistri.getIndex(0));
@@ -643,7 +655,8 @@ void Multitexturer::evaluateArea(){
                     const Vector2f& v1 = uv_vtx[1];
                     const Vector2f& v2 = uv_vtx[2];
                     float area = (v0(1)-v2(1)) * (v1(0)-v2(0)) - (v0(0)-v2(0)) * (v1(1)-v2(1)); // should be divided by 2, but it really does not matter
-                    cameras_[j].tri_ratings_[i] = area;
+//                    cameras_[j].tri_ratings_[i] = area;
+                    _cam_tri_ratings[j][i] = area;
                 }
 
             } // else -> tri_ratings_ stays 0
@@ -654,10 +667,9 @@ void Multitexturer::evaluateArea(){
 
 }
 
-void Multitexturer::evaluateAreaWithOcclusions(){
+void Multitexturer::evaluateAreaWithOcclusions(std::vector<std::vector<float> >& _cam_tri_ratings){
 
     // which triangles contain each vertex
-//    std::vector<int> *vtx2tri = new std::vector<int> [nVtx_];
     std::vector<std::vector<int> > vtx2tri (nVtx_);
 
     for (unsigned int i = 0; i < nTri_; i++) {
@@ -688,7 +700,6 @@ void Multitexturer::evaluateAreaWithOcclusions(){
     }
     const unsigned int resolution = (unsigned int) floor(fres/(float)nCam_);
     // Triangle buffer: how many triangles are in each position of the grid
-    //std::vector<unsigned int> * triBuffer = new std::vector<unsigned int> [resolution * resolution];
     std::vector<std::vector<unsigned int> > triBuffer (resolution * resolution);
     // Vector containing the position of each vertex inside the triangle buffer
     std::vector<Vector2i> vtxInBuffer(nVtx_);
@@ -858,33 +869,33 @@ void Multitexturer::evaluateAreaWithOcclusions(){
         }
 
         for (unsigned int i = 0; i < nTri_; i++){
-            cameras_[c].tri_ratings_[i] = validTri[i] ? triArea[i] : 0;
+            //cameras_[c].tri_ratings_[i] = validTri[i] ? triArea[i] : 0;
+            _cam_tri_ratings[c][i] = validTri[i] ? triArea[i] : 0;
         }
 
         std::cerr << "\r" << (float)(c+1)/nCam_*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
         
     }
 
-
-    
-//    delete [] triBuffer;
-//    delete [] vtx2tri;
 }
 
 
-void Multitexturer::smoothRatings(std::vector<std::list<int> > &_tri2tri){
+void Multitexturer::smoothRatings(std::vector<std::list<int> > &_tri2tri, std::vector<std::vector<float> >& _cam_tri_ratings){
 
     std::vector<float> tri_rat_filter(nTri_);
 
     for (unsigned int c = 0; c < nCam_; c++) {
+        const std::vector<float>& tri_ratings = _cam_tri_ratings[c];
         for (unsigned int i = 0; i < nTri_; i++) {
             
-            if (cameras_[c].tri_ratings_[i] != 0) {
+//            if (cameras_[c].tri_ratings_[i] != 0) {
+            if (tri_ratings[i] != 0) {
 
                 // Current vertex included in neighbors
                 float sumneighbors = 0; 
                 for (std::list<int>::iterator it = _tri2tri[i].begin(); it != _tri2tri[i].end(); ++it){
-                    sumneighbors += cameras_[c].tri_ratings_[*it];
+//                    sumneighbors += cameras_[c].tri_ratings_[*it];
+                    sumneighbors += tri_ratings[*it];
                 }
                 tri_rat_filter[i] = sumneighbors/_tri2tri[i].size();
             } else {
@@ -892,12 +903,14 @@ void Multitexturer::smoothRatings(std::vector<std::list<int> > &_tri2tri){
             }
         }
 
-        cameras_[c].tri_ratings_ = tri_rat_filter;
+//        cameras_[c].tri_ratings_ = tri_rat_filter;
+        _cam_tri_ratings[c] = tri_rat_filter;
+
     }
 
 }
 
-void Multitexturer::evaluateWeightNormal(){
+void Multitexturer::evaluateWeightNormal(std::vector<std::vector<float> >& _cam_tri_ratings){
 
     const float invalpha = 1/alpha_;
     const float invoneminusalpha = 1 / (1-alpha_);
@@ -905,6 +918,7 @@ void Multitexturer::evaluateWeightNormal(){
     // triangle normal
     Vector3f n(0.0,0.0,0.0);
     Vector3f mf, mmf, nf;
+
 
     for (unsigned int i = 0; i < nTri_; i++) {
 
@@ -931,17 +945,21 @@ void Multitexturer::evaluateWeightNormal(){
             dp *= -1;
 
             if (dp <= 0){
-                cameras_[j].tri_ratings_[i] = 0;
+//                cameras_[j].tri_ratings_[i] = 0;
+                _cam_tri_ratings[j][i] = 0;
+
             } else if (dp < alpha_){
-                cameras_[j].tri_ratings_[i]  *= 0.5 * pow(dp * invalpha, beta_);
+//                cameras_[j].tri_ratings_[i]  *= 0.5 * pow(dp * invalpha, beta_);
+                _cam_tri_ratings[j][i] *= 0.5 * pow(dp * invalpha, beta_);
             } else {
-                cameras_[j].tri_ratings_[i]  *= 1 - 0.5 * pow( (1-dp) * invoneminusalpha, beta_);
+//                cameras_[j].tri_ratings_[i]  *= 1 - 0.5 * pow( (1-dp) * invoneminusalpha, beta_);
+                _cam_tri_ratings[j][i]  *= 1 - 0.5 * pow( (1-dp) * invoneminusalpha, beta_);
             }
         }
     }
 }
 
-void Multitexturer::improveFaceRatings(){
+void Multitexturer::improveFaceRatings(std::vector<std::vector<float> >& _cam_tri_rating){
 
     if (fileFaceCam_.size() == 0){
         return;
@@ -985,7 +1003,8 @@ void Multitexturer::improveFaceRatings(){
     for (unsigned int t = 0; t < nTri_; t++) {
         const Triangle& thistri = mesh_.getTriangle(t);
         if ( (vtx_face[thistri.getIndex(0)]) || (vtx_face[thistri.getIndex(1)]) || (vtx_face[thistri.getIndex(2)]) ){
-            cameras_[faceCam].tri_ratings_[t] *= 4;
+            //cameras_[faceCam].tri_ratings_[t] *= 4;
+            _cam_tri_rating[faceCam][t] *= 4;
         }
     }
 
@@ -1088,9 +1107,6 @@ void Multitexturer::loadImageToCache(const std::string& _fileName){
     }
 
     imageCache_[_fileName] = Image(_fileName);
-
-//    std::cin.get();
-
 
 }
 
@@ -1211,8 +1227,6 @@ void Multitexturer::chartColoring() {
     rasterizeTriangles(pix_frontier, pix_triangle);
 
     evaluateCameraRatings();
-    std::cerr << "a empezar photoconsistency" << std::endl;
-    std::cin.get();
 
     if (photoconsistency_) {
         checkPhotoconsistency();
@@ -1835,7 +1849,7 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_triangle) {
         for (unsigned int i = 0; i < (*unwit).m_.getNTri(); i++){
             
             const Triangle& tpres = (*unwit).m_.getTriangle(i);
-            const int tpres_orig3D = (*unwit).m_.getOrigTri(i);
+//            const int tpres_orig3D = (*unwit).m_.getOrigTri(i);
 
             trcnt++;
 

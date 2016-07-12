@@ -487,7 +487,7 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
             int tri2del = itedge->Candidate;
             usit=uTri.begin();
 
-            unsigned int int2del;
+            unsigned int int2del = 0; // dumb init...
             for (unsigned int cn= 0; cn != nTri; cn++){
                 if (uTri[cn] == tri2del){
                     int2del = cn;

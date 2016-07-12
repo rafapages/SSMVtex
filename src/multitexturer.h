@@ -116,20 +116,20 @@ private:
     // They all fill the vector tri_ratings_ of each camera
     // 
     // Uses the normal of the triangle
-    void evaluateNormal(); 
+    void evaluateNormal(std::vector<std::vector<float> >& _cam_tri_ratings);
     // Uses the projected area of the triangle
-    void evaluateArea();
+    void evaluateArea(std::vector<std::vector<float> >& _cam_tri_ratings);
     // Uses the projected area taking into account occlusions
-    void evaluateAreaWithOcclusions();
+    void evaluateAreaWithOcclusions(std::vector<std::vector<float> >& _cam_tri_ratings);
     // Smooths the values estimated so transitions are seamless
 //    void smoothRatings(std::list<int> *_tri2tri);
-    void smoothRatings(std::vector<std::list<int> > & _tri2tri);
+    void smoothRatings(std::vector<std::list<int> > & _tri2tri, std::vector<std::vector<float> >& _cam_tri_ratings);
     // Weights the normals with respect to a function with
     // curvature beta_ and cutoff value alpha_
-    void evaluateWeightNormal();
+    void evaluateWeightNormal(std::vector<std::vector<float> >& _cam_tri_ratings);
     // Finds a face in an image and increases the camera ratings
     // for that camera in the corresponding facial triangles
-    void improveFaceRatings();
+    void improveFaceRatings(std::vector<std::vector<float> >& _cam_tri_ratings);
 
 
     // Finds a camera in the list and returns its position
