@@ -336,14 +336,13 @@ void Multitexturer::evaluateCameraRatings(){
             float totrating = 0.0;
             int numTri = 0;
             for (it = vtx2tri[i].begin(); it != vtx2tri[i].end(); ++it){
-                const std::vector<float>& tri_ratings = cam_tri_ratings[c];
 //                if (cameras_[c].tri_ratings_[*it] == 0.0){
-                if (tri_ratings[*it] == 0.0){
+                if (cam_tri_ratings[c][*it] == 0){
                     totrating = 0.0;
                     break;
                 }
 //                float rating = cameras_[c].tri_ratings_[*it];
-                const float rating = tri_ratings[*it];
+                const float rating = cam_tri_ratings[c][*it];
                 totrating += rating;
                 numTri++;
             }
