@@ -508,7 +508,9 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
 
             // std::cerr << "Candidate" << itedge->Candidate << std::endl;
             // std::cerr << "tricount " << tri_count << std::endl;
-            std::cerr << "\r" << (float)tri_count/nTri*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
+            if (0 == tri_count % 1024){
+                std::cerr << "\r" << (float)tri_count/nTri*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
+            }
             
             // the old Edge is now deleted, and the new ones are inserted in its place
             itedge = unw.perimeter_.erase(itedge);

@@ -163,6 +163,7 @@ private:
     // Checks if there is an occlusion not produced by the geometry
     // and solves it.
     void checkPhotoconsistency();
+    void checkPhotoconsistencyPerPhoto();
 
     // Performs the multi-texturing and returns a texture image
     Image colorTextureAtlas(const ArrayXXi& _pix_triangle);

@@ -240,8 +240,13 @@ void Packer::pack(std::vector<Chart>& _charts, float& _width, float& _height){
         }
 
 //        counter++;
-          std::cerr << "\r" << (float)counter/nelem * 100 << std::setw(4) << std::setprecision(4) <<"%    " << std::flush;
+        if (0 == counter % 1024) {
+            std::cerr << "\r" << (float)counter/nelem * 100 << std::setw(4) << std::setprecision(4) <<"%    " << std::flush;
+        }
     }
+
+    std::cerr << "\r" << 100 << std::setw(4) << std::setprecision(4) <<"%    " << std::flush;
+
 
     // after placing all the charts, we can calculate the maximum height
     _height = (*(--contList.end())).second.y;

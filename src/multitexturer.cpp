@@ -62,7 +62,7 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
                 switch (c = opt[1]) {
                     case 'n':	ca_mode_ = NORMAL_VERTEX; 		opts.push_back(std::string(1,c)); break;
                     case 'b':	ca_mode_ = NORMAL_BARICENTER;	opts.push_back(std::string(1,c)); break;
-                    case 'a':	ca_mode_ = AREA;                opts.push_back(std::string(1,c)); break;
+                    case 'a':	ca_mode_ = AREA; photoconsistency_ = true;               opts.push_back(std::string(1,c)); break;
                     case 'l':	ca_mode_ = AREA_OCCL;           opts.push_back(std::string(1,c)); break;
                     case 'p':   ca_mode_ = AREA_OCCL; photoconsistency_ = true;   opts.push_back(std::string(1,c)); break;
 
@@ -660,10 +660,14 @@ void Multitexturer::evaluateArea(std::vector<std::vector<float> >& _cam_tri_rati
 
             } // else -> tri_ratings_ stays 0
         }
-        std::cerr << "\r" << (float)i/nTri_*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
+
+        if (0 == i % 1024){
+            std::cerr << "\r" << (float)i/nTri_*100 << std::setw(4) << std::setprecision(4) << "%      "<< std::flush;
+        }
 
     }
 
+    std::cerr << "\rdone!          " << std::endl;
 }
 
 void Multitexturer::evaluateAreaWithOcclusions(std::vector<std::vector<float> >& _cam_tri_ratings){
@@ -1228,7 +1232,8 @@ void Multitexturer::chartColoring() {
     evaluateCameraRatings();
 
     if (photoconsistency_) {
-        checkPhotoconsistency();
+//        checkPhotoconsistency();
+        checkPhotoconsistencyPerPhoto();
     } else {
         origMesh_ = mesh_;
     }
@@ -1366,12 +1371,13 @@ void Multitexturer::rasterizeTriangles(ArrayXXi& _pix_frontier, ArrayXXi& _pix_t
                     }
                 }
             }
-         
-            std::cerr << "\r" << (float)trcnt/nTri_*100 << std::setw(4) << std::setprecision(4) << "% of triangles rasterized.      ";
+            if (0 == trcnt % 1024) { // Esto no siempre llega a 100%, claro.
+                std::cerr << "\r" << (float)trcnt/nTri_*100 << std::setw(4) << std::setprecision(4) << "% of triangles rasterized.      ";
+            }
 
         }
     }
-
+    std::cerr << "\r" << 100 << std::setw(4) << std::setprecision(4) << "% of triangles rasterized.      ";
     std::cerr << "\n";
 }
 
@@ -1613,7 +1619,7 @@ void Multitexturer::subdivideCharts(unsigned int _iterations){
         mesh_.replaceTriangles(new3dtris);
         updateNumbers();
 
-        std::cerr << "\r" << (float)(iteration+1)/_iterations*100 << std::setw(4) << std::setprecision(4) << "%";
+        std::cerr << "\r" << (float)(iteration+1)/_iterations*100 << std::setw(4) << std::setprecision(4) << "%               ";
 
     }
 
@@ -1711,13 +1717,132 @@ void Multitexturer::checkPhotoconsistency(){
                 cameras_[camindex].vtx_ratings_[i] = 0;
             }
         }
-
-        std::cerr << "\r" << (float)(i+1)/nVtx_*100 << std::setw(4) << std::setprecision(4) << "% photoconsistency check. ";
-        std::cerr << (float)imageCache_.size()/imageCacheSize_ * 100 << std::setw(4) << std::setprecision(4) << "% of cache usage (";
-        std::cerr << imageCache_.size() << "/" << imageCacheSize_ << ").      " << std::flush;
-
+        if (0 == (i+1) % 1024) { // Too much information will kill you
+            std::cerr << "\r" << (float)(i+1)/nVtx_*100 << std::setw(4) << std::setprecision(4) << "% photoconsistency check. ";
+            std::cerr << (float)imageCache_.size()/imageCacheSize_ * 100 << std::setw(4) << std::setprecision(4) << "% of cache usage (";
+            std::cerr << imageCache_.size() << "/" << imageCacheSize_ << ").      " << std::flush;
+        }
     }
     std::cerr << "\n";
+
+}
+
+void Multitexturer::checkPhotoconsistencyPerPhoto() {
+
+    std::vector<std::vector<Color> > colors_per_vtx (nVtx_);
+    std::vector<std::vector<float> > ratings_per_vtx (nVtx_);
+    std::vector<Color> ave_colors (nVtx_, Color(0.0,0.0,0.0));
+    std::vector<int> ave_num (nVtx_, 0);
+
+    for (unsigned int i = 0; i < nVtx_; i++){
+        colors_per_vtx[i].assign(nCam_, Color(0.0,0.0,0.0));
+        ratings_per_vtx[i].assign(nCam_, -1.0);
+    }
+
+    for (unsigned int c = 0; c < nCam_; c++){
+
+        std::string imageName = imageList_[c];
+        Image image(imageName);
+
+        for (unsigned int i = 0; i < nVtx_; i++){
+            const Vector3f & current = mesh_.getVertex(i);
+
+            if (cameras_[c].vtx_ratings_[i] > 0.0){
+
+                // In this case, we save the Color information from this camera
+
+                const Vector2f v_st = cameras_[c].transform2uvCoord(current);
+                // Projection coordinates
+                const   float proj_s = v_st(0);
+                const float proj_t = v_st(1);
+
+                if (proj_s < 0.0 || proj_t < 0.0){ // This may happen and it's very wrong
+                    continue;
+                }
+
+                float image_row = (float) image.getHeight() - proj_t;
+                float image_col = proj_s;
+
+                // In case a rounding error gives us a pixel outside the image
+                image_row = std::min (image_row, (float) image.getHeight());
+                image_col = std::min (image_col, (float) image.getWidth());
+                image_row = std::max (image_row, 0.0f);
+                image_col = std::max (image_col, 0.0f);
+
+                Color col = image.interpolate(image_row, image_col, BILINEAR);
+
+                colors_per_vtx[i][c] = col;
+                ratings_per_vtx[i][c] = cameras_[c].vtx_ratings_[i];
+                ave_colors[i] += col;
+                ave_num[i] = ave_num[i]+1;
+
+                if (0 == (i+1) % 1024) { // Too much information will kill you
+                    std::cerr << "\r" << "Image " << c+1 << "/" << nCam_ << ". Progress: ";
+                    std::cerr << (float)(i+1)/nVtx_*100 << std::setw(4) << std::setprecision(4) << "%.       ";
+                }
+            }
+        }
+        std::cerr << "\r" << "Image " << c+1 << "/" << nCam_ << ". Progress: 100%             ";
+
+    }
+
+    std::cerr << "\n";
+
+    for (unsigned int i = 0; i < nVtx_; i++){
+        ave_colors[i] = ave_colors[i] / (float) ave_num[i];
+    }
+
+    for (unsigned int i = 0; i < nVtx_; i++){
+        std::vector<Color>& camColors = colors_per_vtx[i];
+        std::vector<float>& camRatings = ratings_per_vtx[i];
+
+        const Color& c_ave = ave_colors[i];
+        std::vector<Color> colDif; // color diference with respect to the average
+        std::vector<Color> finalCamColors;
+        std::vector<int> camDif;
+
+        std::vector<Color>::iterator cit;
+
+        unsigned int r = 0;
+        for (cit = camColors.begin(); cit != camColors.end(); ++cit, r++){
+//            if (camRatings[r] == -1.0) continue;
+            if (camRatings[r] < 0.0) continue;
+            const Color cc = *cit;
+            finalCamColors.push_back(cc);
+            colDif.push_back(cc - c_ave);
+            camDif.push_back(r);
+        }
+
+        float var_r, var_g, var_b; // variance
+        var_r = var_g = var_b = 0.0;
+        for (cit = finalCamColors.begin(); cit != finalCamColors.end(); ++cit){
+            var_r += (cit->getRed() - c_ave.getRed())     * (cit->getRed() - c_ave.getRed());
+            var_g += (cit->getGreen() - c_ave.getGreen()) * (cit->getGreen() - c_ave.getGreen());
+            var_b += (cit->getBlue() - c_ave.getBlue())   * (cit->getBlue() - c_ave.getBlue());
+        }
+
+        var_r = var_r / (float) finalCamColors.size();
+        var_g = var_g / (float) finalCamColors.size();
+        var_b = var_b / (float) finalCamColors.size();
+
+
+        float dev_r, dev_g, dev_b; // Standard deviation
+        dev_r = sqrt(var_r);
+        dev_g = sqrt(var_g);
+        dev_b = sqrt(var_b);
+
+//        it = ratings.begin();
+        std::vector<int>::iterator it = camDif.begin();
+        std::vector<Color>::iterator dit = colDif.begin();
+        for (; dit != colDif.end(); ++dit, ++it){
+            Color cc = *dit;
+            if (fabs(cc.getRed()) > dev_r || fabs(cc.getGreen())> dev_g || fabs(cc.getBlue()) > dev_b){
+                const int camindex = *it;
+                cameras_[camindex].vtx_ratings_[i] = 0;
+            }
+        }
+
+    }
 
 }
 
@@ -2056,9 +2181,11 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_triangle) {
                 }
             }
 
-            std::cerr << "\r" << (float)trcnt/nTri_*100 << std::setw(4) << std::setprecision(4) << "% of triangles colored. ";
-            std::cerr << (float)imageCache_.size()/imageCacheSize_ * 100 << std::setw(4) << std::setprecision(4) << "% of cache usage (";
-            std::cerr << imageCache_.size() << "/" << imageCacheSize_ << ").      " << std::flush;
+            if (0 == trcnt % 1024) {
+                std::cerr << "\r" << (float)trcnt/nTri_*100 << std::setw(4) << std::setprecision(4) << "% of triangles colored. ";
+                std::cerr << (float)imageCache_.size()/imageCacheSize_ * 100 << std::setw(4) << std::setprecision(4) << "% of cache usage (";
+                std::cerr << imageCache_.size() << "/" << imageCacheSize_ << ").      " << std::flush;
+            }
         }
     }
 
