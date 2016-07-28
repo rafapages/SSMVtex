@@ -49,6 +49,9 @@ public:
 
     bool equals(const Color& _c) const;
 
+    static Color hsv2rgb(float _h, float _s, float _v);
+
+
 private:
 
     float r_, g_, b_; // 0.0 - 255.0

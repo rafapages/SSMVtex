@@ -171,6 +171,9 @@ private:
     // This method colors each path on a different flat color... just for illustration purposes...
     Image colorFlatCharts(const ArrayXXi& _pix_triangle);
 
+    // This method colors each vertex depending on how it seen by a certain camera... again, just for illustration purposes
+    void exportCamColorMesh(unsigned int _camIndex);
+
     // Dilates the charts by inpainting the background using OpenCV
     void dilateAtlasCV(const ArrayXXi& _pix_triangle, Image& _image) const;
     void dilateAtlasCV2(const ArrayXXi& _pix_triangle, Image& _image) const;

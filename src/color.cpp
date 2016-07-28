@@ -148,3 +148,62 @@ bool Color::operator== (const Color& _c) const {
 bool Color::equals(const Color& _c) const {
 	return *this == _c;
 }
+
+Color Color::hsv2rgb(float _h, float _s, float _v){
+
+    float  hh, p, q, t, ff;
+    int  i;
+    Color out;
+
+    if(_s <= 0.0) {       // < is bogus, just shuts up warnings
+        // error - should never happen
+        out.r_ = 0.0;
+        out.g_ = 0.0;
+        out.b_ = 0.0;
+        return out;
+    }
+
+    hh = _h;
+    if(hh >= 360.0) hh = 0.0;
+    hh /= 60.0;
+    i = (long)hh;
+    ff = hh - i;
+    p = _v * (1.0 - _s);
+    q = _v * (1.0 - (_s * ff));
+    t = _v * (1.0 - (_s * (1.0 - ff)));
+
+    switch(i) {
+    case 0:
+        out.r_ = _v;
+        out.g_ = t;
+        out.b_ = p;
+        break;
+    case 1:
+        out.r_ = q;
+        out.g_ = _v;
+        out.b_ = p;
+        break;
+    case 2:
+        out.r_ = p;
+        out.g_ = _v;
+        out.b_ = t;
+        break;
+    case 3:
+        out.r_ = p;
+        out.g_ = q;
+        out.b_ = _v;
+        break;
+    case 4:
+        out.r_ = t;
+        out.g_ = p;
+        out.b_ = _v;
+        break;
+    case 5:
+    default:
+        out.r_ = _v;
+        out.g_ = p;
+        out.b_ = q;
+        break;
+    }
+    return out;
+}

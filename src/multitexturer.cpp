@@ -1238,6 +1238,8 @@ void Multitexturer::chartColoring() {
         origMesh_ = mesh_;
     }
 
+//    exportCamColorMesh(50); // THIS NEEDS TO BE IMPROVED
+
     Image imout;
 
     if (m_mode_ == FLAT){
@@ -1805,7 +1807,6 @@ void Multitexturer::checkPhotoconsistencyPerPhoto() {
 
         unsigned int r = 0;
         for (cit = camColors.begin(); cit != camColors.end(); ++cit, r++){
-//            if (camRatings[r] == -1.0) continue;
             if (camRatings[r] < 0.0) continue;
             const Color cc = *cit;
             finalCamColors.push_back(cc);
@@ -2269,6 +2270,31 @@ Image Multitexturer::colorFlatCharts(const ArrayXXi& _pix_triangle){
 
 }
 
+void Multitexturer::exportCamColorMesh(unsigned int _camIndex) {
+
+    if (_camIndex > nCam_) _camIndex = nCam_ -1;
+
+    std::vector<Color> colors (nVtx_);
+
+    float maxRating = 0.0;
+    for (unsigned int i = 0; i < nVtx_; i++){
+        if (cameras_[_camIndex].vtx_ratings_[i] > maxRating){
+            maxRating = cameras_[_camIndex].vtx_ratings_[i];
+        }
+    }
+
+    // We code the color with hue value
+
+    for (unsigned int i = 0; i < nVtx_; i++){
+
+        float hue = 240 - 240 * cameras_[_camIndex].vtx_ratings_[i] / maxRating; // from 0 tp 240º to avoid purple
+        Color col = Color::hsv2rgb(hue, 1, 1);
+        colors  [i] = col * 255;
+    }
+
+    mesh_.writeColorPerVertexOBJ("test_col.obj", colors);
+}
+
 void Multitexturer::dilateAtlasCV(const ArrayXXi& _pix_triangle, Image& _image) const{
 
     cv::Mat mask (imHeight_, imWidth_, CV_8UC1, cv::Scalar(255)); 
@@ -2457,5 +2483,6 @@ void Multitexturer::exportOBJcharts(const std::string& _fileName){
 
     outMesh.close();
 }
+
 
 
