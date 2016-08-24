@@ -105,6 +105,7 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
         // B_w : second vertex of longest edge
         // E_w : the other vertex
 
+
         Vector3f A_w, B_w, E_w;
         int vtxCase;
 
@@ -132,11 +133,10 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
         float mx = x_w.norm();
         float me = e_w.norm();
 
-        // We don't want to divide by zero
-        if (mx==0.0){
+        if (mx < EPSILON) {
             mx = EPSILON;
         }
-        if (me==0.0){
+        if (me < EPSILON ){
             me = EPSILON;
         }
 
@@ -165,6 +165,7 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
 
         unw.setNEdgePos(0);
 
+
         // Step 2 : Add the three edges of the triangle to our Edge list
         for (unsigned int c = 0; c < 3; c++){
 
@@ -186,7 +187,6 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
                 ed.pb = seed.getIndex((c+2)%3);
                 break;
             }
-
 
             for (unsigned int j = 0; j < adj_count[q]; j++){
                 const Triangle& t1 = _mesh.getTriangle(triNeighbor[3*q+j]);
@@ -223,6 +223,7 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
         // While the number of candidate edges is still above zero
         while (unw.getNEdgePos() > 0) {
 
+
             // Step 3.1: we choose en Edge born in generation "gen"
 
             std::list<Edge>::iterator itedge;
@@ -251,9 +252,11 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
 
             const Triangle& cand = _mesh.getTriangle(e.Candidate);
             int newVtx = -1;
+
             const int c0 = cand.getIndex(0);
             const int c1 = cand.getIndex(1);
             const int c2 = cand.getIndex(2);
+
 
             // std::cerr << "c0 c1 c2 " << c0 << " " << c1 << " " << c2 << std::endl;
             // std::cerr << "e.a e.b " << e.a << " " << e.b << std::endl;
@@ -285,6 +288,8 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
             ed2.pb = e.pb;
 
             // Candidate for ed1
+
+            // I HAVE TO FIX THIS CRAZY NESTED CONDITIONS...
             for (unsigned int j = 0; j < adj_count[e.Candidate]; j++){
                 const Triangle& t1 = _mesh.getTriangle(triNeighbor[3*(e.Candidate)+j]);
                 if( ((t1.getIndex(0) == ed1.a)  &&  (t1.getIndex(1) == ed1.b)) ||
@@ -298,6 +303,8 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
                     else
                         ed1.Candidate = -1;
                     break;
+                } else {
+                    ed1.Candidate = -1;
                 }
             }
 
@@ -316,6 +323,8 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
                     else
                         ed2.Candidate = -1;
                     break;
+                }else {
+                    ed2.Candidate = -1;
                 }
             }
 
@@ -329,11 +338,11 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
             double ena = e_na.norm(); // REMEMBER: Same magnitude in 3D and 2D
 
             // We still don't want to divide by zero
-            if (xna == 0.0)
-                xna=EPSILON;
-            if (ena == 0.0)
-                ena=EPSILON;    
+
+            if (xna < EPSILON) xna = EPSILON;
+            if (ena < EPSILON) ena = EPSILON;    
             const double dpn = x_na.dot(e_na);
+
             // const double proj = dpn / xna;
             // const double nproj = proj / xna; // This value represents the proportion of the projection with respect to vector x_na
 
@@ -348,7 +357,8 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
             // -----------------------------------------------------------------------------
             // This is the old way to calculate the point:
 
-            double dpnxnaena = dpn/(xna*ena);
+            double dpnxnaena = dpn / (xna*ena);
+
             dpnxnaena = dpnxnaena < -1.0 ? -1.0 : dpnxnaena; // double precision
             dpnxnaena = dpnxnaena >  1.0 ?  1.0 : dpnxnaena;
             double ang = acos(dpnxnaena); // REMEMBER: Same angle in 3D and 2D
@@ -446,6 +456,7 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
             // Step 3.3 : Check the area ratio
 
             float hypoth_bbox_area = unw.m_.getHypotheticalBBoxArea(nv);
+            if (hypoth_bbox_area < EPSILON) hypoth_bbox_area = EPSILON;
 
             float triarea = ((nv-ed1a)(0) * (ed2b-ed1a)(1) - (nv-ed1a)(1) * (ed2b-ed1a)(0)) / 2; // OJO CON LA NOMENCLATURA AQUÍ
             float hypoth_tri_area = unw.m_.getTriArea () + triarea;
@@ -554,7 +565,6 @@ void Unwrapper::unwrapMesh(const Mesh3D& _mesh, std::vector<Chart>& _charts){
     }
 
     std::cerr << "\rdone!   " << std::endl;
-
 
 }
 
