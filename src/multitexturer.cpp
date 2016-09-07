@@ -926,7 +926,7 @@ void Multitexturer::evaluateWeightNormal(std::vector<std::vector<float> >& _cam_
     for (unsigned int i = 0; i < nTri_; i++) {
 
         // Find camera most orthogonal to this triangle
-        const Vector3f n = mesh_.getTriangleNormal(i);
+        const Vector3f n = mesh_.getTriangleNormal(i); // Normalized normal
         const Triangle& thistri = mesh_.getTriangle(i);
 
         // We calculate the baricenter (centroid) of the triangle

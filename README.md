@@ -60,8 +60,8 @@ As many 3D models have been acquired using a SfM approach, it is possible that p
 If you use this software for scientific purposes, please don’t forget to cite us! Thanks!
 
 	@article {pages2015seamless,
-	author = {Pagés, R. and Berjón, D. and Morán, F. and García, N.},
-	title = {Seamless, Static Multi-Texturing of 3D Meshes},
+	author = {Pag\'{e}s, R. and Berj\'{o}n, D. and Mor\'{a}n, F. and Garc\'{i}a, N.},
+	title = {Seamless, Static Multi-Texturing of {3D} Meshes},
 	journal = {Computer Graphics Forum},
 	volume = {34},
 	number = {1},
