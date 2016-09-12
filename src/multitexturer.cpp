@@ -1238,7 +1238,12 @@ void Multitexturer::chartColoring() {
         origMesh_ = mesh_;
     }
 
-//    exportCamColorMesh(50); // THIS NEEDS TO BE IMPROVED
+//    // THIS NEEDS TO BE IMPROVED
+//    for (unsigned int i = 10; i < 30; i++){
+//        exportCamColorMesh(i);
+//    }
+//    std::cerr << "Exported ratings-cam models" << std::endl;
+
 
     Image imout;
 
@@ -2274,6 +2279,11 @@ void Multitexturer::exportCamColorMesh(unsigned int _camIndex) {
 
     if (_camIndex > nCam_) _camIndex = nCam_ -1;
 
+    std::stringstream outname;
+    outname << "test_col_";
+    outname << _camIndex;
+    outname << ".obj";
+
     std::vector<Color> colors (nVtx_);
 
     float maxRating = 0.0;
@@ -2292,7 +2302,9 @@ void Multitexturer::exportCamColorMesh(unsigned int _camIndex) {
         colors  [i] = col * 255;
     }
 
-    mesh_.writeColorPerVertexOBJ("test_col.obj", colors);
+//    mesh_.writeColorPerVertexOBJ("test_col.obj", colors);
+    mesh_.writeColorPerVertexOBJ(outname.str(), colors);
+
 }
 
 void Multitexturer::dilateAtlasCV(const ArrayXXi& _pix_triangle, Image& _image) const{
