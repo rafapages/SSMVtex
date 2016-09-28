@@ -9,10 +9,10 @@
 TARGET   = multitex
 
 CXX      = g++
-CFLAGS   = -std=c++11 -Wall -I. -O2
+CFLAGS   = -std=c++11 -Wall -I. -O2 -fopenmp
 
 LINKER   = g++ -o
-LFLAGS   = -Wall -I. -lm
+LFLAGS   = -Wall -I. -lm -O2 -fopenmp
 LIBS = -lfreeimageplus -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_objdetect -lopencv_photo
 
 SRCDIR   = src

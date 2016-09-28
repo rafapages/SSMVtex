@@ -321,7 +321,6 @@ void Multitexturer::evaluateCameraRatings(){
 
     std::cerr << "done!\n";
 
-
     if (fileFaceCam_.size() != 0){
         improveFaceRatings(cam_tri_ratings);
         evaluateWeightNormal(cam_tri_ratings);
@@ -681,6 +680,18 @@ void Multitexturer::evaluateAreaWithOcclusions(std::vector<std::vector<float> >&
         }
     }
 
+
+
+    // Occlusions are evaluated in a kind of z-buffer whose size is determined
+    // by the average size of the input images. However, this buffer is goes beyond image-pixel
+    // resolution, as the optimal case would be to calculate occlusions in float WC. The buffer
+    // is placed only in the region that the mesh covers when projected to each image.
+    float fres = 0.0;
+    for (unsigned int c = 0; c < nCam_; c++){
+        fres += std::max(cameras_[c].getImageWidth(), cameras_[c].getImageHeight());
+    }
+    const unsigned int resolution = (unsigned int) floor(fres/(float)nCam_);
+
     // Vector containing the projection to the image plane for each vertex
     std::vector<Vector2f> vtx_st (nVtx_);
     // Vector containing the area of the triangle projected to the image plane
@@ -693,22 +704,17 @@ void Multitexturer::evaluateAreaWithOcclusions(std::vector<std::vector<float> >&
     //       LIGHT : Seen
     std::vector<VtxMode> vtxSeen (nVtx_);
 
-    // Occlusions are evaluated in a kind of z-buffer whose size is determined
-    // by the average size of the input images. However, this buffer is goes beyond image-pixel
-    // resolution, as the optimal case would be to calculate occlusions in float WC. The buffer
-    // is placed only in the region that the mesh covers when projected to each image.
-    float fres = 0.0;
-    for (unsigned int c = 0; c < nCam_; c++){
-        fres += std::max(cameras_[c].getImageWidth(), cameras_[c].getImageHeight());
-    }
-    const unsigned int resolution = (unsigned int) floor(fres/(float)nCam_);
     // Triangle buffer: how many triangles are in each position of the grid
     std::vector<std::vector<unsigned int> > triBuffer (resolution * resolution);
+
+
+
     // Vector containing the position of each vertex inside the triangle buffer
     std::vector<Vector2i> vtxInBuffer(nVtx_);
 
+
     // For each camera
-    for (unsigned int c = 0; c < nCam_; c++){
+    for (unsigned int c = 0; c < nCam_; c++) {
 
         const unsigned int width = cameras_[c].getImageWidth();
         const unsigned int height = cameras_[c].getImageHeight();
@@ -724,12 +730,10 @@ void Multitexturer::evaluateAreaWithOcclusions(std::vector<std::vector<float> >&
         // The projected area is calculated and back-facing triangles are stored
         for (unsigned int j = 0; j < nTri_; j++){
             const Vector3i& triInx = mesh_.getTriangle(j).getIndices();
-            //tri_area[j] = (vtx_t[vl.getIndex(0)]-vtx_t[vl.getIndex(2)]) * (vtx_s[vl.getIndex(1)]-vtx_s[vl.getIndex(2)]) - (vtx_s[vl.getIndex(0)]-vtx_s[vl.getIndex(2)]) * (vtx_t[vl.getIndex(1)]-vtx_t[vl.getIndex(2)]);
             const Vector2f& v0 = vtx_st[triInx(0)];
             const Vector2f& v1 = vtx_st[triInx(1)];
             const Vector2f& v2 = vtx_st[triInx(2)];
             triArea[j] = (v0(1) - v2(1)) * (v1(0) - v2(0)) - (v0(0) - v2(0)) * (v1(1) - v2(1));
-            //triArea[j] = 2 * Mesh2D::triangleArea(vtx_st[triInx(0)], vtx_st[triInx(2)], vtx_st[triInx(1)]); // 0-2-1 order to avoid negative values 
             validTri[j] = triArea[j] > 0; // It's back-facing
         }
 
@@ -859,20 +863,17 @@ void Multitexturer::evaluateAreaWithOcclusions(std::vector<std::vector<float> >&
                     vtxSeen[i] = SHADOW;
                 }
             }
-        }
-
-
-        // If a triangles has a vertex with SHADOW mode, its discarded
-        for (unsigned int i = 0; i < nVtx_; i++){
+            // If a triangles has a vertex with SHADOW mode, its discarded
             if (vtxSeen[i] == SHADOW){
                 for(std::vector<int>::iterator it = vtx2tri[i].begin(); it != vtx2tri[i].end(); ++it){
                     validTri[*it] = false;
+
                 }
             }
         }
 
+
         for (unsigned int i = 0; i < nTri_; i++){
-            //cameras_[c].tri_ratings_[i] = validTri[i] ? triArea[i] : 0;
             _cam_tri_ratings[c][i] = validTri[i] ? triArea[i] : 0;
         }
 
@@ -885,19 +886,18 @@ void Multitexturer::evaluateAreaWithOcclusions(std::vector<std::vector<float> >&
 
 void Multitexturer::smoothRatings(std::vector<std::list<int> > &_tri2tri, std::vector<std::vector<float> >& _cam_tri_ratings){
 
-    std::vector<float> tri_rat_filter(nTri_);
 
+    #pragma omp parallel for
     for (unsigned int c = 0; c < nCam_; c++) {
+        std::vector<float> tri_rat_filter(nTri_);
         const std::vector<float>& tri_ratings = _cam_tri_ratings[c];
         for (unsigned int i = 0; i < nTri_; i++) {
             
-//            if (cameras_[c].tri_ratings_[i] != 0) {
             if (tri_ratings[i] != 0) {
 
                 // Current vertex included in neighbors
                 float sumneighbors = 0; 
                 for (std::list<int>::iterator it = _tri2tri[i].begin(); it != _tri2tri[i].end(); ++it){
-//                    sumneighbors += cameras_[c].tri_ratings_[*it];
                     sumneighbors += tri_ratings[*it];
                 }
                 tri_rat_filter[i] = sumneighbors/_tri2tri[i].size();
@@ -906,7 +906,6 @@ void Multitexturer::smoothRatings(std::vector<std::list<int> > &_tri2tri, std::v
             }
         }
 
-//        cameras_[c].tri_ratings_ = tri_rat_filter;
         _cam_tri_ratings[c] = tri_rat_filter;
 
     }
@@ -919,11 +918,11 @@ void Multitexturer::evaluateWeightNormal(std::vector<std::vector<float> >& _cam_
     const float invoneminusalpha = 1 / (1-alpha_);
 
     // triangle normal
-    Vector3f n(0.0,0.0,0.0);
-    Vector3f mf, mmf, nf;
+    //Vector3f n(0.0,0.0,0.0);
 
-
+    #pragma omp parallel for
     for (unsigned int i = 0; i < nTri_; i++) {
+        Vector3f mf, mmf;
 
         // Find camera most orthogonal to this triangle
         const Vector3f n = mesh_.getTriangleNormal(i); // Normalized normal
@@ -942,20 +941,16 @@ void Multitexturer::evaluateWeightNormal(std::vector<std::vector<float> >& _cam_
             // We check the position of the camera with respect to the triangle
             // const Vector3f mmf = mf - cameras_[j].getPosition();
             mmf = mf - cameras_[j].getPosition();
-            // Vector3f nf = mmf.normalized();
-            Vector3f nf = mmf.normalized();
+            const Vector3f nf = mmf.normalized();
             float dp = n.dot(nf);
             dp *= -1;
 
             if (dp <= 0){
-//                cameras_[j].tri_ratings_[i] = 0;
                 _cam_tri_ratings[j][i] = 0;
 
             } else if (dp < alpha_){
-//                cameras_[j].tri_ratings_[i]  *= 0.5 * pow(dp * invalpha, beta_);
                 _cam_tri_ratings[j][i] *= 0.5 * pow(dp * invalpha, beta_);
             } else {
-//                cameras_[j].tri_ratings_[i]  *= 1 - 0.5 * pow( (1-dp) * invoneminusalpha, beta_);
                 _cam_tri_ratings[j][i]  *= 1 - 0.5 * pow( (1-dp) * invoneminusalpha, beta_);
             }
         }
@@ -1746,6 +1741,7 @@ void Multitexturer::checkPhotoconsistencyPerPhoto() {
         ratings_per_vtx[i].assign(nCam_, -1.0);
     }
 
+    #pragma omp parallel for
     for (unsigned int c = 0; c < nCam_; c++){
 
         std::string imageName = imageList_[c];
@@ -1780,8 +1776,6 @@ void Multitexturer::checkPhotoconsistencyPerPhoto() {
 
                 colors_per_vtx[i][c] = col;
                 ratings_per_vtx[i][c] = cameras_[c].vtx_ratings_[i];
-                ave_colors[i] += col;
-                ave_num[i] = ave_num[i]+1;
 
                 if (0 == (i+1) % 1024) { // Too much information will kill you
                     std::cerr << "\r" << "Image " << c+1 << "/" << nCam_ << ". Progress: ";
@@ -1793,15 +1787,24 @@ void Multitexturer::checkPhotoconsistencyPerPhoto() {
 
     }
 
-    std::cerr << "\n";
-
+    #pragma omp parallel for
     for (unsigned int i = 0; i < nVtx_; i++){
-        ave_colors[i] = ave_colors[i] / (float) ave_num[i];
+        for (unsigned int c = 0; c < nCam_; c++){
+            if (ratings_per_vtx[i][c] > 0.0){
+                ave_colors[i] += colors_per_vtx[i][c];
+                ave_num[i] += 1;
+            }
+        }
     }
 
+    std::cerr << "\n";
+
+    #pragma omp parallel for
     for (unsigned int i = 0; i < nVtx_; i++){
         std::vector<Color>& camColors = colors_per_vtx[i];
         std::vector<float>& camRatings = ratings_per_vtx[i];
+
+        ave_colors[i] = ave_colors[i] / (float) ave_num[i];
 
         const Color& c_ave = ave_colors[i];
         std::vector<Color> colDif; // color diference with respect to the average
@@ -1962,7 +1965,7 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_triangle) {
     // Output image is initialized
     Image imout =  Image (imHeight_, imWidth_);
 
-    // pix_ratings: this vector contains a rating for each camera. It will be re-used for every pixel 
+    // pix_ratings: this vector contains a rating for each camera. It will be re-used for every pixel
     std::vector<float> pix_ratings (nCam_, 0.0);
 
     // ratings_cam:
@@ -1974,6 +1977,7 @@ Image Multitexturer::colorTextureAtlas(const ArrayXXi& _pix_triangle) {
     const float maxwbyimwidth =realWidth_/imWidth_;
 
     int trcnt = 0;
+//#pragma omp parallel for
     for (unwit = charts_.begin(); unwit != charts_.end(); ++unwit){
 
         for (unsigned int i = 0; i < (*unwit).m_.getNTri(); i++){
