@@ -18,6 +18,7 @@
 
 #include <iomanip>
 #include <algorithm>
+#include <chrono>
 
 #include <opencv2/photo/photo.hpp>
 
@@ -217,10 +218,16 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
         // We remove the '.obj' extension from the input file name
         fileNameOut_ = fileNameIn_.substr(0, fileNameIn_.length()-4);
 
+
         // And we add the optionlist as part of the name, and the new extensions
         fileNameOut_ += optionlist;
         fileNameTexOut_ = fileNameOut_;
         out_extension_ = VRML;
+
+        // We open the time register file
+        std::string timeFileName = fileNameOut_;
+        timeFileName += "_times.txt";
+        times_.open(timeFileName.c_str());
 
         fileNameTexOut_ += ".jpg";
         
@@ -251,6 +258,7 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
     std::cerr << fileNameOut_ << std::endl;
     std::cerr << fileNameTexOut_ << std::endl;
 
+
     if(in_mode_ == SPLAT && ca_mode_ == AREA_OCCL){
         std::cerr << "Splat mode is on: splats normally overlap, so occlusions will not be taken into account" << std::endl;
         ca_mode_ = AREA;
@@ -261,6 +269,7 @@ void Multitexturer::parseCommandLine(int argc, char *argv[]){
 void Multitexturer::evaluateCameraRatings(){
 
     std::cerr << "Evaluating camera ratings..." << std::endl;
+    times_ << "Evaluating camera ratings..." << std::endl;
 
     // Originally, tri_ratings was a field in Camera class. However, due to memory allocation
     // issues, we have extracted it from there, and make a vector of vectors instead
@@ -270,6 +279,8 @@ void Multitexturer::evaluateCameraRatings(){
     for (unsigned int c = 0 ; c < nCam_ ; c++){
         cameras_[c].vtx_ratings_.resize(nVtx_);
     }
+
+    auto start = std::chrono::system_clock::now();
 
     // This step will calculate every camera-triangle ratings
     // using the chosen system.
@@ -285,6 +296,11 @@ void Multitexturer::evaluateCameraRatings(){
         evaluateAreaWithOcclusions(cam_tri_ratings);
         break;
     }
+
+    auto t_tri_ratings = std::chrono::system_clock::now();
+    std::chrono::duration<double> diff = t_tri_ratings-start;
+    times_ << "Triangle ratings:" << std::endl;
+    times_ << diff.count() << std::endl;
 
     // Create vtx2tri and tri2tri
     // vtx2vtx is a vector containing every direct neighbor for each vertex
@@ -319,6 +335,11 @@ void Multitexturer::evaluateCameraRatings(){
         evaluateWeightNormal(cam_tri_ratings);
     }
 
+    auto t_smooth = std::chrono::system_clock::now();
+    diff = t_smooth-t_tri_ratings;
+    times_ << "Smoothing triangle ratings:" << std::endl;
+    times_ << diff.count() << std::endl;
+
     std::cerr << "done!\n";
 
     if (fileFaceCam_.size() != 0){
@@ -352,6 +373,11 @@ void Multitexturer::evaluateCameraRatings(){
             }
         }
     }
+
+    auto t_vtx_ratings = std::chrono::system_clock::now();
+    diff = t_vtx_ratings - t_smooth;
+    times_ << "Vtx ratings: " << std::endl;
+    times_ << diff.count() << std::endl;
 
     // This is probably not necessary, but just in case...
     for (unsigned int c = 0; c < nCam_; c++){
@@ -1291,7 +1317,14 @@ void Multitexturer::chartColoring() {
 
     if (photoconsistency_) {
 //        checkPhotoconsistency();
+        auto start = std::chrono::system_clock::now();
+
         checkPhotoconsistencyPerPhoto();
+
+        auto end = std::chrono::system_clock::now();
+        std::chrono::duration<double> diff = end-start;
+        times_ << "Photoconsistency: " << std::endl;
+        times_ << diff.count() << std::endl;
     } else {
         origMesh_ = mesh_;
     }
@@ -1308,7 +1341,17 @@ void Multitexturer::chartColoring() {
     if (m_mode_ == FLAT){
         imout = colorFlatCharts(pix_triangle);
     } else if (m_mode_ == TEXTURE){
+
+        auto tex_start = std::chrono::system_clock::now();
+
         imout = colorTextureAtlas(pix_triangle);
+
+        auto tex_end = std::chrono::system_clock::now();
+        std::chrono::duration<double>diff = tex_end - tex_start;
+        times_ << "Colouring:" << std::endl;
+        times_ << diff.count() << std::endl;
+        times_.close();
+
     } else {
         std::cerr << "Mode: " << m_mode_ << " is unknown!" << std::endl;
         return;
@@ -1917,6 +1960,7 @@ void Multitexturer::checkPhotoconsistencyPerPhoto() {
         }
 
     }
+
     std::cerr << "done!" << std::endl;
 
 }

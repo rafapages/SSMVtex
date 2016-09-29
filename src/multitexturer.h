@@ -234,6 +234,9 @@ private:
     std::string fileNameTexOut_;
     std::string fileFaceCam_;
 
+    // Out timing file
+    std::ofstream times_;
+
 };
 
 #endif // MULTITEXTURER_H
