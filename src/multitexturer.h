@@ -100,6 +100,11 @@ private:
     //
     // According to camera c, is vertex v eclipsed by triangle t ?
     bool isVertexEclipsed(int _v, int _t, int _c) const;
+    bool isVertexEclipsed(const Vector3f& _v, int _t, int _c) const;
+    // Line-triangle intersection (returns false if not intersecting)
+    // Line: _a, _b
+    // Triangle: _v0, _v1, v2
+    bool lineTriangleIntersection(const Vector3f& _a, const Vector3f& _b, const Vector3f& _v0, const Vector3f& _v1, const Vector3f& _v2, Vector3f& _intersection) const;
     // Samples x with respect to the given resolution
     unsigned int findPosGrid (float _x, float _min, float _max, unsigned int _resolution) const;
     // Checks if the point p is included in the triangle defined by vertices a, b and c

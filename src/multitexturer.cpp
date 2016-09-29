@@ -1045,6 +1045,69 @@ bool Multitexturer::isVertexEclipsed (int _v, int _t, int _c) const {
     return ((dpnacam > 0 && dpnav < 0) || (dpnacam < 0 && dpnav > 0));
 }
 
+bool Multitexturer::isVertexEclipsed (const Vector3f& _v, int _t, int _c) const {
+
+    const Vector3f& va = mesh_.getVertex(mesh_.getTriangle(_t).getIndex(0));
+    Vector3f vb = mesh_.getVertex(mesh_.getTriangle(_t).getIndex(1));
+    Vector3f vc = mesh_.getVertex(mesh_.getTriangle(_t).getIndex(2));
+
+    // All vertices are defined with respect to Va
+    vb -= va;
+    vc -= va;
+
+    Vector3f n = vb.cross(vc);
+
+    Vector3f acam, av;
+
+    acam = cameras_[_c].getPosition();
+    acam -= va;
+
+    av = _v;
+    av -= va;
+
+    // We check if they are in the same side
+    // of the triangle using the dot product
+    float dpnacam = n.dot(acam);
+    float dpnav   = n.dot(av);
+
+    return ((dpnacam > 0 && dpnav < 0) || (dpnacam < 0 && dpnav > 0));
+}
+
+bool Multitexturer::lineTriangleIntersection(const Vector3f &_a, const Vector3f &_b, const Vector3f &_v0, const Vector3f &_v1, const Vector3f &_v2, Vector3f& _intersection) const{
+
+    const Vector3f p1p0 = _v1 - _v0;
+    const Vector3f p2p0 = _v2 - _v0;
+    const Vector3f ba = _b - _a;
+
+    Matrix3f M, Minv;
+    for (unsigned i = 0; i < 3; i++){
+        M(i,0) = ba(i);
+    }
+    for (unsigned i = 0; i < 3; i++){
+        M(i,1) = p1p0(i);
+    }
+    for (unsigned i = 0; i < 3; i++){
+        M(i,2) = p2p0(i);
+    }
+
+    Minv = M.inverse();
+
+    Vector3f tuv = Minv*(_b - _v0);
+    const float t = tuv(0);
+    const float u = tuv(1);
+    const float v = tuv(2);
+
+    _intersection = _b + (_a - _b) * t; // Intersection of line and plane
+
+    // intersection is inside the triangle if u,v € [0,1] and u+1 <= 1
+    if ( (0 <= u) && (u <= 1) && (0 <= v) && (v <= 1) && (u+v <= 1) ){
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
 bool Multitexturer::isPinsideTri (const Vector2f& _p, const Vector2f& _a, const Vector2f& _b, const Vector2f& _c) const {
 
     const Vector2f uv = uvPtri(_p, _a, _b, _c);
@@ -1731,6 +1794,8 @@ void Multitexturer::checkPhotoconsistency(){
 
 void Multitexturer::checkPhotoconsistencyPerPhoto() {
 
+    std::cerr << "Checking photoconsistency..." << std::endl;
+
     std::vector<std::vector<Color> > colors_per_vtx (nVtx_);
     std::vector<std::vector<float> > ratings_per_vtx (nVtx_);
     std::vector<Color> ave_colors (nVtx_, Color(0.0,0.0,0.0));
@@ -1777,13 +1842,13 @@ void Multitexturer::checkPhotoconsistencyPerPhoto() {
                 colors_per_vtx[i][c] = col;
                 ratings_per_vtx[i][c] = cameras_[c].vtx_ratings_[i];
 
-                if (0 == (i+1) % 1024) { // Too much information will kill you
-                    std::cerr << "\r" << "Image " << c+1 << "/" << nCam_ << ". Progress: ";
-                    std::cerr << (float)(i+1)/nVtx_*100 << std::setw(4) << std::setprecision(4) << "%.       ";
-                }
+//                if (0 == (i+1) % 1024) { // Too much information will kill you
+//                    std::cerr << "\r" << "Image " << c+1 << "/" << nCam_ << ". Progress: ";
+//                    std::cerr << (float)(i+1)/nVtx_*100 << std::setw(4) << std::setprecision(4) << "%.       ";
+//                }
             }
         }
-        std::cerr << "\r" << "Image " << c+1 << "/" << nCam_ << ". Progress: 100%             ";
+//        std::cerr << "\r" << "Image " << c+1 << "/" << nCam_ << ". Progress: 100%             ";
 
     }
 
@@ -1797,7 +1862,7 @@ void Multitexturer::checkPhotoconsistencyPerPhoto() {
         }
     }
 
-    std::cerr << "\n";
+    //std::cerr << "\n";
 
     #pragma omp parallel for
     for (unsigned int i = 0; i < nVtx_; i++){
@@ -1852,6 +1917,7 @@ void Multitexturer::checkPhotoconsistencyPerPhoto() {
         }
 
     }
+    std::cerr << "done!" << std::endl;
 
 }
 
